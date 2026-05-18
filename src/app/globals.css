@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 243 75% 59%;
+    --radius: 0.75rem;
+    --font-sans: 'Inter', system-ui, sans-serif;
+  }
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 98%;
+    --primary: 243 75% 65%;
+    --primary-foreground: 240 10% 4%;
+    --secondary: 240 4% 12%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 12%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 240 4% 14%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 98%;
+    --success: 142 70% 45%;
+    --success-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 243 75% 65%;
+  }
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+}
+
+/* Soft gradient for hero & ticket pages */
+.gradient-mesh {
+  background:
+    radial-gradient(at 20% 0%, hsl(243 75% 59% / 0.15) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsl(280 75% 55% / 0.12) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, hsl(190 75% 50% / 0.10) 0px, transparent 50%);
+}
+.dark .gradient-mesh {
+  background:
+    radial-gradient(at 20% 0%, hsl(243 75% 65% / 0.18) 0px, transparent 50%),
+    radial-gradient(at 80% 50%, hsl(280 75% 60% / 0.14) 0px, transparent 50%),
+    radial-gradient(at 50% 100%, hsl(190 75% 55% / 0.12) 0px, transparent 50%);
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Skeletons */
+.skeleton {
+  @apply bg-muted animate-pulse rounded-md;
+}
+
+/* Smooth page enter */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-up { animation: fade-up 0.35s ease-out both; }
+
+/* Print poster */
+@media print {
+  body { background: white !important; }
+  .no-print { display: none !important; }
+  .poster-page { page-break-after: always; }
+}
