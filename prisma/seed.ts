@@ -138,7 +138,7 @@ async function main() {
           createdAt: created,
           calledAt: status === 'done' ? new Date(created.getTime() + 5 * 60000) : null,
           startedAt: status === 'done' ? started : null,
-          completedAt: status !== 'waiting' ? completed : null,
+          completedAt: completed,
         },
       });
     }
