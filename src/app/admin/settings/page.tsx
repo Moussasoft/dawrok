@@ -27,7 +27,7 @@ export default async function AdminSettingsPage() {
       where: { isSuperadmin: true },
       select: { id: true, name: true, email: true, createdAt: true },
       orderBy: { createdAt: 'asc' },
-    }),
+    }).then(rows => rows.map(r => ({ ...r, createdAt: r.createdAt.toISOString() }))),
     prisma.systemConfig.findUnique({ where: { key: 'notifications' } }),
   ]);
 
