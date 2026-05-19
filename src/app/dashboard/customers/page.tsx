@@ -16,7 +16,7 @@ export default async function CustomersPage({
   const sp = await searchParams;
   const q = sp.q?.trim() ?? '';
 
-  const branch = await prisma.branch.findFirst({ where: { orgId: session.orgId } });
+  const branch = await prisma.branch.findFirst({ where: { orgId: session.orgId ?? undefined } });
   if (!branch) redirect('/dashboard');
 
   const customers = await prisma.customer.findMany({

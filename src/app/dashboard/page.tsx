@@ -9,7 +9,7 @@ export default async function DashboardPage() {
   const session = await getSession();
   if (!session) redirect('/login');
   const branch = await prisma.branch.findFirst({
-    where: { orgId: session.orgId },
+    where: { orgId: session.orgId ?? undefined },
     include: {
       services: { where: { active: true } },
       employees: { where: { active: true } },

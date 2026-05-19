@@ -18,7 +18,7 @@ export async function GET() {
   if (!session?.orgId) {
     return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
   }
-  const branch = await prisma.branch.findFirst({ where: { orgId: session.orgId } });
+  const branch = await prisma.branch.findFirst({ where: { orgId: session.orgId ?? undefined } });
   if (!branch) return NextResponse.json({ error: 'Aucune agence' }, { status: 404 });
 
   const since = new Date();

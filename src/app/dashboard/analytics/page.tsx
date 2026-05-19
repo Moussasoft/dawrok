@@ -10,7 +10,7 @@ export const dynamic = 'force-dynamic';
 export default async function AnalyticsPage() {
   const session = await getSession();
   if (!session) redirect('/login');
-  const branch = await prisma.branch.findFirst({ where: { orgId: session.orgId } });
+  const branch = await prisma.branch.findFirst({ where: { orgId: session.orgId ?? undefined } });
   if (!branch) redirect('/dashboard');
 
   const since = new Date();
