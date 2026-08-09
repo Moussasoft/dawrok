@@ -47,7 +47,10 @@ const config: Config = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
-      fontFamily: { sans: ['var(--font-sans)', 'system-ui', 'sans-serif'] },
+      fontFamily: {
+  sans: ['var(--font-sans)', 'system-ui', 'sans-serif'],
+  arabic: ['var(--font-arabic)', 'Noto Kufi Arabic', 'sans-serif'],
+},
       keyframes: {
         'pulse-soft': {
           '0%, 100%': { opacity: '1' },

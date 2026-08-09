@@ -1,12 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import './globals.css';
-import { Providers } from '@/components/providers';
+import { ReactNode } from 'react';
 
 export const metadata: Metadata = {
-  title: 'Daourak — File d\'attente intelligente',
-  description: 'Digitalisez vos files d\'attente. Vos clients scannent, attendent où ils veulent, vous gérez en temps réel.',
-  manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, title: 'Daourak', statusBarStyle: 'default' },
+  title: 'Daourak',
+  description: 'File d\'attente intelligente',
 };
 
 export const viewport: Viewport = {
@@ -17,20 +14,7 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="fr" suppressHydrationWarning>
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
-  );
+export default function RootLayout({ children }: { children: ReactNode }) {
+  return children;
 }
+

@@ -25,6 +25,7 @@
     --ring: 243 75% 59%;
     --radius: 0.75rem;
     --font-sans: 'Inter', system-ui, sans-serif;
+    --font-arabic: 'Noto Kufi Arabic', sans-serif;
   }
   .dark {
     --background: 240 10% 4%;
@@ -88,4 +89,10 @@
   body { background: white !important; }
   .no-print { display: none !important; }
   .poster-page { page-break-after: always; }
+}
+
+
+/* RTL support */
+[dir="rtl"] body {
+  font-family: var(--font-arabic), var(--font-sans), system-ui, sans-serif;
 }
