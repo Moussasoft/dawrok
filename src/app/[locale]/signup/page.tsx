@@ -7,18 +7,15 @@ import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const SECTORS = [
-  { value: 'hairdresser', label: '✂️ Coiffure / Barbier' },
-  { value: 'doctor', label: '🩺 Médecin / Cabinet' },
-  { value: 'vehicle_inspection', label: '🚗 Visite technique' },
-  { value: 'bank', label: '🏦 Banque / Administration' },
-  { value: 'restaurant', label: '🍽️ Restaurant' },
-  { value: 'other', label: '📋 Autre service' },
-];
+const SECTOR_KEYS = ['hairdresser', 'doctor', 'vehicle_inspection', 'bank', 'restaurant', 'other'] as const;
 
 export default function SignupPage() {
   const router = useRouter();
   const t = useTranslations();
+  const sectors = SECTOR_KEYS.map((key) => ({
+    value: key,
+    label: t(`sectors.${key}`),
+  }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState({
@@ -70,7 +67,7 @@ export default function SignupPage() {
                 value={form.sector}
                 onChange={(e) => setForm({ ...form, sector: e.target.value })}
               >
-                {SECTORS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                {sectors.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
               </select>
             </div>
             <div className="space-y-1.5">

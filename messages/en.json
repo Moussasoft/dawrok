@@ -37,7 +37,8 @@
     "doctor": "Doctor",
     "vehicleInspection": "Vehicle Inspection",
     "bank": "Bank / Admin",
-    "restaurant": "Restaurant"
+    "restaurant": "Restaurant",
+    "other": "Other"
   },
   "features": {
     "title": "Everything you need",

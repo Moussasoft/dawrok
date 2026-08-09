@@ -37,7 +37,8 @@
     "doctor": "طبيب",
     "vehicleInspection": "فحص السيارات",
     "bank": "بنك / إدارة",
-    "restaurant": "مطعم"
+    "restaurant": "مطعم",
+    "other": "خدمة أخرى"
   },
   "features": {
     "title": "كل ما تحتاجه",
