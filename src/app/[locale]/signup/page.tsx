@@ -7,14 +7,21 @@ import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
-const SECTOR_KEYS = ['hairdresser', 'doctor', 'vehicle_inspection', 'bank', 'restaurant', 'other'] as const;
+const SECTORS = [
+  { value: 'hairdresser',         tKey: 'hairdresser' },
+  { value: 'doctor',              tKey: 'doctor' },
+  { value: 'vehicle_inspection',  tKey: 'vehicleInspection' },
+  { value: 'bank',                tKey: 'bank' },
+  { value: 'restaurant',          tKey: 'restaurant' },
+  { value: 'other',               tKey: 'other' },
+] as const;
 
 export default function SignupPage() {
   const router = useRouter();
   const t = useTranslations();
-  const sectors = SECTOR_KEYS.map((key) => ({
-    value: key,
-    label: t(`sectors.${key}`),
+  const sectors = SECTORS.map((s) => ({
+    value: s.value,
+    label: t(`sectors.${s.tKey}`),
   }));
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
