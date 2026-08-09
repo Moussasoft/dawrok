@@ -7,10 +7,10 @@ import '../globals.css';
 import { Providers } from '@/components/providers';
 
 export const metadata: Metadata = {
-  title: 'Daourak — File d\'attente intelligente',
-  description: 'Digitalisez vos files d\'attente. Vos clients scannent, attendent où ils veulent, vous gérez en temps réel.',
+  title: 'دورك — طابور ذكي',
+  description: 'رقمن طوابير الانتظار. عملاؤك يمسحون QR، ينتظرون أينما يريدون، وأنت تدير في الوقت الحقيقي.',
   manifest: '/manifest.webmanifest',
-  appleWebApp: { capable: true, title: 'Daourak', statusBarStyle: 'default' },
+  appleWebApp: { capable: true, title: 'دورك', statusBarStyle: 'default' },
 };
 
 export const viewport: Viewport = {
