@@ -92,11 +92,11 @@ function DashboardMockup({ label }: { label: string }) {
 }
 
 const SECTORS_VISUAL = [
-  { k:'hairdresser',       i:Scissors,       c:'from-rose-500 to-pink-500',   img:'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=400&h=300&fit=crop' },
-  { k:'doctor',             i:Stethoscope,     c:'from-sky-500 to-blue-500',    img:'https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=400&h=300&fit=crop' },
-  { k:'vehicleInspection', i:Car,              c:'from-amber-500 to-orange-500', img:'https://images.unsplash.com/photo-1487754180451-c456f719a1fc?w=400&h=300&fit=crop' },
-  { k:'bank',              i:Building2,        c:'from-violet-500 to-purple-500',img:'https://images.unsplash.com/photo-1501167786227-4cba60f6d58f?w=400&h=300&fit=crop' },
-  { k:'restaurant',        i:UtensilsCrossed,  c:'from-emerald-500 to-teal-500', img:'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop' },
+  { k:'hairdresser',       i:Scissors,       c:'from-rose-500 to-pink-500',   img:'/images/salon-coiffure.jpg' },
+  { k:'doctor',             i:Stethoscope,     c:'from-sky-500 to-blue-500',    img:'/images/cabinet-medical.jpg' },
+  { k:'vehicleInspection', i:Car,              c:'from-amber-500 to-orange-500', img:'/images/garage-auto.jpg' },
+  { k:'bank',              i:Building2,        c:'from-violet-500 to-purple-500',img:'/images/banque-admin.jpg' },
+  { k:'restaurant',        i:UtensilsCrossed,  c:'from-emerald-500 to-teal-500', img:'/images/restaurant.jpg' },
 ];
 
 export default function PreviewPage() {
@@ -165,7 +165,7 @@ export default function PreviewPage() {
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <Card className="overflow-hidden group hover:shadow-xl transition-all">
             <div className="relative h-48 overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&h=400&fit=crop" alt="File d'attente classique" className="h-full w-full object-cover"/>
+              <img src="/images/file-attente.jpg" alt="File d'attente classique" className="h-full w-full object-cover"/>
               <div className="absolute inset-0 bg-rose-500/30"/>
               <span className="absolute top-3 start-3 rounded-full bg-rose-500 px-3 py-1 text-xs font-bold text-white">AVANT</span>
             </div>
@@ -176,7 +176,7 @@ export default function PreviewPage() {
           </Card>
           <Card className="overflow-hidden group hover:shadow-xl transition-all">
             <div className="relative h-48 overflow-hidden">
-              <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop" alt="Avec Daourak" className="h-full w-full object-cover"/>
+              <img src="/images/client-libre.jpg" alt="Avec Daourak" className="h-full w-full object-cover"/>
               <div className="absolute inset-0 bg-emerald-500/30"/>
               <span className="absolute top-3 start-3 rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white">APRÈS</span>
             </div>
@@ -208,7 +208,7 @@ export default function PreviewPage() {
           </div>
           <div className="mt-10 flex justify-center">
             <div className="rounded-2xl overflow-hidden shadow-xl max-w-md">
-              <img src="https://images.unsplash.com/photo-1584433144859-1fc3ab64a957?w=600&h=400&fit=crop" alt="Scan QR code" className="w-full h-56 object-cover"/>
+              <img src="/images/scan-qr.jpg" alt="Scan QR code" className="w-full h-56 object-cover"/>
             </div>
           </div>
         </div>
