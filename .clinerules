@@ -1,0 +1,40 @@
+# Cline Rules — Daourak
+
+## Stack technique
+- Next.js 15 (App Router), React 19, TypeScript strict
+- Tailwind CSS v4 (darkMode: class, design system with CSS variables)
+- next-intl v4 (locales: fr, en, ar | defaultLocale: ar | localePrefix: as-needed)
+- Prisma ORM (SQLite dev, pg production)
+- next-themes v0.4 (ThemeProvider, light/dark/system)
+- Composants shadcn/ui dans `src/components/ui/`
+- Icônes Lucide React
+- Dossier `src/app/[locale]/` pour les pages internationalisées
+- Traductions dans `messages/{fr,en,ar}.json`
+
+## Conception & Design
+- Toujours utiliser les classes Tailwind existantes et les variables CSS du thème
+- Supporter le RTL pour l'arabe : vérifier `dir="rtl"` et les classes `rtl:`
+- Toujours gérer le dark mode avec `dark:` variants
+- Composants réutilisables dans `src/components/`, utiliser `'use client'` uniquement si nécessaire
+- Mobile-first : commencer par le responsive mobile, puis `md:`, `lg:`
+- Privilégier `shadcn/ui` pour les nouveaux composants (Button, Card, Input, Label, etc.)
+
+## Coding
+- Toujours utiliser `useTranslations()` de next-intl pour les textes visibles
+- Les nouvelles clés de traduction doivent être ajoutées dans `messages/fr.json`, `en.json`, ET `ar.json`
+- Utiliser `getSession()` de `@/lib/auth` pour les vérifications d'authentification serveur
+- Routes API dans `src/app/api/`, utiliser `{ status: 200 }` et gérer les erreurs avec `NextResponse.json({ error }, { status: 400 })`
+- Valider les entrées avec Zod côté API
+- TypeScript strict : pas de `any`, typer tous les paramètres et retours
+- Pour le RTL : inverser les marges/paddings (ml ↔ mr, pl ↔ pr) avec les variants Tailwind `ms-*` / `me-*` (start/end logiques)
+
+## Internationalisation (i18n)
+- Les fichiers dans `src/app/[locale]/...` utilisent `next-intl`
+- Les anciens fichiers dans `src/app/...` (sans [locale]) sont des vestiges à supprimer
+- Toujours utiliser `t('section.key')` pour les textes, jamais en dur
+- Les noms de clés sont en camelCase (ex: `vehicleInspection`, pas `vehicle_inspection`)
+
+## Langue du code & commentaires
+- Noms de variables/fonctions en anglais
+- Commentaires en français (langue du projet)
+- Messages commit en français ou conventionnel (feat:, fix:, chore:)
