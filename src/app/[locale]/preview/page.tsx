@@ -156,13 +156,39 @@ export default function PreviewPage() {
         </div>
       </section>
 
-      {/* COMPARAISON AVANT/APRÈS */}
+      {/* COMPARAISON AVANT/APRÈS — avec vraies images */}
       <section className="container py-16 md:py-24">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-5xl font-bold">{t('howItWorks.title')}</h2>
           <p className="mt-3 text-muted-foreground text-lg">{t('howItWorks.subtitle')}</p>
         </div>
-        <QueueComparison />
+        <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <Card className="overflow-hidden group hover:shadow-xl transition-all">
+            <div className="relative h-48 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?w=600&h=400&fit=crop" alt="File d'attente classique" className="h-full w-full object-cover"/>
+              <div className="absolute inset-0 bg-rose-500/30"/>
+              <span className="absolute top-3 start-3 rounded-full bg-rose-500 px-3 py-1 text-xs font-bold text-white">AVANT</span>
+            </div>
+            <div className="p-5">
+              <h3 className="font-bold text-lg mb-2">File d&apos;attente classique</h3>
+              <p className="text-sm text-muted-foreground">Clients debout, stressés, temps perdu. Files interminables sans visibilité.</p>
+            </div>
+          </Card>
+          <Card className="overflow-hidden group hover:shadow-xl transition-all">
+            <div className="relative h-48 overflow-hidden">
+              <img src="https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=600&h=400&fit=crop" alt="Avec Daourak" className="h-full w-full object-cover"/>
+              <div className="absolute inset-0 bg-emerald-500/30"/>
+              <span className="absolute top-3 start-3 rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white">APRÈS</span>
+            </div>
+            <div className="p-5">
+              <h3 className="font-bold text-lg mb-2">Avec Daourak</h3>
+              <p className="text-sm text-muted-foreground">Scan QR, suivi en temps réel sur mobile. Client libre, staff efficace.</p>
+            </div>
+          </Card>
+        </div>
+        <div className="flex justify-center mt-6">
+          <span className="text-3xl text-muted-foreground/30">→</span>
+        </div>
       </section>
 
       {/* ÉTAPES */}
@@ -180,7 +206,11 @@ export default function PreviewPage() {
                 <p className="text-sm text-muted-foreground leading-relaxed">{s.d}</p>
               </Card>))}
           </div>
-          <div className="mt-10 flex justify-center"><ScanIllustration /></div>
+          <div className="mt-10 flex justify-center">
+            <div className="rounded-2xl overflow-hidden shadow-xl max-w-md">
+              <img src="https://images.unsplash.com/photo-1584433144859-1fc3ab64a957?w=600&h=400&fit=crop" alt="Scan QR code" className="w-full h-56 object-cover"/>
+            </div>
+          </div>
         </div>
       </section>
 
