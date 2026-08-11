@@ -38,7 +38,19 @@
     "vehicleInspection": "فحص السيارات",
     "bank": "بنك / إدارة",
     "restaurant": "مطعم",
-    "other": "خدمة أخرى"
+    "other": "خدمة أخرى",
+    "hairdresserDesc": "صالونات الحلاقة والتجميل",
+    "doctorDesc": "عيادات وأطباء",
+    "vehicleInspectionDesc": "مراكز الفحص التقني",
+    "bankDesc": "بنوك وإدارات",
+    "restaurantDesc": "مطاعم ومقاهي"
+  },
+  "home": {
+    "statsClients": "+500 متجر",
+    "statsTickets": "+50,000 تذكرة",
+    "statsTime": "-40% وقت انتظار",
+    "preview": "نظرة على لوحة التحكم",
+    "phonePreview": "العميل يمسح الرمز ويتابع دوره"
   },
   "features": {
     "title": "كل ما تحتاجه",

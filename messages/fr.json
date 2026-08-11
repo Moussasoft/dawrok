@@ -38,7 +38,19 @@
     "vehicleInspection": "Visite technique",
     "bank": "Banque / Admin",
     "restaurant": "Restaurant",
-    "other": "Autre"
+    "other": "Autre",
+    "hairdresserDesc": "Salons de coiffure et beauté",
+    "doctorDesc": "Cabinets médicaux",
+    "vehicleInspectionDesc": "Centres de contrôle technique",
+    "bankDesc": "Banques et administrations",
+    "restaurantDesc": "Restaurants et cafés"
+  },
+  "home": {
+    "statsClients": "+500 commerces",
+    "statsTickets": "+50 000 tickets",
+    "statsTime": "-40% d'attente",
+    "preview": "Aperçu du dashboard",
+    "phonePreview": "Le client scanne et suit son tour"
   },
   "features": {
     "title": "Tout ce qu'il vous faut",

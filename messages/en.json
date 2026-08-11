@@ -38,7 +38,19 @@
     "vehicleInspection": "Vehicle Inspection",
     "bank": "Bank / Admin",
     "restaurant": "Restaurant",
-    "other": "Other"
+    "other": "Other",
+    "hairdresserDesc": "Hair salons & barbershops",
+    "doctorDesc": "Medical clinics",
+    "vehicleInspectionDesc": "Vehicle inspection centers",
+    "bankDesc": "Banks & administration",
+    "restaurantDesc": "Restaurants & cafés"
+  },
+  "home": {
+    "statsClients": "+500 businesses",
+    "statsTickets": "+50,000 tickets",
+    "statsTime": "-40% wait time",
+    "preview": "Dashboard preview",
+    "phonePreview": "Customer scans & follows their turn"
   },
   "features": {
     "title": "Everything you need",
