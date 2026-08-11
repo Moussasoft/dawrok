@@ -243,7 +243,7 @@ export default function PreviewPage() {
               <Card key={i} className="group relative overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
                 <div className="h-32 overflow-hidden">
                   <img src={s.img} alt={t(`sectors.${s.k}`)} className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-500"/>
-                  <div className={`absolute inset-0 bg-gradient-to-t ${s.c} opacity-60`}/>
+                  <div className={`absolute inset-0 bg-gradient-to-t ${s.c} opacity-30`}/>
                 </div>
                 <div className="p-4 text-center">
                   <div className={`mx-auto -mt-8 relative z-10 mb-2 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${s.c} p-2 shadow-lg`}><s.i className="h-6 w-6 text-white"/></div>
