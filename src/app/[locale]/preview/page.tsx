@@ -165,7 +165,7 @@ export default function PreviewPage() {
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <Card className="overflow-hidden group hover:shadow-xl transition-all">
             <div className="relative h-48 overflow-hidden">
-              <img src="/images/file-attente.jpg" alt="File d'attente classique" className="h-full w-full object-cover"/>
+              <img src="/images/fille-attente.jpg" alt="File d'attente classique" className="h-full w-full object-cover"/>
               <div className="absolute inset-0 bg-rose-500/30"/>
               <span className="absolute top-3 start-3 rounded-full bg-rose-500 px-3 py-1 text-xs font-bold text-white">AVANT</span>
             </div>
@@ -176,7 +176,7 @@ export default function PreviewPage() {
           </Card>
           <Card className="overflow-hidden group hover:shadow-xl transition-all">
             <div className="relative h-48 overflow-hidden">
-              <img src="/images/client-libre.jpg" alt="Avec Daourak" className="h-full w-full object-cover"/>
+              <img src="/images/solution-fille-attente.jpg" alt="Avec Daourak" className="h-full w-full object-cover"/>
               <div className="absolute inset-0 bg-emerald-500/30"/>
               <span className="absolute top-3 start-3 rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white">APRÈS</span>
             </div>
