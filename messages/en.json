@@ -28,7 +28,13 @@
     "step2Title": "2. They follow their turn",
     "step2Desc": "Position, estimated time, notification when their turn is near. They can leave.",
     "step3Title": "3. You manage",
-    "step3Desc": "Real-time dashboard + analytics: peak hours, average duration, loyalty."
+    "step3Desc": "Real-time dashboard + analytics: peak hours, average duration, loyalty.",
+    "beforeLabel": "BEFORE",
+    "beforeTitle": "Traditional waiting line",
+    "beforeDesc": "Customers standing, stressed, time wasted. Endless queues with no visibility.",
+    "afterLabel": "AFTER",
+    "afterTitle": "With Daourak",
+    "afterDesc": "Scan QR, real-time tracking on mobile. Free customers, efficient staff."
   },
   "sectors": {
     "title": "For all services",

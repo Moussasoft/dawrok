@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import {
@@ -54,16 +54,8 @@ function PhoneMockup({ label }: { label: string }) {
     <div className="relative mx-auto w-52 md:w-60">
       <div className="relative rounded-[2.5rem] border-[3px] border-zinc-700 dark:border-zinc-400 bg-zinc-900 p-2.5 shadow-2xl">
         <div className="mx-auto mb-2.5 h-5 w-20 rounded-full bg-zinc-800"/>
-        <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 to-card p-4 aspect-[9/16] flex flex-col items-center justify-center text-center gap-2">
-          <div className="rounded-xl bg-white p-2 shadow-lg">
-            <svg viewBox="0 0 80 80" className="h-16 w-16 md:h-20 md:w-20">
-              {[[5,5],[15,5],[5,15],[15,15],[30,5],[50,5],[65,5],[75,5],[5,30],[25,30],[55,30],[70,30],[10,45],[30,45],[60,45],[5,65],[20,65],[40,65],[60,65],[70,65],[75,65]].map(([x,y],i)=>(<rect key={i} x={x} y={y} width="4" height="4" fill="#6366F1"/>))}
-            </svg>
-          </div>
-          <p className="text-[10px] md:text-xs font-medium text-white/80 leading-tight">{label}</p>
-          <div className="inline-flex items-center gap-1 rounded-full bg-primary/20 px-2.5 py-0.5 text-[10px] text-white">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"/>Live
-          </div>
+        <div className="overflow-hidden rounded-2xl aspect-[9/16]">
+          <img src="/images/dawrok.jpg" alt={label} className="h-full w-full object-cover" />
         </div>
         <div className="mx-auto mt-2.5 h-1 w-16 rounded-full bg-zinc-700"/>
       </div>
@@ -101,6 +93,7 @@ const SECTORS_VISUAL = [
 
 export default function PreviewPage() {
   const t = useTranslations();
+  const locale = useLocale();
   return (
     <main className="min-h-screen overflow-x-hidden">
       {/* NAV */}
@@ -141,8 +134,8 @@ export default function PreviewPage() {
               </div>
               <p className="mt-4 text-sm text-muted-foreground flex items-center justify-center lg:justify-start gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-500"/>{t('hero.noCard')}</p>
             </div>
-            <div className="hidden lg:flex flex-col items-center gap-6">
-              <PhoneMockup label={t('home.phonePreview')}/>
+            <div className="flex flex-col items-center gap-6">
+              <img src={`/images/dawrok-${locale}.jpg`} alt={t('home.phonePreview')} className="w-60 md:w-72 rounded-2xl shadow-2xl" />
             </div>
           </div>
         </div>
@@ -165,24 +158,24 @@ export default function PreviewPage() {
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           <Card className="overflow-hidden group hover:shadow-xl transition-all">
             <div className="relative h-48 overflow-hidden">
-              <img src="/images/fille-attente.jpg" alt="File d'attente classique" className="h-full w-full object-cover"/>
+              <img src="/images/fille-attente.jpg" alt={t('howItWorks.beforeTitle')} className="h-full w-full object-cover"/>
               <div className="absolute inset-0 bg-rose-500/30"/>
-              <span className="absolute top-3 start-3 rounded-full bg-rose-500 px-3 py-1 text-xs font-bold text-white">AVANT</span>
+              <span className="absolute top-3 start-3 rounded-full bg-rose-500 px-3 py-1 text-xs font-bold text-white">{t('howItWorks.beforeLabel')}</span>
             </div>
             <div className="p-5">
-              <h3 className="font-bold text-lg mb-2">File d&apos;attente classique</h3>
-              <p className="text-sm text-muted-foreground">Clients debout, stressés, temps perdu. Files interminables sans visibilité.</p>
+              <h3 className="font-bold text-lg mb-2">{t('howItWorks.beforeTitle')}</h3>
+              <p className="text-sm text-muted-foreground">{t('howItWorks.beforeDesc')}</p>
             </div>
           </Card>
           <Card className="overflow-hidden group hover:shadow-xl transition-all">
             <div className="relative h-48 overflow-hidden">
-              <img src="/images/solution-fille-attente.jpg" alt="Avec Daourak" className="h-full w-full object-cover"/>
+              <img src="/images/solution-fille-attente.jpg" alt={t('howItWorks.afterTitle')} className="h-full w-full object-cover"/>
               <div className="absolute inset-0 bg-emerald-500/30"/>
-              <span className="absolute top-3 start-3 rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white">APRÈS</span>
+              <span className="absolute top-3 start-3 rounded-full bg-emerald-500 px-3 py-1 text-xs font-bold text-white">{t('howItWorks.afterLabel')}</span>
             </div>
             <div className="p-5">
-              <h3 className="font-bold text-lg mb-2">Avec Daourak</h3>
-              <p className="text-sm text-muted-foreground">Scan QR, suivi en temps réel sur mobile. Client libre, staff efficace.</p>
+              <h3 className="font-bold text-lg mb-2">{t('howItWorks.afterTitle')}</h3>
+              <p className="text-sm text-muted-foreground">{t('howItWorks.afterDesc')}</p>
             </div>
           </Card>
         </div>

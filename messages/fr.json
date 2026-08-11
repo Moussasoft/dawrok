@@ -28,7 +28,13 @@
     "step2Title": "2. Il suit son tour",
     "step2Desc": "Position, temps estimé, notification quand son tour approche. Il peut sortir.",
     "step3Title": "3. Vous pilotez",
-    "step3Desc": "Tableau de bord temps réel + analytics : pic d'affluence, durée moyenne, fidélité."
+    "step3Desc": "Tableau de bord temps réel + analytics : pic d'affluence, durée moyenne, fidélité.",
+    "beforeLabel": "AVANT",
+    "beforeTitle": "File d'attente classique",
+    "beforeDesc": "Clients debout, stressés, temps perdu. Files interminables sans visibilité.",
+    "afterLabel": "APRÈS",
+    "afterTitle": "Avec Daourak",
+    "afterDesc": "Scan QR, suivi en temps réel sur mobile. Client libre, staff efficace."
   },
   "sectors": {
     "title": "Pour tous les services",
