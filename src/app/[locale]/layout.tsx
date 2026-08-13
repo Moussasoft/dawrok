@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: 'دورك — طابور ذكي',
   description: 'رقمن طوابير الانتظار. عملاؤك يمسحون QR، ينتظرون أينما يريدون، وأنت تدير في الوقت الحقيقي.',
   manifest: '/manifest.webmanifest',
+  icons: { icon: '/icon.svg' },
   appleWebApp: { capable: true, title: 'دورك', statusBarStyle: 'default' },
 };
 
