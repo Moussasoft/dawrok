@@ -32,9 +32,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select } from '@/components/ui/input';
 import { PauseDialog } from './pause-dialog';
 import { CounterTicketDialog } from './counter-ticket-dialog';
+import type { SmsChannelOffer } from '@/components/sms-opt-in';
 
 type Option = { id: string; name: string };
-type Props = { branchId: string; qrToken: string; employees: Option[]; services: Option[] };
+type Props = {
+  branchId: string;
+  qrToken: string;
+  employees: Option[];
+  services: Option[];
+  /** Canal SMS proposé pour les tickets comptoir (null : pas d'offre). */
+  smsChannel: SmsChannelOffer | null;
+};
 
 type TicketPatch = { status?: string; employeeId?: string | null; action?: 'recall' };
 
@@ -74,7 +82,7 @@ function useStation(branchId: string, employees: Option[]) {
   return [station, update] as const;
 }
 
-export function LiveDashboard({ branchId, qrToken, employees, services }: Props) {
+export function LiveDashboard({ branchId, qrToken, employees, services, smsChannel }: Props) {
   const t = useTranslations('dashboard');
   const locale = useLocale();
   const errorMessage = useErrorMessage();
@@ -414,6 +422,7 @@ export function LiveDashboard({ branchId, qrToken, employees, services }: Props)
         onClose={() => setCounterOpen(false)}
         branchId={branchId}
         services={services}
+        smsChannel={smsChannel}
       />
     </div>
   );

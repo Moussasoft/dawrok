@@ -5,6 +5,7 @@ import { Ticket } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { recallTicket } from '@/lib/my-ticket';
 import { TakeTicketForm } from './take-ticket-form';
+import type { SmsChannelOffer } from '@/components/sms-opt-in';
 import { BookingForm, ModeSwitch } from './booking-form';
 
 /** Rappel du ticket déjà pris depuis CE navigateur. */
@@ -34,6 +35,7 @@ export function PublicQueueClient({
   services,
   canTakeTicket,
   allowBooking,
+  smsChannel,
 }: {
   qrToken: string;
   timezone: string;
@@ -41,6 +43,8 @@ export function PublicQueueClient({
   /** Faux si la file est en pause ou hors horaires : seule la réservation reste possible. */
   canTakeTicket: boolean;
   allowBooking: boolean;
+  /** Canal proposé pour être prévenu (null : pas d'offre SMS). */
+  smsChannel: SmsChannelOffer | null;
 }) {
   const [mode, setMode] = useState<'now' | 'later'>(canTakeTicket ? 'now' : 'later');
   const showSwitch = allowBooking && canTakeTicket;
@@ -50,9 +54,9 @@ export function PublicQueueClient({
     <div className="space-y-4">
       {showSwitch && <ModeSwitch mode={mode} setMode={setMode} />}
       {effective === 'now' ? (
-        <TakeTicketForm qrToken={qrToken} services={services} />
+        <TakeTicketForm qrToken={qrToken} services={services} smsChannel={smsChannel} />
       ) : (
-        <BookingForm qrToken={qrToken} services={services} timezone={timezone} />
+        <BookingForm qrToken={qrToken} services={services} timezone={timezone} smsChannel={smsChannel} />
       )}
     </div>
   );

@@ -180,7 +180,9 @@
     "feedback_closed": "Il n’est plus possible de noter ce passage.",
     "feedback_exists": "Vous avez déjà donné votre avis.",
     "terms_required": "Veuillez accepter les conditions d’utilisation et la politique de confidentialité.",
-    "customer_has_active_ticket": "Ce client a un ticket ou un rendez-vous en cours : terminez-le ou annulez-le d’abord."
+    "customer_has_active_ticket": "Ce client a un ticket ou un rendez-vous en cours : terminez-le ou annulez-le d’abord.",
+    "invalid_phone": "Ce numéro ne peut pas recevoir de SMS : saisissez un numéro de mobile.",
+    "plan_feature_sms": "Les SMS ne sont pas inclus dans votre offre."
   },
   "status": {
     "scheduled": "RDV à venir",
@@ -283,7 +285,8 @@
     "ticketCreated": "Ticket N° {number} créé",
     "employees": "{count, plural, =0 {Aucun employé actif — ajoutez-en dans les réglages} one {# employé actif} other {# employés actifs}}",
     "eta": "~{minutes} min",
-    "since": "depuis {minutes} min"
+    "since": "depuis {minutes} min",
+    "counterSmsConsent": "Prévenir ce client par SMS (avec son accord)"
   },
   "settings": {
     "title": "Réglages",
@@ -346,7 +349,15 @@
     "retentionOption": "{days} jours",
     "retentionHint": "Au-delà, les tickets sont anonymisés, les commentaires effacés et les fiches clients inactives supprimées (loi 09-08). Purge automatique chaque jour.",
     "retentionSaved": "Durée de conservation enregistrée",
-    "privacyPolicyLink": "Politique de confidentialité"
+    "privacyPolicyLink": "Politique de confidentialité",
+    "smsTitle": "Notifications SMS / WhatsApp",
+    "smsDesc": "Les clients qui le demandent reçoivent un message quand leur tour approche, puis quand ils sont appelés — utile sans smartphone récent ni notifications.",
+    "smsNotIncluded": "Non inclus dans votre offre.",
+    "smsNotConfigured": "Le service SMS n’est pas encore configuré sur la plateforme.",
+    "smsChannel": "Canal",
+    "smsChannelSms": "SMS",
+    "smsChannelWhatsapp": "WhatsApp",
+    "smsUsage": "Messages envoyés ce mois-ci"
   },
   "analytics": {
     "title": "Analytics",
@@ -450,7 +461,11 @@
     "cancel": "Annuler",
     "myTicket": "Vous avez déjà un ticket",
     "viewMyTicket": "Voir mon ticket →",
-    "privacyNotice": "Vos informations servent uniquement à gérer votre passage chez {org}."
+    "privacyNotice": "Vos informations servent uniquement à gérer votre passage chez {org}.",
+    "notifySms": "Me prévenir par SMS",
+    "notifyWhatsapp": "Me prévenir sur WhatsApp",
+    "notifySmsHint": "Un message quand votre tour approche, puis quand vous êtes appelé.",
+    "notifySmsNeedPhone": "Saisissez un numéro de mobile pour activer cette option."
   },
   "ticket": {
     "yourTicket": "Votre ticket",
@@ -610,7 +625,8 @@
       "customer_delete": "Fiche client supprimée",
       "customer_export": "Données client exportées",
       "retention_purge": "Purge des données expirées",
-      "org_retention": "Durée de conservation modifiée"
+      "org_retention": "Durée de conservation modifiée",
+      "org_sms": "Notifications SMS modifiées"
     },
     "settingsSubtitle": "Gérez votre compte et la configuration de la plateforme",
     "tabProfile": "Profil",
@@ -661,7 +677,8 @@
     "notifOverLimit": "Dépassement de limite",
     "notifOverLimitDesc": "Alerte quand une organisation atteint les limites de son offre",
     "notifDaily": "Rapport quotidien",
-    "notifDailyDesc": "Récapitulatif quotidien de l’activité"
+    "notifDailyDesc": "Récapitulatif quotidien de l’activité",
+    "smsQuota": "SMS / WhatsApp par mois"
   },
   "push": {
     "calledTitle": "C’est votre tour ! N° {number}",
@@ -910,6 +927,10 @@
         "p1": "{company} — {email}"
       }
     }
+  },
+  "sms": {
+    "called": "{org} : c’est votre tour ! Ticket {number}, présentez-vous : {where}.",
+    "soon": "{org} : votre tour approche ({count, plural, =0 {vous êtes le prochain} one {encore # personne avant vous} other {encore # personnes avant vous}}). Ticket {number} : {url}"
   },
   "language": {
     "fr": "Français",

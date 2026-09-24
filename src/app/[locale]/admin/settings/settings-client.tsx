@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 import { useApiCall } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
+import { Switch } from '@/components/ui/switch';
 
 type PlanConfig = {
   plan: string;
@@ -20,6 +21,7 @@ type PlanConfig = {
   allowBooking: boolean;
   allowAnalytics: boolean;
   allowCustomBrand: boolean;
+  smsQuota: number;
 };
 type Superadmin = { id: string; name: string; email: string; createdAt: string };
 type Notifications = { newOrgSignup: boolean; orgSuspended: boolean; orgOverLimit: boolean; dailyReport: boolean; notifEmail: string };
@@ -36,29 +38,6 @@ type TabId = (typeof TABS)[number]['id'];
 
 const SUPERADMIN_MIN_PASSWORD = 12;
 
-
-function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      aria-label={label}
-      onClick={() => onChange(!checked)}
-      className={cn(
-        'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-        checked ? 'bg-primary' : 'bg-muted'
-      )}
-    >
-      <span
-        className={cn(
-          'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transition-transform',
-          checked ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-0'
-        )}
-      />
-    </button>
-  );
-}
 
 function PasswordInput({ id, value, onChange, show, placeholder }: { id: string; value: string; onChange: (v: string) => void; show: boolean; placeholder?: string }) {
   return (
@@ -262,6 +241,7 @@ function PlansSection({ initialConfigs, currency }: { initialConfigs: PlanConfig
     ['maxBranches', t('maxBranches'), 1],
     ['maxEmployees', t('maxEmployees'), 1],
     ['maxServices', t('maxServices'), 1],
+    ['smsQuota', t('smsQuota'), 0],
   ] as const;
   const featureFields = [
     ['allowBooking', t('featureBooking')],
@@ -313,7 +293,7 @@ function PlansSection({ initialConfigs, currency }: { initialConfigs: PlanConfig
                   <div className="space-y-2">
                     {featureFields.map(([key, label]) => (
                       <label key={key} className="flex cursor-pointer items-center gap-2 text-sm">
-                        <Toggle checked={form[key]} label={label} onChange={(v) => setForm({ ...form, [key]: v })} />
+                        <Switch checked={form[key]} label={label} onChange={(v) => setForm({ ...form, [key]: v })} />
                         {label}
                       </label>
                     ))}
@@ -337,6 +317,8 @@ function PlansSection({ initialConfigs, currency }: { initialConfigs: PlanConfig
                   <span className="font-medium tabular-nums">{cfg.maxEmployees}</span>
                   <span className="text-muted-foreground">{t('maxServices')}</span>
                   <span className="font-medium tabular-nums">{cfg.maxServices}</span>
+                  <span className="text-muted-foreground">{t('smsQuota')}</span>
+                  <span className="font-medium tabular-nums">{cfg.smsQuota}</span>
                   {featureFields.map(([key, label]) => (
                     <FeatureRow key={key} label={label} enabled={cfg[key]} />
                   ))}
@@ -541,7 +523,7 @@ function NotificationsSection({ initialConfig }: { initialConfig: Notifications 
                 <p className="text-sm font-medium">{label}</p>
                 <p className="text-xs text-muted-foreground">{desc}</p>
               </div>
-              <Toggle checked={config[key]} label={label} onChange={(v) => save(key, v)} />
+              <Switch checked={config[key]} label={label} onChange={(v) => save(key, v)} />
             </div>
           ))}
         </div>

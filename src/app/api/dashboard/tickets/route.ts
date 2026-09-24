@@ -7,6 +7,7 @@ import { requireOwnBranch } from '@/lib/branch';
 import { createTicket } from '@/lib/tickets';
 import { DEFAULT_TIMEZONE } from '@/lib/time';
 import { routing } from '@/i18n/routing';
+import { wantsSms } from '@/lib/sms-notify';
 
 const schema = z.object({
   branchId: z.string().min(1).max(64),
@@ -14,6 +15,7 @@ const schema = z.object({
   customerPhone: z.string().trim().max(30).optional().nullable(),
   serviceId: z.string().max(64).optional().nullable(),
   locale: z.enum(routing.locales).optional(),
+  notifySms: z.boolean().optional(),
 });
 
 // Ticket « comptoir » créé par le staff pour un client sans smartphone.
@@ -30,6 +32,9 @@ export const POST = route(async (req) => {
     serviceId = service.id;
   }
 
+  const org = await prisma.organization.findUnique({ where: { id: auth.orgId }, select: { smsEnabled: true, smsChannel: true, plan: true } });
+  const notifySms = data.notifySms && org ? await wantsSms(org, data.customerPhone || null) : false;
+
   const ticket = await createTicket({
     branchId: branch.id,
     timeZone: branch.timezone || DEFAULT_TIMEZONE,
@@ -37,6 +42,7 @@ export const POST = route(async (req) => {
     customerPhone: data.customerPhone || null,
     serviceId,
     locale: data.locale,
+    notifySms,
   });
   return NextResponse.json({ ok: true, number: ticket.number, publicCode: ticket.publicCode }, { status: 201 });
 });

@@ -12,6 +12,7 @@ import { generateSlots, isSlotBookable, type SlotQuery } from '@/lib/slots';
 import { DEFAULT_TIMEZONE, dayBounds, dayKey, parseDayKey } from '@/lib/time';
 import { DEFAULT_SERVICE_MIN } from '@/lib/queue-logic';
 import { routing } from '@/i18n/routing';
+import { wantsSms } from '@/lib/sms-notify';
 
 const MIN_LEAD_MIN = 30;
 const MAX_DAYS_AHEAD = 90;
@@ -71,6 +72,7 @@ const postSchema = z.object({
   serviceId: z.string().max(64).optional().nullable(),
   scheduledFor: z.string().datetime(),
   locale: z.enum(routing.locales).optional(),
+  notifySms: z.boolean().optional(),
 });
 
 // Endpoint public — réserver un rendez-vous.
@@ -91,6 +93,7 @@ export const POST = route(async (req) => {
   const query = await buildSlotQuery(branch, dayKey(scheduled, timeZone), serviceId);
   if (!isSlotBookable(query, scheduled)) throw new ApiError(409, 'slot_unavailable');
 
+  const notifySms = data.notifySms ? await wantsSms(branch.organization, data.customerPhone) : false;
   const customerId = await upsertCustomer(branch.id, data.customerPhone, data.customerName);
   // Les RDV restent `scheduled` (hors file) jusqu'à leur heure ; maintainQueue les promeut.
   const ticket = await prisma.ticket.create({
@@ -106,6 +109,7 @@ export const POST = route(async (req) => {
       status: 'scheduled',
       cancelToken: crypto.randomBytes(16).toString('hex'),
       ...(data.locale ? { locale: data.locale } : {}),
+      notifySms,
     },
   });
 

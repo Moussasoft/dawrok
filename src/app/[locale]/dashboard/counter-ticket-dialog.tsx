@@ -8,22 +8,25 @@ import { Button } from '@/components/ui/button';
 import { Input, Label, Select } from '@/components/ui/input';
 import { apiFetch, useErrorMessage } from '@/lib/api-client';
 import { ticketLabel } from '@/lib/format';
+import { SmsOptIn, canText, type SmsChannelOffer } from '@/components/sms-opt-in';
 
 type Props = {
   open: boolean;
   onClose: () => void;
   branchId: string;
   services: { id: string; name: string }[];
+  smsChannel: SmsChannelOffer | null;
 };
 
 // Ticket « comptoir » pour les clients sans smartphone : le numéro créé s'affiche en grand.
-export function CounterTicketDialog({ open, onClose, branchId, services }: Props) {
+export function CounterTicketDialog({ open, onClose, branchId, services, smsChannel }: Props) {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
   const locale = useLocale();
   const errorMessage = useErrorMessage();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [notifySms, setNotifySms] = useState(false);
   const [serviceId, setServiceId] = useState(services[0]?.id ?? '');
   const [saving, setSaving] = useState(false);
   const [created, setCreated] = useState<number | null>(null);
@@ -31,6 +34,7 @@ export function CounterTicketDialog({ open, onClose, branchId, services }: Props
   function reset() {
     setName('');
     setPhone('');
+    setNotifySms(false);
     setCreated(null);
   }
 
@@ -51,6 +55,7 @@ export function CounterTicketDialog({ open, onClose, branchId, services }: Props
         serviceId: serviceId || null,
         // Langue du client inconnue : celle de l'écran du staff.
         locale,
+        notifySms: !!smsChannel && notifySms && canText(phone),
       },
     });
     setSaving(false);
@@ -93,6 +98,9 @@ export function CounterTicketDialog({ open, onClose, branchId, services }: Props
             </Label>
             <Input id="ct-phone" type="tel" inputMode="tel" dir="ltr" value={phone} maxLength={30} onChange={(e) => setPhone(e.target.value)} />
           </div>
+          {smsChannel && (
+            <SmsOptIn channel={smsChannel} phone={phone} checked={notifySms} onChange={setNotifySms} label={t('counterSmsConsent')} />
+          )}
           {services.length > 1 && (
             <div className="space-y-1.5">
               <Label htmlFor="ct-service">{t('service')}</Label>

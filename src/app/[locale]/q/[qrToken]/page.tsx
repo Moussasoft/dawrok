@@ -4,6 +4,7 @@ import { Lock, Clock } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { getSnapshot } from '@/lib/queue';
 import { getPlanLimits } from '@/lib/plans';
+import { smsOfferFor } from '@/lib/sms-notify';
 import { formatDateTime, weekdayName } from '@/lib/format';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { LegalLinks } from '@/components/legal-links';
@@ -64,6 +65,7 @@ export default async function PublicQueuePage({ params }: { params: Promise<{ qr
   }
 
   const allowBooking = !suspended && branch.allowBooking && limits.allowBooking;
+  const smsChannel = suspended ? null : await smsOfferFor(branch.organization);
 
   return (
     <main className="gradient-mesh flex min-h-screen flex-col">
@@ -96,6 +98,7 @@ export default async function PublicQueuePage({ params }: { params: Promise<{ qr
             timezone={snap.timezone}
             canTakeTicket={!closedNotice}
             allowBooking={allowBooking}
+            smsChannel={smsChannel}
             services={branch.services.map((s) => ({ id: s.id, name: s.name, durationMin: s.avgDurationMin }))}
           />
         )}

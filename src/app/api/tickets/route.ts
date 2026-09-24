@@ -7,6 +7,7 @@ import { clientIp, enforceRateLimit } from '@/lib/rate-limit';
 import { isOpenAt, nextOpening, parseOpenHours } from '@/lib/opening-hours';
 import { DEFAULT_TIMEZONE } from '@/lib/time';
 import { routing } from '@/i18n/routing';
+import { wantsSms } from '@/lib/sms-notify';
 
 const schema = z.object({
   qrToken: z.string().min(4).max(64),
@@ -14,6 +15,7 @@ const schema = z.object({
   customerPhone: z.string().trim().max(30).optional().nullable(),
   serviceId: z.string().max(64).optional().nullable(),
   locale: z.enum(routing.locales).optional(),
+  notifySms: z.boolean().optional(),
 });
 
 // Endpoint public — le client scanne le QR et prend son ticket.
@@ -48,6 +50,8 @@ export const POST = route(async (req) => {
   // son code (donc le prénom et l'annulation) à quiconque connaissait ce numéro.
   // Le navigateur du client mémorise son propre ticket pour le retrouver.
   const phone = data.customerPhone || null;
+  // SMS : seulement si l'organisation le propose et que le numéro peut le recevoir.
+  const notifySms = data.notifySms ? await wantsSms(branch.organization, phone) : false;
 
   const serviceId = branch.services.some((s) => s.id === data.serviceId)
     ? data.serviceId!
@@ -62,6 +66,7 @@ export const POST = route(async (req) => {
     customerPhone: phone,
     serviceId,
     locale: data.locale,
+    notifySms,
   });
   return NextResponse.json({ ok: true, publicCode: ticket.publicCode, number: ticket.number });
 });

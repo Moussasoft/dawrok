@@ -5,6 +5,8 @@ import { hasRole } from '@/lib/roles';
 import { countOrgResources, getOrgLimits } from '@/lib/plans';
 import { parseOpenHours } from '@/lib/opening-hours';
 import { redirectTo } from '@/i18n/server';
+import { smsUsage } from '@/lib/sms-notify';
+import { smsProviders } from '@/lib/sms';
 import { SettingsClient } from './settings-client';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +18,7 @@ export async function generateMetadata() {
 
 export default async function SettingsPage() {
   const auth = await requireOrgPageRole('manager');
-  const [org, limits, usage] = await Promise.all([
+  const [org, limits, usage, smsUsed] = await Promise.all([
     prisma.organization.findUnique({
       where: { id: auth.orgId },
       include: {
@@ -28,6 +30,7 @@ export default async function SettingsPage() {
     }),
     getOrgLimits(auth.orgId),
     countOrgResources(auth.orgId),
+    smsUsage(auth.orgId),
   ]);
   if (!org) return redirectTo('/login');
 
@@ -46,6 +49,7 @@ export default async function SettingsPage() {
       }}
       limits={limits}
       usage={usage}
+      sms={{ enabled: org.smsEnabled, channel: org.smsChannel, quota: limits.smsQuota, used: smsUsed, providers: smsProviders() }}
       branches={org.branches.map((b) => ({
         id: b.id,
         name: b.name,

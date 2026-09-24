@@ -16,6 +16,7 @@ import type { OpenHours } from '@/lib/opening-hours';
 import { cn } from '@/lib/utils';
 import { LogoUploader } from './logo-uploader';
 import { PrivacyCard } from './privacy-card';
+import { SmsCard, type SmsSettings } from './sms-card';
 
 type Service = { id: string; name: string; avgDurationMin: number; active: boolean };
 type Employee = { id: string; name: string; active: boolean };
@@ -57,6 +58,7 @@ export function SettingsClient({
   org,
   limits,
   usage,
+  sms,
   branches,
 }: {
   /** Seul le propriétaire modifie l'organisation (nom, secteur, marque). */
@@ -64,6 +66,7 @@ export function SettingsClient({
   org: Org;
   limits: Limits;
   usage: Usage;
+  sms: SmsSettings;
   branches: Branch[];
 }) {
   const t = useTranslations('settings');
@@ -77,6 +80,7 @@ export function SettingsClient({
       <p className="mb-6 text-muted-foreground">{t('subtitle')}</p>
 
       <OrgCard org={org} limits={limits} usage={usage} canEdit={canEditOrg} onRefresh={refresh} />
+      <SmsCard sms={sms} canEdit={canEditOrg} onRefresh={refresh} />
       <PrivacyCard retentionDays={org.retentionDays} canEdit={canEditOrg} onRefresh={refresh} />
 
       <h2 className="mb-3 mt-8 flex items-center gap-2 text-lg font-semibold">

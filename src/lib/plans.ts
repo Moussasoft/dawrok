@@ -15,13 +15,15 @@ export type PlanLimits = {
   allowBooking: boolean;
   allowAnalytics: boolean;
   allowCustomBrand: boolean;
+  /** SMS / WhatsApp inclus par mois (0 = non inclus). */
+  smsQuota: number;
 };
 
 export const PLAN_DEFAULTS: PlanLimits[] = [
-  { plan: 'free', price: 0, maxBranches: 1, maxEmployees: 3, maxServices: 5, allowBooking: false, allowAnalytics: false, allowCustomBrand: false },
-  { plan: 'starter', price: 19, maxBranches: 2, maxEmployees: 10, maxServices: 15, allowBooking: true, allowAnalytics: false, allowCustomBrand: false },
-  { plan: 'pro', price: 49, maxBranches: 5, maxEmployees: 30, maxServices: 50, allowBooking: true, allowAnalytics: true, allowCustomBrand: false },
-  { plan: 'business', price: 129, maxBranches: 20, maxEmployees: 200, maxServices: 200, allowBooking: true, allowAnalytics: true, allowCustomBrand: true },
+  { plan: 'free', price: 0, maxBranches: 1, maxEmployees: 3, maxServices: 5, allowBooking: false, allowAnalytics: false, allowCustomBrand: false, smsQuota: 0 },
+  { plan: 'starter', price: 19, maxBranches: 2, maxEmployees: 10, maxServices: 15, allowBooking: true, allowAnalytics: false, allowCustomBrand: false, smsQuota: 0 },
+  { plan: 'pro', price: 49, maxBranches: 5, maxEmployees: 30, maxServices: 50, allowBooking: true, allowAnalytics: true, allowCustomBrand: false, smsQuota: 100 },
+  { plan: 'business', price: 129, maxBranches: 20, maxEmployees: 200, maxServices: 200, allowBooking: true, allowAnalytics: true, allowCustomBrand: true, smsQuota: 500 },
 ];
 
 /** Devise d'affichage des prix des plans. */

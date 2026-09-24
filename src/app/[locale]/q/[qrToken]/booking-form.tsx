@@ -11,11 +11,22 @@ import { dayKeyParts, formatTime } from '@/lib/format';
 import { addDaysToKey, dayKey } from '@/lib/time';
 import { cn } from '@/lib/utils';
 import { rememberTicket } from '@/lib/my-ticket';
+import { SmsOptIn, canText, type SmsChannelOffer } from '@/components/sms-opt-in';
 
 type Service = { id: string; name: string; durationMin: number };
 type Slot = { time: string; available: boolean };
 
-export function BookingForm({ qrToken, services, timezone }: { qrToken: string; services: Service[]; timezone: string }) {
+export function BookingForm({
+  qrToken,
+  services,
+  timezone,
+  smsChannel,
+}: {
+  qrToken: string;
+  services: Service[];
+  timezone: string;
+  smsChannel: SmsChannelOffer | null;
+}) {
   const t = useTranslations('publicQueue');
   const tc = useTranslations('common');
   const locale = useLocale();
@@ -30,6 +41,7 @@ export function BookingForm({ qrToken, services, timezone }: { qrToken: string; 
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [notifySms, setNotifySms] = useState(false);
   const [serviceId, setServiceId] = useState<string>(services[0]?.id ?? '');
   const [date, setDate] = useState(days[0]);
   const [slot, setSlot] = useState<string | null>(null);
@@ -62,7 +74,15 @@ export function BookingForm({ qrToken, services, timezone }: { qrToken: string; 
     setSubmitting(true);
     const res = await apiFetch<{ publicCode: string }>('/api/appointments', {
       method: 'POST',
-      json: { qrToken, customerName: name.trim(), customerPhone: phone.trim(), serviceId: serviceId || null, scheduledFor: slot, locale },
+      json: {
+        qrToken,
+        customerName: name.trim(),
+        customerPhone: phone.trim(),
+        serviceId: serviceId || null,
+        scheduledFor: slot,
+        locale,
+        notifySms: !!smsChannel && notifySms && canText(phone),
+      },
     });
     if (!res.ok) {
       setSubmitting(false);
@@ -187,6 +207,7 @@ export function BookingForm({ qrToken, services, timezone }: { qrToken: string; 
           maxLength={30}
         />
       </div>
+      {smsChannel && <SmsOptIn channel={smsChannel} phone={phone} checked={notifySms} onChange={setNotifySms} />}
 
       <Button type="submit" size="xl" className="w-full" disabled={submitting || !slot}>
         <Calendar className="h-5 w-5" />

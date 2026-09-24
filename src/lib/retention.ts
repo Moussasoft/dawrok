@@ -60,7 +60,8 @@ export async function purgeExpiredData(now = new Date()): Promise<PurgeReport> {
   });
   report.auditDeleted += orphanLogs.count;
 
-  // Nettoyage technique : liens expirés ou utilisés, compteurs anciens, abonnements push orphelins.
+  // Nettoyage technique : liens expirés ou utilisés, compteurs anciens, abonnements push orphelins,
+  // journal des SMS (sans numéro) gardé 13 mois pour la facturation.
   const monthAgo = new Date(now.getTime() - 30 * DAY_MS);
   const technical = await prisma.$transaction([
     prisma.passwordResetToken.deleteMany({ where: { OR: [{ usedAt: { not: null } }, { expiresAt: { lt: now } }] } }),
@@ -69,6 +70,7 @@ export async function purgeExpiredData(now = new Date()): Promise<PurgeReport> {
     prisma.pushSubscription.deleteMany({
       where: { createdAt: { lt: new Date(now.getTime() - DAY_MS) }, ticket: { status: { in: [...TERMINAL_STATUSES] } } },
     }),
+    prisma.smsMessage.deleteMany({ where: { createdAt: { lt: new Date(now.getTime() - 400 * DAY_MS) } } }),
   ]);
   report.technicalDeleted = technical.reduce((sum, r) => sum + r.count, 0);
 

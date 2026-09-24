@@ -20,6 +20,7 @@ const planSchema = z.object({
   allowBooking: z.boolean(),
   allowAnalytics: z.boolean(),
   allowCustomBrand: z.boolean(),
+  smsQuota: z.number().int().min(0).max(1_000_000),
 });
 
 export const PATCH = route(async (req) => {

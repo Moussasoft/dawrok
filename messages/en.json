@@ -180,7 +180,9 @@
     "feedback_closed": "This visit can no longer be rated.",
     "feedback_exists": "You have already given your feedback.",
     "terms_required": "Please accept the terms of use and the privacy policy.",
-    "customer_has_active_ticket": "This customer has a ticket or appointment in progress: complete or cancel it first."
+    "customer_has_active_ticket": "This customer has a ticket or appointment in progress: complete or cancel it first.",
+    "invalid_phone": "This number cannot receive text messages: enter a mobile number.",
+    "plan_feature_sms": "Text messages are not included in your plan."
   },
   "status": {
     "scheduled": "Upcoming appointment",
@@ -283,7 +285,8 @@
     "ticketCreated": "Ticket No. {number} created",
     "employees": "{count, plural, =0 {No active employee — add some in settings} one {# active employee} other {# active employees}}",
     "eta": "~{minutes} min",
-    "since": "for {minutes} min"
+    "since": "for {minutes} min",
+    "counterSmsConsent": "Text this customer (with their consent)"
   },
   "settings": {
     "title": "Settings",
@@ -346,7 +349,15 @@
     "retentionOption": "{days} days",
     "retentionHint": "After this period, tickets are anonymized, comments erased and inactive customer records deleted (Law 09-08). Automatic purge every day.",
     "retentionSaved": "Retention period saved",
-    "privacyPolicyLink": "Privacy policy"
+    "privacyPolicyLink": "Privacy policy",
+    "smsTitle": "SMS / WhatsApp notifications",
+    "smsDesc": "Customers who ask for it get a message when their turn is coming, then when they are called — useful without a recent smartphone or notifications.",
+    "smsNotIncluded": "Not included in your plan.",
+    "smsNotConfigured": "The SMS service is not configured on the platform yet.",
+    "smsChannel": "Channel",
+    "smsChannelSms": "SMS",
+    "smsChannelWhatsapp": "WhatsApp",
+    "smsUsage": "Messages sent this month"
   },
   "analytics": {
     "title": "Analytics",
@@ -450,7 +461,11 @@
     "cancel": "Cancel",
     "myTicket": "You already have a ticket",
     "viewMyTicket": "View my ticket →",
-    "privacyNotice": "Your details are only used to manage your visit to {org}."
+    "privacyNotice": "Your details are only used to manage your visit to {org}.",
+    "notifySms": "Text me",
+    "notifyWhatsapp": "Notify me on WhatsApp",
+    "notifySmsHint": "A message when your turn is coming, then when you are called.",
+    "notifySmsNeedPhone": "Enter a mobile number to enable this option."
   },
   "ticket": {
     "yourTicket": "Your ticket",
@@ -610,7 +625,8 @@
       "customer_delete": "Customer record deleted",
       "customer_export": "Customer data exported",
       "retention_purge": "Expired data purged",
-      "org_retention": "Retention period changed"
+      "org_retention": "Retention period changed",
+      "org_sms": "SMS notifications changed"
     },
     "settingsSubtitle": "Manage your account and the platform configuration",
     "tabProfile": "Profile",
@@ -661,7 +677,8 @@
     "notifOverLimit": "Limit reached",
     "notifOverLimitDesc": "Alert when an organization reaches its plan limits",
     "notifDaily": "Daily report",
-    "notifDailyDesc": "Daily activity summary"
+    "notifDailyDesc": "Daily activity summary",
+    "smsQuota": "SMS / WhatsApp per month"
   },
   "push": {
     "calledTitle": "It's your turn! No. {number}",
@@ -910,6 +927,10 @@
         "p1": "{company} — {email}"
       }
     }
+  },
+  "sms": {
+    "called": "{org}: it’s your turn! Ticket {number}, please go to: {where}.",
+    "soon": "{org}: your turn is coming ({count, plural, =0 {you are next} one {# person ahead of you} other {# people ahead of you}}). Ticket {number}: {url}"
   },
   "language": {
     "fr": "Français",

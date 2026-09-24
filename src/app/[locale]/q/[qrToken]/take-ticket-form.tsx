@@ -8,10 +8,11 @@ import { Input, Label } from '@/components/ui/input';
 import { apiFetch, useErrorMessage } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 import { rememberTicket } from '@/lib/my-ticket';
+import { SmsOptIn, canText, type SmsChannelOffer } from '@/components/sms-opt-in';
 
 type Service = { id: string; name: string; durationMin: number };
 
-export function TakeTicketForm({ qrToken, services }: { qrToken: string; services: Service[] }) {
+export function TakeTicketForm({ qrToken, services, smsChannel }: { qrToken: string; services: Service[]; smsChannel: SmsChannelOffer | null }) {
   const t = useTranslations('publicQueue');
   const tc = useTranslations('common');
   const router = useRouter();
@@ -19,6 +20,7 @@ export function TakeTicketForm({ qrToken, services }: { qrToken: string; service
   const errorMessage = useErrorMessage();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
+  const [notifySms, setNotifySms] = useState(false);
   const [serviceId, setServiceId] = useState<string | null>(services[0]?.id ?? null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,7 +31,14 @@ export function TakeTicketForm({ qrToken, services }: { qrToken: string; service
     setError(null);
     const res = await apiFetch<{ publicCode: string }>('/api/tickets', {
       method: 'POST',
-      json: { qrToken, customerName: name.trim(), customerPhone: phone.trim() || null, serviceId, locale },
+      json: {
+        qrToken,
+        customerName: name.trim(),
+        customerPhone: phone.trim() || null,
+        serviceId,
+        locale,
+        notifySms: !!smsChannel && notifySms && canText(phone),
+      },
     });
     if (!res.ok) {
       setLoading(false);
@@ -61,6 +70,7 @@ export function TakeTicketForm({ qrToken, services }: { qrToken: string; service
           maxLength={30}
         />
       </div>
+      {smsChannel && <SmsOptIn channel={smsChannel} phone={phone} checked={notifySms} onChange={setNotifySms} />}
       {services.length > 1 && (
         <fieldset className="space-y-1.5">
           <legend className="mb-1.5 text-sm font-medium">{t('chooseService')}</legend>

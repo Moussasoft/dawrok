@@ -263,6 +263,9 @@ class QueueHub {
         import('./push')
           .then((m) => m.notifyTransitions(snap, transitions))
           .catch((e) => console.error('[push] échec', e));
+        import('./sms-notify')
+          .then((m) => m.notifySmsTransitions(snap, transitions))
+          .catch((e) => console.error('[sms] échec', e));
       }
       return snap;
     })();

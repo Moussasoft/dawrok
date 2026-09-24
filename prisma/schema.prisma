@@ -22,6 +22,9 @@ model Organization {
   suspended  Boolean  @default(false)
   // Loi 09-08 : au-delà, tickets anonymisés et fiches clients inactives supprimées (purge quotidienne).
   retentionDays Int   @default(365)
+  // Prévenir par SMS ou WhatsApp les clients qui l'ont demandé (dans le quota de l'offre).
+  smsEnabled Boolean  @default(false)
+  smsChannel String   @default("sms") // sms | whatsapp
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -29,6 +32,7 @@ model Organization {
   users       User[]
   invitations Invitation[]
   logo        OrgLogo?
+  smsMessages SmsMessage[]
 }
 
 // Logo redimensionné (WebP), stocké en base (portable, sans disque partagé) mais dans sa propre
@@ -172,6 +176,9 @@ model Ticket {
   scheduledFor DateTime? // for advance bookings
   cancelToken  String?  @unique             // token allowing public cancel via /api/tickets/cancel/[token]
   locale       String   @default("ar")      // langue du client (SMS, e-mails)
+  notifySms    Boolean  @default(false)     // consentement : prévenir par SMS / WhatsApp
+  smsSoonAt    DateTime?                    // dédoublonnage des SMS « bientôt votre tour »
+  smsCalledAt  DateTime?                    // … et « c'est votre tour » (premier appel seulement)
 
   createdAt    DateTime @default(now())
   calledAt     DateTime?
@@ -189,6 +196,23 @@ model Ticket {
   @@index([branchId, createdAt])
   @@index([branchId, scheduledFor])
   @@index([customerId])
+}
+
+// SMS / WhatsApp envoyés : quota mensuel de l'offre et suivi des coûts (sans le numéro du client).
+model SmsMessage {
+  id         String   @id @default(cuid())
+  orgId      String
+  ticketId   String?
+  channel    String   // sms | whatsapp
+  kind       String   // soon | called
+  status     String   // sent | failed
+  providerId String?
+  error      String?
+  createdAt  DateTime @default(now())
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
 }
 
 // Numérotation atomique : un compteur par agence et par jour local (fuseau de l'agence).
@@ -292,6 +316,7 @@ model PlanConfig {
   allowBooking     Boolean  @default(false)
   allowAnalytics   Boolean  @default(false)
   allowCustomBrand Boolean  @default(false)
+  smsQuota         Int      @default(0)     // SMS / WhatsApp inclus par mois (0 = non inclus)
   updatedAt        DateTime @updatedAt
 }
 

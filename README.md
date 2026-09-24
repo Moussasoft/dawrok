@@ -36,6 +36,7 @@ Ouvrez :
 | `TRUSTED_PROXY_HOPS` | non | Nombre de proxys de confiance devant l'app (défaut 1) pour lire l'IP réelle du client (rate limiting). |
 | `TRUST_X_REAL_IP` | non | `1` pour lire `X-Real-IP` — seulement si le proxy l'écrase toujours (sinon falsifiable). |
 | `LEGAL_COMPANY_NAME`, `LEGAL_CONTACT_EMAIL`, `LEGAL_ADDRESS`, `CNDP_DECLARATION` | **oui en prod** | Éditeur, contact, adresse et n° de déclaration CNDP affichés dans `/privacy` et `/terms`. |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` ou `TWILIO_MESSAGING_SERVICE_SID`, `TWILIO_WHATSAPP_FROM` | non | SMS / WhatsApp aux clients qui le demandent (« bientôt votre tour » puis appel), dans le quota mensuel de l'offre. |
 | `RETENTION_SCHEDULER`, `CRON_SECRET` | non | Purge quotidienne des données expirées : planifiée dans le serveur Node par défaut ; en serverless, `RETENTION_SCHEDULER=off` et un cron sur `GET /api/cron/retention` (`Authorization: Bearer $CRON_SECRET`). |
 
 ## 🧪 Qualité
@@ -95,6 +96,7 @@ src/
 - **Réservation** : créneaux calculés dans le fuseau de l'agence et ses horaires d'ouverture, capacité = employés actifs, chevauchements pris en compte, validation côté serveur.
 - **Horaires d'ouverture** : optionnels. S'ils sont définis, les tickets QR sont refusés hors horaires (le staff peut toujours créer un ticket comptoir).
 - **Offres** : limites de succursales / employés / prestations et fonctionnalités (réservation, analytics, couleur de marque) éditables par le superadmin et appliquées par l'API.
+- **SMS / WhatsApp** : proposés au client (case à cocher, numéro mobile requis) si l'organisation les a activés et que son offre inclut un quota (Pro 100, Business 500 par mois par défaut, modifiable par le superadmin). Deux messages au plus par ticket : « bientôt votre tour » puis premier appel — dédoublonnés en base, journalisés sans le numéro.
 - **Équipe** : rôles `owner` (tout : équipe, facturation, organisation), `manager` (file, analytics, clients, réglages des agences) et `staff` (file uniquement). Invitations par lien à usage unique (7 jours), envoyé par e-mail si un fournisseur est configuré, sinon partageable (copie, WhatsApp).
 
 ## 🛡 Données personnelles (loi 09-08)
@@ -116,6 +118,6 @@ src/
 2. **Plusieurs instances** : le bus temps réel, le cache d'instantanés et le rate limiting sont en mémoire → Redis (Upstash) pub/sub et rate limit.
 3. Secrets : `JWT_SECRET`, clés VAPID, `NEXT_PUBLIC_APP_URL` en HTTPS (obligatoire pour le push).
 4. Supervision : brancher `/api/health` sur un moniteur, ajouter Sentry.
-5. Prochaines briques : e-mails (réinitialisation de mot de passe, alertes superadmin), SMS/WhatsApp, paiement des abonnements.
+5. Prochaines briques : alertes e-mail superadmin, paiement des abonnements.
 
 Voir [AUDIT.md](AUDIT.md) pour l'audit complet et ce qui reste à faire.

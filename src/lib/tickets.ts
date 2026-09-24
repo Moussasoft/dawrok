@@ -22,6 +22,8 @@ export async function createTicket(input: {
   employeeId?: string | null;
   /** Langue du client (SMS, e-mails) ; défaut : langue par défaut de l'app. */
   locale?: string;
+  /** Consentement du client pour être prévenu par SMS / WhatsApp. */
+  notifySms?: boolean;
 }) {
   const customerId = await upsertCustomer(input.branchId, input.customerPhone, input.customerName);
   const number = await nextTicketNumber(input.branchId, input.timeZone);
@@ -36,6 +38,7 @@ export async function createTicket(input: {
       employeeId: input.employeeId ?? null,
       cancelToken: crypto.randomBytes(16).toString('hex'),
       ...(input.locale ? { locale: input.locale } : {}),
+      notifySms: input.notifySms ?? false,
     },
   });
   await publishBranchUpdate(input.branchId);
