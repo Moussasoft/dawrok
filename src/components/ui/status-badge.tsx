@@ -1,6 +1,8 @@
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 const variants: Record<string, string> = {
+  scheduled: 'bg-sky-100 text-sky-800 dark:bg-sky-900/40 dark:text-sky-300',
   waiting: 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300',
   called: 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
   in_progress: 'bg-violet-100 text-violet-800 dark:bg-violet-900/40 dark:text-violet-300',
@@ -9,16 +11,8 @@ const variants: Record<string, string> = {
   cancelled: 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300',
 };
 
-const labels: Record<string, string> = {
-  waiting: 'En attente',
-  called: 'Appelé',
-  in_progress: 'En cours',
-  done: 'Terminé',
-  no_show: 'Absent',
-  cancelled: 'Annulé',
-};
-
 export function StatusBadge({ status, className }: { status: string; className?: string }) {
+  const t = useTranslations('status');
   return (
     <span
       className={cn(
@@ -27,7 +21,7 @@ export function StatusBadge({ status, className }: { status: string; className?:
         className
       )}
     >
-      {labels[status] ?? status}
+      {t.has(status) ? t(status) : status}
     </span>
   );
 }

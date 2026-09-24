@@ -1,102 +1,123 @@
 'use client';
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
+import { Link, useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
-import { Input, Label } from '@/components/ui/input';
+import { Input, Label, Select } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-
-const SECTORS = [
-  { value: 'hairdresser',         tKey: 'hairdresser' },
-  { value: 'doctor',              tKey: 'doctor' },
-  { value: 'vehicle_inspection',  tKey: 'vehicleInspection' },
-  { value: 'bank',                tKey: 'bank' },
-  { value: 'restaurant',          tKey: 'restaurant' },
-  { value: 'other',               tKey: 'other' },
-] as const;
+import { apiFetch, useErrorMessage } from '@/lib/api-client';
+import { SECTORS, SECTOR_I18N_KEY } from '@/lib/sectors';
 
 export default function SignupPage() {
   const router = useRouter();
-  const t = useTranslations();
-  const sectors = SECTORS.map((s) => ({
-    value: s.value,
-    label: t(`sectors.${s.tKey}`),
-  }));
+  const locale = useLocale();
+  const t = useTranslations('signup');
+  const ts = useTranslations('sectors');
+  const errorMessage = useErrorMessage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({
-    orgName: '',
-    sector: 'hairdresser',
-    name: '',
-    email: '',
-    password: '',
-  });
+  const [form, setForm] = useState({ orgName: '', sector: 'hairdresser', name: '', email: '', password: '' });
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const res = await fetch('/api/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
-    const data = await res.json();
-    setLoading(false);
+    // La langue d'inscription sert à nommer les prestations de départ.
+    const res = await apiFetch('/api/auth/signup', { method: 'POST', json: { ...form, locale } });
     if (!res.ok) {
-      setError(data.error || t('signup.error'));
+      setLoading(false);
+      setError(errorMessage(res));
       return;
     }
     router.push('/dashboard');
+    router.refresh();
   }
 
   return (
-    <main className="min-h-screen gradient-mesh flex items-center justify-center p-4">
+    <main className="gradient-mesh flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground mb-2">{t('signup.back')}</Link>
-          <CardTitle className="text-2xl">{t('signup.title')}</CardTitle>
-          <CardDescription>{t('signup.description')}</CardDescription>
+          <Link href="/" className="mb-2 text-sm text-muted-foreground hover:text-foreground">
+            {t('back')}
+          </Link>
+          <CardTitle className="text-2xl">
+            <h1>{t('title')}</h1>
+          </CardTitle>
+          <CardDescription>{t('description')}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={onSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="orgName">{t('signup.orgName')}</Label>
-              <Input id="orgName" placeholder={t('signup.orgNamePlaceholder')} value={form.orgName}
-                onChange={(e) => setForm({ ...form, orgName: e.target.value })} required />
+              <Label htmlFor="orgName">{t('orgName')}</Label>
+              <Input
+                id="orgName"
+                placeholder={t('orgNamePlaceholder')}
+                value={form.orgName}
+                maxLength={100}
+                autoComplete="organization"
+                onChange={(e) => setForm({ ...form, orgName: e.target.value })}
+                required
+              />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="sector">{t('signup.sector')}</Label>
-              <select
-                id="sector"
-                className="flex h-11 w-full rounded-lg border border-input bg-background px-3 py-2 text-base shadow-sm"
-                value={form.sector}
-                onChange={(e) => setForm({ ...form, sector: e.target.value })}
-              >
-                {sectors.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
-              </select>
+              <Label htmlFor="sector">{t('sector')}</Label>
+              <Select id="sector" value={form.sector} onChange={(e) => setForm({ ...form, sector: e.target.value })}>
+                {SECTORS.map((s) => (
+                  <option key={s} value={s}>
+                    {ts(SECTOR_I18N_KEY[s])}
+                  </option>
+                ))}
+              </Select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="name">{t('signup.yourName')}</Label>
-              <Input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+              <Label htmlFor="name">{t('yourName')}</Label>
+              <Input
+                id="name"
+                value={form.name}
+                maxLength={80}
+                autoComplete="name"
+                onChange={(e) => setForm({ ...form, name: e.target.value })}
+                required
+              />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="email">{t('signup.email')}</Label>
-              <Input id="email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} required />
+              <Label htmlFor="email">{t('email')}</Label>
+              <Input
+                id="email"
+                type="email"
+                dir="ltr"
+                autoComplete="email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                required
+              />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">{t('signup.password')}</Label>
-              <Input id="password" type="password" minLength={8} value={form.password}
-                onChange={(e) => setForm({ ...form, password: e.target.value })} required />
-              <p className="text-xs text-muted-foreground">{t('signup.passwordHint')}</p>
+              <Label htmlFor="password">{t('password')}</Label>
+              <Input
+                id="password"
+                type="password"
+                minLength={8}
+                autoComplete="new-password"
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+              />
+              <p className="text-xs text-muted-foreground">{t('passwordHint')}</p>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && (
+              <p role="alert" className="text-sm text-destructive">
+                {error}
+              </p>
+            )}
             <Button type="submit" size="lg" className="w-full" disabled={loading}>
-              {loading ? t('signup.submitting') : t('signup.submit')}
+              {loading ? t('submitting') : t('submit')}
             </Button>
             <p className="text-center text-sm text-muted-foreground">
-              {t('signup.alreadyAccount')} <Link href="/login" className="text-primary hover:underline">{t('signup.loginLink')}</Link>
+              {t('alreadyAccount')}{' '}
+              <Link href="/login" className="text-primary hover:underline">
+                {t('loginLink')}
+              </Link>
             </p>
           </form>
         </CardContent>
