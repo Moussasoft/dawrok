@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { NextRequest } from 'next/server';
 import { ApiError } from './api';
-import { RateLimiter, clientIp, enforceRateLimit } from './rate-limit';
+import { RateLimiter, clientIp, enforceRateLimit, resetRateLimit } from './rate-limit';
 
 const MIN = 60_000;
 const T0 = Date.now();
@@ -108,19 +108,21 @@ describe('clientIp', () => {
 });
 
 describe('enforceRateLimit', () => {
-  it('lève une ApiError 429 avec retryAfter une fois la limite atteinte', () => {
+  it('lève une ApiError 429 avec retryAfter une fois la limite atteinte', async () => {
     const key = `test:${T0}:${Math.random()}`;
-    expect(() => enforceRateLimit(key, 1, MIN)).not.toThrow();
-    let error: unknown;
-    try {
-      enforceRateLimit(key, 1, MIN);
-    } catch (e) {
-      error = e;
-    }
+    await expect(enforceRateLimit(key, 1, MIN)).resolves.toBeUndefined();
+    const error = await enforceRateLimit(key, 1, MIN).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({ status: 429, code: 'rate_limited' });
     const retryAfter = (error as ApiError).extra?.retryAfter as number;
     expect(retryAfter).toBeGreaterThanOrEqual(1);
     expect(retryAfter).toBeLessThanOrEqual(60);
+  });
+
+  it('resetRateLimit libère la clé', async () => {
+    const key = `test:reset:${Math.random()}`;
+    await enforceRateLimit(key, 1, MIN);
+    await resetRateLimit(key);
+    await expect(enforceRateLimit(key, 1, MIN)).resolves.toBeUndefined();
   });
 });

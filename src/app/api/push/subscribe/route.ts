@@ -19,7 +19,7 @@ const postSchema = z.object({
 
 // Le client s'abonne aux notifications de SON ticket (le publicCode fait office de clé).
 export const POST = route(async (req) => {
-  enforceRateLimit(`push:ip:${clientIp(req)}`, 20, 10 * 60_000);
+  await enforceRateLimit(`push:ip:${clientIp(req)}`, 20, 10 * 60_000);
   if (!isPushConfigured()) throw new ApiError(503, 'push_not_configured');
   const { publicCode, subscription, locale } = await parseBody(req, postSchema);
 

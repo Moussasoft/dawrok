@@ -7,7 +7,7 @@ import { clientIp, enforceRateLimit } from '@/lib/rate-limit';
 
 // Annulation par le client depuis sa page de suivi (jeton reçu avec son ticket).
 export const POST = route<{ params: Promise<{ token: string }> }>(async (req, ctx) => {
-  enforceRateLimit(`cancel:ip:${clientIp(req)}`, 20, 10 * 60_000);
+  await enforceRateLimit(`cancel:ip:${clientIp(req)}`, 20, 10 * 60_000);
   const { token } = await ctx.params;
   if (!/^[a-f0-9]{32}$/.test(token)) throw new ApiError(400, 'invalid_token');
 

@@ -77,7 +77,7 @@ const postSchema = z.object({
 
 // Endpoint public — réserver un rendez-vous.
 export const POST = route(async (req) => {
-  enforceRateLimit(`booking:ip:${clientIp(req)}`, 15, 60 * 60_000);
+  await enforceRateLimit(`booking:ip:${clientIp(req)}`, 15, 60 * 60_000);
   const data = await parseBody(req, postSchema);
   const branch = await loadBookableBranch(data.qrToken);
   const timeZone = branch.timezone || DEFAULT_TIMEZONE;
@@ -131,7 +131,7 @@ export const POST = route(async (req) => {
 
 // Créneaux d'un jour (AAAA-MM-JJ, jour local de l'agence).
 export const GET = route(async (req) => {
-  enforceRateLimit(`slots:ip:${clientIp(req)}`, 120, 60_000);
+  await enforceRateLimit(`slots:ip:${clientIp(req)}`, 120, 60_000);
   const qrToken = req.nextUrl.searchParams.get('qrToken');
   const date = req.nextUrl.searchParams.get('date');
   const serviceId = req.nextUrl.searchParams.get('serviceId');

@@ -19,7 +19,7 @@ const postSchema = z.object({
 
 // Le client note son passage depuis sa page de suivi (le publicCode fait office de clé) : un avis par ticket.
 export const POST = route(async (req) => {
-  enforceRateLimit(`feedback:ip:${clientIp(req)}`, 10, 10 * 60_000);
+  await enforceRateLimit(`feedback:ip:${clientIp(req)}`, 10, 10 * 60_000);
   const { publicCode, rating, comment } = await parseBody(req, postSchema);
 
   const ticket = await prisma.ticket.findUnique({

@@ -17,7 +17,7 @@ const schema = z.object({
 // l'appareil courant reçoit une nouvelle session.
 export const POST = route(async (req) => {
   const auth = await requireAuth();
-  enforceRateLimit(`password:${auth.actorId}`, 10, 15 * 60_000);
+  await enforceRateLimit(`password:${auth.actorId}`, 10, 15 * 60_000);
   const { currentPassword, newPassword } = await parseBody(req, schema);
 
   const user = await prisma.user.findUnique({ where: { id: auth.actorId } });

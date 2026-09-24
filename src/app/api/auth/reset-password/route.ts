@@ -14,7 +14,7 @@ const schema = z.object({
 });
 
 export const POST = route(async (req) => {
-  enforceRateLimit(`reset:ip:${clientIp(req)}`, 20, 15 * 60_000);
+  await enforceRateLimit(`reset:ip:${clientIp(req)}`, 20, 15 * 60_000);
   const { token, password } = await parseBody(req, schema);
 
   const record = await prisma.passwordResetToken.findUnique({

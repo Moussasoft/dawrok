@@ -39,6 +39,7 @@ Ouvrez :
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` ou `TWILIO_MESSAGING_SERVICE_SID`, `TWILIO_WHATSAPP_FROM` | non | SMS / WhatsApp aux clients qui le demandent (« bientôt votre tour » puis appel), dans le quota mensuel de l'offre. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_STARTER` / `_PRO` / `_BUSINESS` | non | Abonnements en ligne (Checkout, portail client, webhook `/api/billing/webhook`). Sans Stripe, la page *Abonnement* propose de contacter l'équipe. |
 | `SUPPORT_WHATSAPP`, `SUPPORT_EMAIL` | non | Contact affiché pour les offres « sur demande » (sans prix Stripe). |
+| `REDIS_URL` | si plusieurs instances | Redis partage entre instances le temps réel (instantanés de file), la limitation de débit et le dédoublonnage des notifications ; repli en mémoire s'il ne répond pas. |
 | `RETENTION_SCHEDULER`, `CRON_SECRET` | non | Purge quotidienne des données expirées : planifiée dans le serveur Node par défaut ; en serverless, `RETENTION_SCHEDULER=off` et un cron sur `GET /api/cron/retention` (`Authorization: Bearer $CRON_SECRET`). |
 
 ## 🧪 Qualité
@@ -118,7 +119,7 @@ src/
 ## 🌍 Vers la production
 
 1. **PostgreSQL** (Neon, Supabase…) : `provider = "postgresql"` dans `schema.prisma`, puis passer à `prisma migrate`.
-2. **Plusieurs instances** : le bus temps réel, le cache d'instantanés et le rate limiting sont en mémoire → Redis (Upstash) pub/sub et rate limit.
+2. **Plusieurs instances** : définir `REDIS_URL` (Upstash, Redis Cloud…) — le temps réel, la limitation de débit et le dédoublonnage des notifications sont alors partagés.
 3. Secrets : `JWT_SECRET`, clés VAPID, `NEXT_PUBLIC_APP_URL` en HTTPS (obligatoire pour le push).
 4. Supervision : brancher `/api/health` sur un moniteur, ajouter Sentry.
 5. Prochaines briques : alertes e-mail superadmin, paiement CMI (cartes marocaines).

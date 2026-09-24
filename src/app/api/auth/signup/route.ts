@@ -22,7 +22,7 @@ const schema = z.object({
 });
 
 export const POST = route(async (req) => {
-  enforceRateLimit(`signup:ip:${clientIp(req)}`, 5, 60 * 60_000);
+  await enforceRateLimit(`signup:ip:${clientIp(req)}`, 5, 60 * 60_000);
   const { orgName, sector, name, email: rawEmail, password, locale, acceptTerms } = await parseBody(req, schema);
   if (!acceptTerms) throw new ApiError(400, 'terms_required');
   const email = rawEmail.toLowerCase();

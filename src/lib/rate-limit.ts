@@ -1,7 +1,8 @@
-// Limitation de débit en mémoire (fenêtre glissante).
-// Suffisant pour une instance unique ; en multi-instance, remplacer par Redis (Upstash Ratelimit).
+// Limitation de débit (fenêtre glissante) : partagée via Redis si REDIS_URL est défini
+// (plusieurs instances), sinon en mémoire — et repli en mémoire si Redis ne répond pas.
 import type { NextRequest } from 'next/server';
 import { ApiError } from './api';
+import { readyRedis, redisRateLimitHit } from './redis';
 
 // Chaque clé mémorise sa propre fenêtre : la purge ne peut pas effacer trop tôt une clé
 // à longue fenêtre à cause d'un appel à fenêtre courte.
@@ -61,10 +62,28 @@ export function clientIp(req: NextRequest): string {
   return 'unknown';
 }
 
+async function hit(key: string, limit: number, windowMs: number): Promise<{ ok: boolean; retryAfterSec: number }> {
+  const r = readyRedis();
+  if (r) {
+    try {
+      return await redisRateLimitHit(r.cmd, key, limit, windowMs);
+    } catch (e) {
+      console.error('[rate-limit] Redis indisponible, limite locale', (e as Error).message);
+    }
+  }
+  return limiter.hit(key, limit, windowMs);
+}
+
 /** Lève une ApiError 429 si la limite est atteinte. */
-export function enforceRateLimit(key: string, limit: number, windowMs: number) {
-  const res = limiter.hit(key, limit, windowMs);
+export async function enforceRateLimit(key: string, limit: number, windowMs: number): Promise<void> {
+  const res = await hit(key, limit, windowMs);
   if (!res.ok) throw new ApiError(429, 'rate_limited', { retryAfter: res.retryAfterSec });
+}
+
+/** Efface le compteur d'une clé (ex. après une connexion réussie). */
+export async function resetRateLimit(key: string): Promise<void> {
+  limiter.reset(key);
+  await readyRedis()?.cmd.del(`rl:${key}`).catch(() => undefined);
 }
 
 export { RateLimiter };

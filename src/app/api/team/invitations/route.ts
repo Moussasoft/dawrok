@@ -25,7 +25,7 @@ const schema = z.object({
 // même sans e-mail configuré) et envoyé par e-mail quand un fournisseur est configuré.
 export const POST = route(async (req) => {
   const auth = await requireOrgRole('owner');
-  enforceRateLimit(`invite:${auth.orgId}`, 30, 60 * 60_000);
+  await enforceRateLimit(`invite:${auth.orgId}`, 30, 60 * 60_000);
   const { email, role, locale } = await parseBody(req, schema);
 
   if (await prisma.user.findUnique({ where: { email } })) throw new ApiError(409, 'email_taken');

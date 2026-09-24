@@ -14,6 +14,7 @@ import { DEFAULT_TIMEZONE, getDayWindow } from './time';
 import { isOpenAt, nextOpening, parseOpenHours } from './opening-hours';
 import { ACTIVE_STATUSES, TERMINAL_STATUSES } from './ticket-status';
 import { isFeedbackOpen } from './feedback';
+import { INSTANCE_ID, readyRedis, redis, type RedisClients } from './redis';
 
 export { ACTIVE_STATUSES };
 
@@ -216,18 +217,65 @@ export async function buildSnapshot(branchId: string): Promise<DashboardSnapshot
 // ─── Hub temps réel ──────────────────────────────────────────────────────────
 // Un seul instantané par agence, partagé par toutes les connexions SSE (au lieu d'une
 // reconstruction par client), rafraîchi toutes les 30 s tant que quelqu'un écoute.
-// En mémoire : pour plusieurs instances, remplacer le bus par Redis pub/sub.
+// Plusieurs instances (REDIS_URL) : chaque instantané construit est publié sur Redis ; les autres
+// instances le mettent en cache et le transmettent à leurs propres connexions, sans le reconstruire.
 
 type Listener = (snap: DashboardSnapshot) => void;
 const REFRESH_MS = 30_000;
 const FRESH_MS = 10_000;
+export const REMOTE_CHANNEL = 'daourak:queue';
 
-class QueueHub {
+/** Publie un instantané pour les autres instances (rien si Redis est injoignable : elles se rafraîchissent seules). */
+export function broadcastSnapshot(snap: DashboardSnapshot, clients = readyRedis(), origin = INSTANCE_ID): void {
+  if (!clients) return;
+  clients.cmd
+    .publish(REMOTE_CHANNEL, JSON.stringify({ origin, snap }))
+    .catch((e: Error) => console.error('[redis] diffusion échouée', e.message));
+}
+
+/** Reçoit les instantanés des autres instances (les siens sont ignorés). */
+export function attachRemote(hub: QueueHub, clients: RedisClients, self = INSTANCE_ID): void {
+  const subscribe = () => {
+    clients.sub.subscribe(REMOTE_CHANNEL).catch(() => undefined); // erreur déjà journalisée par le client
+  };
+  subscribe();
+  // Redis indisponible au démarrage puis revenu : on (ré)active l'abonnement.
+  clients.sub.on('ready', subscribe);
+  clients.sub.on('message', (channel: string, message: string) => {
+    if (channel !== REMOTE_CHANNEL) return;
+    try {
+      const { origin, snap } = JSON.parse(message) as { origin: string; snap: DashboardSnapshot };
+      if (origin !== self) hub.receive(snap);
+    } catch {
+      /* message illisible : ignoré */
+    }
+  });
+}
+
+export class QueueHub {
   private snapshots = new Map<string, DashboardSnapshot>();
   private inflight = new Map<string, Promise<DashboardSnapshot>>();
   private queued = new Map<string, Promise<DashboardSnapshot>>();
   private timers = new Map<string, ReturnType<typeof setInterval>>();
   private listenerCount = new Map<string, number>();
+  private remoteAttached = false;
+
+  /** Abonnement Redis au premier usage (jamais à l'import : pas de connexion pendant le build). */
+  private ensureRemote() {
+    if (this.remoteAttached) return;
+    this.remoteAttached = true;
+    const clients = redis();
+    if (clients) attachRemote(this, clients);
+  }
+
+  /** Instantané construit par une autre instance : mis en cache et diffusé localement s'il est plus récent. */
+  receive(snap: DashboardSnapshot): void {
+    const cached = this.snapshots.get(snap.branchId);
+    if (!cached && !this.listenerCount.has(snap.branchId)) return; // personne ne suit cette agence ici
+    if (cached && Date.parse(cached.updatedAt) >= Date.parse(snap.updatedAt)) return;
+    this.snapshots.set(snap.branchId, snap);
+    bus.publish(channels.branch(snap.branchId), snap);
+  }
 
   async get(branchId: string): Promise<DashboardSnapshot> {
     const cached = this.snapshots.get(branchId);
@@ -253,11 +301,13 @@ class QueueHub {
   }
 
   private async run(branchId: string): Promise<DashboardSnapshot> {
+    this.ensureRemote();
     const task = (async () => {
       const prev = this.snapshots.get(branchId);
       const snap = await buildSnapshot(branchId);
       this.snapshots.set(branchId, snap);
       bus.publish(channels.branch(branchId), snap);
+      broadcastSnapshot(snap);
       const transitions = detectTransitions(prev, snap);
       if (transitions.length) {
         import('./push')
@@ -278,6 +328,7 @@ class QueueHub {
   }
 
   subscribe(branchId: string, listener: Listener): () => void {
+    this.ensureRemote();
     const unsub = bus.subscribe(channels.branch(branchId), (data) => listener(data as DashboardSnapshot));
     this.listenerCount.set(branchId, (this.listenerCount.get(branchId) ?? 0) + 1);
     if (!this.timers.has(branchId)) {

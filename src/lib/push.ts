@@ -6,6 +6,7 @@ import type { DashboardSnapshot } from './queue-types';
 import type { PushKind } from './queue-logic';
 import { MESSAGES, toAppLocale } from '@/i18n/messages';
 import { localizedUrl } from './urls';
+import { claimOnce } from './redis';
 
 let configured: boolean | null = null;
 
@@ -33,13 +34,20 @@ export async function notifyTransitions(
   transitions: { ticketId: string; kind: PushKind }[]
 ): Promise<void> {
   if (!isPushConfigured() || !transitions.length) return;
+  const byTicket = new Map(snap.tickets.map((t) => [t.id, t]));
+  // Plusieurs instances peuvent détecter la même transition : une seule envoie la notification.
+  const claimed: typeof transitions = [];
+  for (const tr of transitions) {
+    const t = byTicket.get(tr.ticketId);
+    if (await claimOnce(`push:${tr.ticketId}:${tr.kind}:${t?.calledAt ?? ''}:${t?.recallCount ?? 0}`, 15 * 60_000)) claimed.push(tr);
+  }
+  if (!claimed.length) return;
   const subs = await prisma.pushSubscription.findMany({
-    where: { ticketId: { in: transitions.map((t) => t.ticketId) } },
+    where: { ticketId: { in: claimed.map((t) => t.ticketId) } },
   });
   if (!subs.length) return;
 
-  const byTicket = new Map(snap.tickets.map((t) => [t.id, t]));
-  const kindByTicket = new Map(transitions.map((t) => [t.ticketId, t.kind]));
+  const kindByTicket = new Map(claimed.map((t) => [t.ticketId, t.kind]));
 
   await Promise.all(
     subs.map(async (sub) => {

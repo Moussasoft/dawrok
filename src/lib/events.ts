@@ -1,5 +1,5 @@
-// Bus pub/sub en mémoire pour le SSE — une seule instance.
-// En production multi-instance, remplacer par Redis pub/sub (Upstash).
+// Bus pub/sub en mémoire : les connexions SSE de CE processus. La diffusion entre instances
+// passe par Redis (voir broadcastSnapshot / attachRemote dans queue.ts).
 type Listener = (data: unknown) => void;
 
 class EventBus {

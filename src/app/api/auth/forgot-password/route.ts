@@ -18,10 +18,10 @@ const schema = z.object({
 
 // Réponse identique que le compte existe ou non (pas d'énumération) ; l'e-mail part après la réponse.
 export const POST = route(async (req) => {
-  enforceRateLimit(`forgot:ip:${clientIp(req)}`, 10, 15 * 60_000);
+  await enforceRateLimit(`forgot:ip:${clientIp(req)}`, 10, 15 * 60_000);
   const { email, locale } = await parseBody(req, schema);
   const lower = email.toLowerCase();
-  enforceRateLimit(`forgot:email:${lower}`, 3, 60 * 60_000);
+  await enforceRateLimit(`forgot:email:${lower}`, 3, 60 * 60_000);
 
   after(async () => {
     const user = await prisma.user.findFirst({ where: { email: { in: Array.from(new Set([email, lower])) } } });

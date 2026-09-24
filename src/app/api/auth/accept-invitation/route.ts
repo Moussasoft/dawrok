@@ -17,7 +17,7 @@ const schema = z.object({
 });
 
 export const POST = route(async (req) => {
-  enforceRateLimit(`accept:ip:${clientIp(req)}`, 20, 15 * 60_000);
+  await enforceRateLimit(`accept:ip:${clientIp(req)}`, 20, 15 * 60_000);
   const { token, name, password, acceptTerms } = await parseBody(req, schema);
   if (!acceptTerms) throw new ApiError(400, 'terms_required');
 

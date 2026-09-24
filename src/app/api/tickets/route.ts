@@ -22,9 +22,9 @@ const schema = z.object({
 export const POST = route(async (req) => {
   const ip = clientIp(req);
   // Limites larges : tous les clients d'un Wi-Fi d'agence partagent la même IP publique.
-  enforceRateLimit(`ticket:ip:${ip}`, 40, 10 * 60_000);
+  await enforceRateLimit(`ticket:ip:${ip}`, 40, 10 * 60_000);
   const data = await parseBody(req, schema);
-  enforceRateLimit(`ticket:branch:${data.qrToken}:ip:${ip}`, 25, 10 * 60_000);
+  await enforceRateLimit(`ticket:branch:${data.qrToken}:ip:${ip}`, 25, 10 * 60_000);
 
   const branch = await prisma.branch.findUnique({
     where: { qrToken: data.qrToken },
