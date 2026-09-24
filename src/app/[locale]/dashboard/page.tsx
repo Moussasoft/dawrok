@@ -1,28 +1,35 @@
-import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { getTranslations } from 'next-intl/server';
+import { requireOrgPage } from '@/lib/guards';
+import { getActiveBranch } from '@/lib/branch';
 import { prisma } from '@/lib/db';
+import { redirectTo } from '@/i18n/server';
 import { LiveDashboard } from './live-dashboard';
 
 export const dynamic = 'force-dynamic';
 
+export async function generateMetadata() {
+  const t = await getTranslations('dashboard');
+  return { title: t('liveTitle') };
+}
+
 export default async function DashboardPage() {
-  const session = await getSession();
-  if (!session) redirect('/login');
-  const branch = await prisma.branch.findFirst({
-    where: { orgId: session.orgId ?? undefined },
-    include: {
-      services: { where: { active: true } },
-      employees: { where: { active: true } },
-    },
-  });
-  if (!branch) redirect('/dashboard/settings');
+  const auth = await requireOrgPage();
+  const branch = await getActiveBranch(auth);
+  if (!branch) return redirectTo('/dashboard/settings');
+
+  const [employees, services] = await Promise.all([
+    prisma.employee.findMany({ where: { branchId: branch.id, active: true }, orderBy: { name: 'asc' } }),
+    prisma.service.findMany({ where: { branchId: branch.id, active: true }, orderBy: { name: 'asc' } }),
+  ]);
 
   return (
     <div className="container py-6">
       <LiveDashboard
-        qrToken={branch.qrToken}
+        key={branch.id}
         branchId={branch.id}
-        employees={branch.employees.map((e) => ({ id: e.id, name: e.name }))}
+        qrToken={branch.qrToken}
+        employees={employees.map((e) => ({ id: e.id, name: e.name }))}
+        services={services.map((s) => ({ id: s.id, name: s.name }))}
       />
     </div>
   );

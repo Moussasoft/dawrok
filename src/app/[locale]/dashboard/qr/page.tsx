@@ -1,61 +1,81 @@
-import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
-import { prisma } from '@/lib/db';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { Download, Printer, Tv, Lightbulb } from 'lucide-react';
+import { requireOrgPage } from '@/lib/guards';
+import { getActiveBranch } from '@/lib/branch';
+import { redirectTo } from '@/i18n/server';
+import { Link, routing } from '@/i18n/routing';
 import { Card, CardContent } from '@/components/ui/card';
 import { CopyLink } from './copy-link';
+import { QrLanguagePicker } from './qr-language-picker';
 
 export const dynamic = 'force-dynamic';
 
-export default async function QrPage() {
-  const session = await getSession();
-  if (!session) redirect('/login');
-  const branch = await prisma.branch.findFirst({
-    where: { orgId: session.orgId ?? undefined },
-    include: { organization: true },
-  });
-  if (!branch) redirect('/dashboard');
+export async function generateMetadata() {
+  const t = await getTranslations('qr');
+  return { title: t('title') };
+}
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const url = `${baseUrl}/q/${branch.qrToken}`;
+export default async function QrPage({ searchParams }: { searchParams: Promise<{ lang?: string }> }) {
+  const auth = await requireOrgPage();
+  const [branch, t, locale, sp] = await Promise.all([getActiveBranch(auth), getTranslations('qr'), getLocale(), searchParams]);
+  if (!branch) return redirectTo('/dashboard');
+
+  // Langue de la page client encodée dans le QR (par défaut : langue par défaut du site).
+  const qrLang = (routing.locales as readonly string[]).includes(sp.lang ?? '') ? sp.lang! : routing.defaultLocale;
+  const base = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
+  const prefix = qrLang === routing.defaultLocale ? '' : `/${qrLang}`;
+  const url = `${base}${prefix}/q/${branch.qrToken}`;
+  const qrSrc = `/api/qr/${branch.qrToken}?locale=${qrLang}`;
 
   return (
-    <div className="container py-6 max-w-2xl">
-      <h1 className="text-2xl font-bold mb-2">Votre QR code</h1>
-      <p className="text-muted-foreground mb-6">
-        Imprimez ce QR code et placez-le à l'entrée. Vos clients le scannent pour prendre leur ticket.
-      </p>
+    <div className="container max-w-2xl py-6">
+      <h1 className="mb-2 text-2xl font-bold">{t('title')}</h1>
+      <p className="mb-6 text-muted-foreground">{t('description')}</p>
 
       <Card>
-        <CardContent className="p-8 flex flex-col items-center gap-6">
-          <div className="rounded-2xl overflow-hidden border bg-white p-4">
+        <CardContent className="flex flex-col items-center gap-6 p-8">
+          <QrLanguagePicker label={t('language')} value={qrLang} />
+          <div className="overflow-hidden rounded-2xl border bg-white p-4">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={`/api/qr/${branch.qrToken}`} alt="QR code" width={400} height={400} className="block" />
+            <img src={qrSrc} alt="QR code" width={320} height={320} className="block h-72 w-72 sm:h-80 sm:w-80" />
           </div>
-          <div className="text-center">
-            <div className="text-sm text-muted-foreground">Lien public</div>
-            <CopyLink url={url} />
+          <div className="w-full text-center">
+            <div className="text-sm text-muted-foreground">{t('publicLink')}</div>
+            <CopyLink url={url} copyLabel={t('copy')} copiedLabel={t('copied')} />
           </div>
-          <a
-            href={`/api/qr/${branch.qrToken}`}
-            download={`daourak-${branch.organization.slug}.png`}
-            className="text-sm text-primary hover:underline"
-          >
-            Télécharger le QR (PNG)
-          </a>
-          <a
-            href="/poster"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90"
-          >
-            🖨️ Poster A4 imprimable
-          </a>
+          <div className="flex flex-wrap justify-center gap-2">
+            <a
+              href={qrSrc}
+              download={`daourak-qr-${qrLang}.png`}
+              className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent"
+            >
+              <Download className="h-4 w-4" /> {t('download')}
+            </a>
+            <Link
+              href={{ pathname: '/poster', query: { lang: qrLang } }}
+              locale={qrLang as (typeof routing.locales)[number]}
+              target="_blank"
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
+            >
+              <Printer className="h-4 w-4" /> {t('poster')}
+            </Link>
+            <Link
+              href={`/screen/${branch.qrToken}`}
+              locale={locale as (typeof routing.locales)[number]}
+              target="_blank"
+              className="inline-flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium hover:bg-accent"
+            >
+              <Tv className="h-4 w-4" /> {t('tvScreen')}
+            </Link>
+          </div>
         </CardContent>
       </Card>
 
-      <div className="mt-6 p-4 rounded-xl bg-muted text-sm">
-        <strong>💡 Astuce :</strong> imprimez le QR au format A5, plastifiez-le, et collez-le à hauteur des yeux à l'entrée.
-        Ajoutez une phrase comme « Scannez pour prendre votre tour ».
+      <div className="mt-6 flex gap-2 rounded-xl bg-muted p-4 text-sm">
+        <Lightbulb className="h-5 w-5 flex-shrink-0 text-amber-500" />
+        <p>
+          <strong>{t('tipTitle')}</strong> {t('tip')}
+        </p>
       </div>
     </div>
   );

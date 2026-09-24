@@ -1,20 +1,51 @@
-import { redirect } from 'next/navigation';
-import { getSession } from '@/lib/auth';
+import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { SettingsClient } from '@/components/settings-client';
+import { requireOrgPage } from '@/lib/guards';
+import { countOrgResources, getOrgLimits } from '@/lib/plans';
+import { parseOpenHours } from '@/lib/opening-hours';
+import { redirectTo } from '@/i18n/server';
+import { SettingsClient } from './settings-client';
 
 export const dynamic = 'force-dynamic';
 
-export default async function SettingsPage() {
-  const session = await getSession();
-  if (!session) redirect('/login');
-  const org = await prisma.organization.findUnique({
-    where: { id: session.orgId ?? undefined },
-    include: {
-      branches: { include: { services: true, employees: true } },
-    },
-  });
-  if (!org) redirect('/login');
+export async function generateMetadata() {
+  const t = await getTranslations('settings');
+  return { title: t('title') };
+}
 
-  return <SettingsClient org={org} branches={org.branches} />;
+export default async function SettingsPage() {
+  const auth = await requireOrgPage();
+  const [org, limits, usage] = await Promise.all([
+    prisma.organization.findUnique({
+      where: { id: auth.orgId },
+      include: {
+        branches: {
+          orderBy: { createdAt: 'asc' },
+          include: { services: { orderBy: { name: 'asc' } }, employees: { orderBy: { name: 'asc' } } },
+        },
+      },
+    }),
+    getOrgLimits(auth.orgId),
+    countOrgResources(auth.orgId),
+  ]);
+  if (!org) return redirectTo('/login');
+
+  return (
+    <SettingsClient
+      org={{ id: org.id, name: org.name, slug: org.slug, sector: org.sector, plan: org.plan, brandColor: org.brandColor }}
+      limits={limits}
+      usage={usage}
+      branches={org.branches.map((b) => ({
+        id: b.id,
+        name: b.name,
+        address: b.address,
+        timezone: b.timezone,
+        allowBooking: b.allowBooking,
+        bookingSlotMin: b.bookingSlotMin,
+        openHours: parseOpenHours(b.openHours),
+        services: b.services.map((s) => ({ id: s.id, name: s.name, avgDurationMin: s.avgDurationMin, active: s.active })),
+        employees: b.employees.map((e) => ({ id: e.id, name: e.name, active: e.active })),
+      }))}
+    />
+  );
 }
