@@ -15,3 +15,5 @@ coverage
 *.db-journal
 *.db-shm
 *.db-wal
+# Sauvegardes locales de la base (données réelles)
+*.db.bak*
