@@ -840,7 +840,9 @@
     "cndpDeclared": "معالجة مصرّح بها لدى اللجنة الوطنية لمراقبة حماية المعطيات ذات الطابع الشخصي تحت رقم {number}.",
     "address": "العنوان: {address}",
     "acceptTerms": "أوافق على <terms>شروط الاستخدام</terms> و<privacy>سياسة الخصوصية</privacy>.",
-    "learnMore": "اعرف المزيد",
+    "learnMore": "اعرف المزيد"
+  },
+  "legalDocs": {
     "privacy": {
       "intro": {
         "title": "باختصار",

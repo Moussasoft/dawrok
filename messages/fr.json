@@ -840,7 +840,9 @@
     "cndpDeclared": "Traitement déclaré auprès de la CNDP sous le n° {number}.",
     "address": "Adresse : {address}",
     "acceptTerms": "J’accepte les <terms>conditions d’utilisation</terms> et la <privacy>politique de confidentialité</privacy>.",
-    "learnMore": "En savoir plus",
+    "learnMore": "En savoir plus"
+  },
+  "legalDocs": {
     "privacy": {
       "intro": {
         "title": "En bref",

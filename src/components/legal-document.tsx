@@ -7,12 +7,12 @@ import { formatDate } from '@/lib/format';
 
 type Doc = 'privacy' | 'terms';
 
-/** Texte légal découpé en sections dans messages/*.json : legal.<doc>.<section>.{title, p1, p2…}. */
+/** Texte légal découpé en sections dans messages/*.json : legalDocs.<doc>.<section>.{title, p1, p2…} (serveur seulement). */
 export async function LegalDocument({ doc }: { doc: Doc }) {
-  const [t, locale] = await Promise.all([getTranslations('legal'), getLocale()]);
+  const [t, td, locale] = await Promise.all([getTranslations('legal'), getTranslations('legalDocs'), getLocale()]);
   const info = legalInfo();
   const values = { company: info.company, email: info.email, retention: info.retention };
-  const sections = Object.entries(t.raw(doc) as Record<string, Record<string, string>>);
+  const sections = Object.entries(td.raw(doc) as Record<string, Record<string, string>>);
 
   return (
     <main className="gradient-mesh min-h-screen">
@@ -28,12 +28,12 @@ export async function LegalDocument({ doc }: { doc: Doc }) {
           <p className="mt-1 text-sm text-muted-foreground">{t('updated', { date: formatDate(LEGAL_UPDATED_AT, locale) })}</p>
           {sections.map(([key, section]) => (
             <section key={key} className="mt-8">
-              <h2 className="text-lg font-semibold">{t(`${doc}.${key}.title`)}</h2>
+              <h2 className="text-lg font-semibold">{td(`${doc}.${key}.title`)}</h2>
               {Object.keys(section)
                 .filter((p) => p !== 'title')
                 .map((p) => (
                   <p key={p} className="mt-2 leading-relaxed text-muted-foreground">
-                    {t(`${doc}.${key}.${p}`, values)}
+                    {td(`${doc}.${key}.${p}`, values)}
                   </p>
                 ))}
             </section>

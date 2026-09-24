@@ -6,6 +6,7 @@ import { Inter, Noto_Kufi_Arabic } from 'next/font/google';
 import { routing } from '@/i18n/routing';
 import '../globals.css';
 import { Providers } from '@/components/providers';
+import { pickClientMessages } from '@/i18n/client-messages';
 
 // Polices auto-hébergées par Next (aucune requête vers Google côté visiteur, pas de décalage de mise en page).
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans', display: 'swap' });
@@ -58,7 +59,7 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} dir={dir} className={`${inter.variable} ${kufi.variable}`} suppressHydrationWarning>
       <body>
-        <NextIntlClientProvider messages={messages}>
+        <NextIntlClientProvider messages={pickClientMessages(messages)}>
           <Providers dir={dir}>{children}</Providers>
         </NextIntlClientProvider>
       </body>
