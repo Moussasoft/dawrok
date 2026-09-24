@@ -1,9 +1,20 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 
-export function useEventSource<T>(url: string | null) {
+type Options = {
+  /**
+   * Couper la connexion quand l'onglet est masqué (économise une connexion HTTP/1.1).
+   * À désactiver sur la page ticket : un onglet en arrière-plan doit continuer à recevoir
+   * les mises à jour pour pouvoir notifier le client.
+   */
+  pauseWhenHidden?: boolean;
+};
+
+export function useEventSource<T>(url: string | null, { pauseWhenHidden = true }: Options = {}) {
   const [data, setData] = useState<T | null>(null);
   const [connected, setConnected] = useState(false);
+  /** Le serveur a refusé la connexion (session expirée, ressource supprimée…). */
+  const [failed, setFailed] = useState(false);
   const ref = useRef<EventSource | null>(null);
 
   useEffect(() => {
@@ -13,13 +24,20 @@ export function useEventSource<T>(url: string | null) {
       ref.current?.close();
       const es = new EventSource(url!);
       ref.current = es;
-      es.onopen = () => setConnected(true);
-      es.onerror = () => setConnected(false);
+      es.onopen = () => {
+        setConnected(true);
+        setFailed(false);
+      };
+      es.onerror = () => {
+        setConnected(false);
+        // CLOSED = le navigateur abandonne (réponse non-SSE, ex. 401/404) ; sinon il se reconnecte seul.
+        if (es.readyState === EventSource.CLOSED) setFailed(true);
+      };
       es.onmessage = (e) => {
         try {
           setData(JSON.parse(e.data) as T);
         } catch {
-          /* ignore */
+          /* message invalide ignoré */
         }
       };
     }
@@ -30,25 +48,21 @@ export function useEventSource<T>(url: string | null) {
       setConnected(false);
     }
 
-    connect();
-
-    // Libère la connexion SSE quand l'onglet est caché (limite HTTP/1.1 = 6 conn/domaine)
-    // et la rétablit quand l'onglet redevient visible.
     function onVisibility() {
       if (document.hidden) {
-        disconnect();
-      } else {
+        if (pauseWhenHidden) disconnect();
+      } else if (!ref.current || ref.current.readyState === EventSource.CLOSED) {
         connect();
       }
     }
 
+    connect();
     document.addEventListener('visibilitychange', onVisibility);
-
     return () => {
-      disconnect();
       document.removeEventListener('visibilitychange', onVisibility);
+      disconnect();
     };
-  }, [url]);
+  }, [url, pauseWhenHidden]);
 
-  return { data, connected };
+  return { data, connected, failed };
 }

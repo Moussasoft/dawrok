@@ -1,120 +1,83 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
 
 type Props = {
-  position: number; // 0 = c'est votre tour
-  totalAhead: number;
-  nowServing?: number;
+  /** Personnes en attente devant le client (0 = il est le prochain). */
+  peopleAhead: number;
   etaMin: number;
-  status: string;
+  nowServing: number;
 };
 
-export function ClientTicketView({ position, totalAhead, nowServing = 0, etaMin, status }: Props) {
-  // Animate the "personnes avant vous" count smoothly when it changes.
-  const [displayCount, setDisplayCount] = useState(totalAhead);
+// Vue « en attente » : le compteur s'anime quand il diminue.
+export function WaitingView({ peopleAhead, etaMin, nowServing }: Props) {
+  const t = useTranslations('ticket');
+  const [display, setDisplay] = useState(peopleAhead);
   const [pulse, setPulse] = useState(false);
-  const prevRef = useRef(totalAhead);
+  const prevRef = useRef(peopleAhead);
 
   useEffect(() => {
-    if (totalAhead === prevRef.current) return;
     const from = prevRef.current;
-    const to = totalAhead;
+    const to = peopleAhead;
+    if (from === to) return;
     prevRef.current = to;
     setPulse(true);
-    const stepDir = to > from ? 1 : -1;
+    const step = to > from ? 1 : -1;
     let current = from;
+    let timer: ReturnType<typeof setTimeout>;
     const tick = () => {
-      current += stepDir;
-      setDisplayCount(current);
-      if (current !== to) {
-        timer = setTimeout(tick, 120);
-      } else {
-        setTimeout(() => setPulse(false), 200);
-      }
+      current += step;
+      setDisplay(current);
+      if (current !== to) timer = setTimeout(tick, 120);
+      else timer = setTimeout(() => setPulse(false), 250);
     };
-    let timer = setTimeout(tick, 0);
+    timer = setTimeout(tick, 0);
     return () => clearTimeout(timer);
-  }, [totalAhead]);
+  }, [peopleAhead]);
 
-  useEffect(() => {
-    setPulse(true);
-    const t = setTimeout(() => setPulse(false), 600);
-    return () => clearTimeout(t);
-  }, [status]);
-
-  const isYourTurn = status === 'called' || (status === 'waiting' && position === 0);
-  const isInProgress = status === 'in_progress';
-  const isDone = status === 'done';
-  const isCancelled = status === 'cancelled' || status === 'no_show';
-
-  if (isDone) {
+  if (peopleAhead === 0) {
     return (
-      <div className="text-center py-8">
-        <div className="text-7xl mb-4">✓</div>
-        <h2 className="text-2xl font-bold mb-2">Service terminé</h2>
-        <p className="text-muted-foreground">Merci de votre visite !</p>
-      </div>
-    );
-  }
-
-  if (isCancelled) {
-    return (
-      <div className="text-center py-8">
-        <div className="text-6xl mb-4">⊘</div>
-        <h2 className="text-2xl font-bold mb-2">Ticket annulé</h2>
-      </div>
-    );
-  }
-
-  if (isYourTurn) {
-    return (
-      <div className="text-center py-6 animate-pulse-soft">
-        <div className="inline-block px-6 py-3 bg-success text-success-foreground rounded-2xl text-3xl font-extrabold mb-4">
-          C'est votre tour !
+      <div className="py-4 text-center">
+        <div className="mb-3 inline-block rounded-2xl bg-primary/10 px-5 py-2 text-2xl font-extrabold text-primary">
+          {t('youAreNext')}
         </div>
-        <p className="text-lg text-muted-foreground">Présentez-vous à l'accueil</p>
+        <p className="text-muted-foreground">{t('youAreNextDesc')}</p>
+        {nowServing > 0 && <NowServing count={nowServing} />}
       </div>
     );
   }
 
-  if (isInProgress) {
-    return (
-      <div className="text-center py-6">
-        <div className="text-2xl font-semibold text-primary mb-2">En cours de service</div>
-        <p className="text-muted-foreground">Votre service est en cours.</p>
-      </div>
-    );
-  }
-
-  // waiting
   return (
-    <div className="text-center py-4">
-      <div className="text-sm uppercase tracking-wider text-muted-foreground mb-2">Personnes avant vous</div>
+    <div className="py-4 text-center">
+      <div className="mb-2 text-sm uppercase tracking-wider text-muted-foreground">{t('peopleAhead')}</div>
       <div
-        className={cn(
-          'text-8xl font-extrabold tabular-nums transition-all duration-300',
-          pulse && 'scale-110 text-primary'
-        )}
+        aria-live="polite"
+        className={cn('text-8xl font-extrabold tabular-nums transition-all duration-300', pulse && 'scale-110 text-primary')}
       >
-        {displayCount}
+        {display}
       </div>
-      {nowServing > 0 && (
-        <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-          {nowServing === 1 ? "1 client en cours de service" : `${nowServing} clients en cours de service`}
-        </div>
-      )}
-      <div className="mt-6 grid grid-cols-2 gap-3 text-left">
+      {nowServing > 0 && <NowServing count={nowServing} />}
+      <div className="mt-6 grid grid-cols-2 gap-3 text-start">
         <div className="rounded-xl bg-muted p-4">
-          <div className="text-xs uppercase text-muted-foreground">Position</div>
-          <div className="text-2xl font-bold">{position + 1}</div>
+          <div className="text-xs uppercase text-muted-foreground">{t('position')}</div>
+          <div className="text-2xl font-bold tabular-nums">{peopleAhead + 1}</div>
         </div>
         <div className="rounded-xl bg-muted p-4">
-          <div className="text-xs uppercase text-muted-foreground">Temps estimé</div>
-          <div className="text-2xl font-bold">~{etaMin} min</div>
+          <div className="text-xs uppercase text-muted-foreground">{t('eta')}</div>
+          <div className="text-2xl font-bold tabular-nums">{t('etaValue', { minutes: etaMin })}</div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function NowServing({ count }: { count: number }) {
+  const t = useTranslations('ticket');
+  return (
+    <div className="mt-2 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+      {t('nowServing', { count })}
     </div>
   );
 }

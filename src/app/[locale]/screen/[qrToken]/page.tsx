@@ -4,13 +4,12 @@ import { TVScreen } from './tv-screen';
 
 export const dynamic = 'force-dynamic';
 
-// Public TV display for a branch — accessible via qrToken to avoid leaking internal IDs.
+export const metadata = { robots: { index: false } };
+
+// Écran TV public d'une agence — accessible par le qrToken (déjà public) pour ne pas exposer d'identifiant interne.
 export default async function ScreenPage({ params }: { params: Promise<{ qrToken: string }> }) {
   const { qrToken } = await params;
-  const branch = await prisma.branch.findUnique({
-    where: { qrToken },
-    include: { organization: true },
-  });
+  const branch = await prisma.branch.findUnique({ where: { qrToken }, include: { organization: true } });
   if (!branch) notFound();
 
   return (

@@ -1,69 +1,122 @@
 import { notFound } from 'next/navigation';
-import { getTranslations } from 'next-intl/server';
+import { getLocale, getTranslations } from 'next-intl/server';
+import { Lock, Clock } from 'lucide-react';
 import { prisma } from '@/lib/db';
-import { PublicQueueClient } from './public-queue-client';
+import { getSnapshot } from '@/lib/queue';
+import { getPlanLimits } from '@/lib/plans';
+import { formatDateTime, weekdayName } from '@/lib/format';
+import { LanguageSwitcher } from '@/components/language-switcher';
+import { MyTicketBanner, PublicQueueClient } from './public-queue-client';
 
 export const dynamic = 'force-dynamic';
+
+export async function generateMetadata({ params }: { params: Promise<{ qrToken: string }> }) {
+  const { qrToken } = await params;
+  const branch = await prisma.branch.findUnique({ where: { qrToken }, select: { name: true } });
+  return { title: branch?.name, robots: { index: false } };
+}
 
 export default async function PublicQueuePage({ params }: { params: Promise<{ qrToken: string }> }) {
   const { qrToken } = await params;
   const branch = await prisma.branch.findUnique({
     where: { qrToken },
-    include: {
-      organization: true,
-      services: { where: { active: true }, orderBy: { name: 'asc' } },
-    },
+    include: { organization: true, services: { where: { active: true }, orderBy: { name: 'asc' } } },
   });
   if (!branch || !branch.active) notFound();
-  const t = await getTranslations();
+  const [t, locale, snap, limits] = await Promise.all([
+    getTranslations(),
+    getLocale(),
+    getSnapshot(branch.id),
+    getPlanLimits(branch.organization.plan),
+  ]);
+  const suspended = branch.organization.suspended;
+  const waitingCount = snap.tickets.filter((x) => x.status === 'waiting').length;
 
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const waitingCount = await prisma.ticket.count({
-    where: {
-      branchId: branch.id,
-      status: { in: ['waiting', 'called', 'in_progress'] },
-      createdAt: { gte: startOfDay },
-    },
-  });
+  let closedNotice: React.ReactNode = null;
+  if (suspended) {
+    closedNotice = <ClosedCard icon={<Lock className="mx-auto h-8 w-8 text-amber-600" />} title={t('errors.service_unavailable')} />;
+  } else if (snap.isPaused) {
+    closedNotice = (
+      <ClosedCard
+        icon={<Lock className="mx-auto h-8 w-8 text-amber-600" />}
+        title={t('publicQueue.closed')}
+        detail={snap.closureReason}
+        footer={snap.closedUntil ? `${t('publicQueue.reopen')} : ${formatDateTime(snap.closedUntil, locale, snap.timezone)}` : null}
+      />
+    );
+  } else if (!snap.isOpenNow) {
+    const next = snap.nextOpening;
+    closedNotice = (
+      <ClosedCard
+        icon={<Clock className="mx-auto h-8 w-8 text-amber-600" />}
+        title={t('publicQueue.closedNow')}
+        footer={
+          next
+            ? next.today
+              ? t('publicQueue.opensToday', { time: next.time })
+              : t('publicQueue.opensOn', { day: weekdayName(next.weekday, locale, 'long'), time: next.time })
+            : null
+        }
+      />
+    );
+  }
+
+  const allowBooking = !suspended && branch.allowBooking && limits.allowBooking;
 
   return (
-    <main className="min-h-screen gradient-mesh flex flex-col">
-      <div className="container max-w-md mx-auto flex-1 flex flex-col py-6">
-        <div className="text-center mb-8">
-          <div className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-3">
+    <main className="gradient-mesh flex min-h-screen flex-col">
+      <div className="container mx-auto flex max-w-md flex-1 flex-col py-6">
+        <div className="mb-2 flex justify-end">
+          <LanguageSwitcher />
+        </div>
+        <div className="mb-8 text-center">
+          <div className="mb-3 inline-block rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
             {branch.organization.name}
           </div>
           <h1 className="text-3xl font-bold">{branch.name}</h1>
-          {branch.address && <p className="text-muted-foreground mt-1">{branch.address}</p>}
+          {branch.address && <p className="mt-1 text-muted-foreground">{branch.address}</p>}
         </div>
 
-        <div className="rounded-2xl bg-card border p-4 text-center mb-6 shadow-sm">
+        <div className="mb-6 rounded-2xl border bg-card p-4 text-center shadow-sm">
           <div className="text-sm text-muted-foreground">{t('publicQueue.waitingCount')}</div>
-          <div className="text-4xl font-extrabold mt-1 tabular-nums">{waitingCount}</div>
+          <div className="mt-1 text-4xl font-extrabold tabular-nums">{waitingCount}</div>
         </div>
 
-        {branch.closedUntil && branch.closedUntil.getTime() > Date.now() ? (
-          <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/30 p-6 text-center mb-4">
-            <div className="text-3xl">{'\uD83D\uDD12'}</div>
-            <h3 className="mt-2 font-bold">{t('publicQueue.closed')}</h3>
-            {branch.closureReason && <p className="text-sm mt-1">{branch.closureReason}</p>}
-            <p className="text-xs text-muted-foreground mt-2">
-              {t('publicQueue.reopen')} : {branch.closedUntil.toLocaleString('fr-FR')}
-            </p>
-          </div>
-        ) : (
+        <MyTicketBanner qrToken={qrToken} />
+        {closedNotice}
+        {(!closedNotice || (allowBooking && !suspended)) && (
           <PublicQueueClient
             qrToken={qrToken}
-            allowBooking={branch.allowBooking}
+            timezone={snap.timezone}
+            canTakeTicket={!closedNotice}
+            allowBooking={allowBooking}
             services={branch.services.map((s) => ({ id: s.id, name: s.name, durationMin: s.avgDurationMin }))}
           />
         )}
 
-        <p className="mt-auto pt-6 text-center text-xs text-muted-foreground">
-          {t('common.poweredBy')}
-        </p>
+        <p className="mt-auto pt-6 text-center text-xs text-muted-foreground">{t('common.poweredBy')}</p>
       </div>
     </main>
+  );
+}
+
+function ClosedCard({
+  icon,
+  title,
+  detail,
+  footer,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  detail?: string | null;
+  footer?: string | null;
+}) {
+  return (
+    <div className="mb-4 rounded-2xl border-2 border-amber-300 bg-amber-50 p-6 text-center dark:border-amber-800 dark:bg-amber-950/30">
+      {icon}
+      <h2 className="mt-2 font-bold">{title}</h2>
+      {detail && <p className="mt-1 text-sm">{detail}</p>}
+      {footer && <p className="mt-2 text-xs text-muted-foreground">{footer}</p>}
+    </div>
   );
 }
