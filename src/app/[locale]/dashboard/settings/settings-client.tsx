@@ -14,6 +14,7 @@ import { WEEKDAYS, type Weekday } from '@/lib/time';
 import { weekdayName } from '@/lib/format';
 import type { OpenHours } from '@/lib/opening-hours';
 import { cn } from '@/lib/utils';
+import { LogoUploader } from './logo-uploader';
 
 type Service = { id: string; name: string; avgDurationMin: number; active: boolean };
 type Employee = { id: string; name: string; active: boolean };
@@ -28,7 +29,7 @@ type Branch = {
   services: Service[];
   employees: Employee[];
 };
-type Org = { id: string; name: string; slug: string; sector: string; plan: string; brandColor: string };
+type Org = { id: string; name: string; slug: string; sector: string; plan: string; brandColor: string; logoUrl: string | null };
 type Limits = {
   plan: string;
   maxBranches: number;
@@ -201,6 +202,16 @@ function OrgCard({
             </dd>
           </dl>
         )}
+
+        <div className="mt-6 border-t pt-4">
+          <LogoUploader
+            logoUrl={org.logoUrl}
+            orgName={org.name}
+            allowed={limits.allowCustomBrand}
+            canEdit={canEdit}
+            onChange={onRefresh}
+          />
+        </div>
 
         <div className="mt-6 border-t pt-4">
           <div className="mb-3 text-xs font-medium uppercase text-muted-foreground">{t('usage')}</div>

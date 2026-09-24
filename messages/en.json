@@ -174,7 +174,9 @@
     "forbidden_role": "Your role does not allow this action.",
     "last_owner": "The organization must keep at least one owner.",
     "cannot_remove_self": "You cannot remove yourself.",
-    "invitation_invalid": "This invitation is invalid, expired or already used."
+    "invitation_invalid": "This invitation is invalid, expired or already used.",
+    "invalid_image": "Invalid image: use a PNG, JPG or WebP file.",
+    "image_too_large": "Image too large ({max} MB maximum)."
   },
   "status": {
     "scheduled": "Upcoming appointment",
@@ -328,7 +330,13 @@
     "booking": "Online booking",
     "allowBooking": "Allow appointment booking",
     "slotDuration": "Slot step (minutes)",
-    "bookingLocked": "Booking is available from the Starter plan."
+    "bookingLocked": "Booking is available from the Starter plan.",
+    "logo": "Logo",
+    "logoUpload": "Choose a logo",
+    "logoRemove": "Remove",
+    "logoHint": "PNG, JPG or WebP, 2 MB maximum. Shown on the TV screen, customer page, ticket and poster.",
+    "logoUpdated": "Logo updated",
+    "logoRemoved": "Logo removed"
   },
   "analytics": {
     "title": "Analytics",
@@ -568,7 +576,8 @@
       "team_join": "New member",
       "user_password_reset": "Password reset",
       "user_password_change": "Password changed",
-      "user_email_change": "Email changed"
+      "user_email_change": "Email changed",
+      "org_logo": "Logo changed"
     },
     "settingsSubtitle": "Manage your account and the platform configuration",
     "tabProfile": "Profile",

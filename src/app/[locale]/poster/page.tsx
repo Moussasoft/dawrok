@@ -14,7 +14,7 @@ export default async function PosterPage() {
   const auth = await requireOrgPage();
   const [branch, t, locale] = await Promise.all([getActiveBranch(auth), getTranslations('poster'), getLocale()]);
   if (!branch) return redirectTo('/dashboard');
-  const org = await prisma.organization.findUnique({ where: { id: auth.orgId }, select: { name: true, brandColor: true } });
+  const org = await prisma.organization.findUnique({ where: { id: auth.orgId }, select: { name: true, brandColor: true, logoUrl: true } });
 
   const base = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
   const url = `${base}${locale === routing.defaultLocale ? '' : `/${locale}`}/q/${branch.qrToken}`;
@@ -60,6 +60,10 @@ export default async function PosterPage() {
         />
 
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 1 }}>
+          {org?.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={org.logoUrl} alt="" style={{ display: 'block', height: '22mm', margin: '0 auto 12px', objectFit: 'contain' }} />
+          )}
           <div
             style={{
               display: 'inline-block',

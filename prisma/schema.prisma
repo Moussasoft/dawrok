@@ -18,7 +18,9 @@ model Organization {
   sector     String   @default("other") // hairdresser | doctor | vehicle_inspection | bank | restaurant | other
   plan       String   @default("free")  // free | starter | pro | business
   brandColor String   @default("#6366F1")
-  logoUrl    String?
+  logoUrl    String?  // /api/orgs/{id}/logo?v=… (versionnée pour le cache)
+  logoData   Bytes?   // logo redimensionné (WebP), stocké en base : portable, sans disque partagé
+  logoMime   String?
   suspended  Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

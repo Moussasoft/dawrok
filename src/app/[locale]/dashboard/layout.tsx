@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic';
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const auth = await requireOrgPage();
   const [org, branches, active] = await Promise.all([
-    prisma.organization.findUnique({ where: { id: auth.orgId }, select: { name: true } }),
+    prisma.organization.findUnique({ where: { id: auth.orgId }, select: { name: true, logoUrl: true } }),
     listOrgBranches(auth.orgId),
     getActiveBranch(auth),
   ]);
@@ -28,9 +28,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
         <div className="container flex h-14 items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <Link href="/dashboard" className="flex shrink-0 items-center gap-2 font-bold">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm text-primary-foreground">
-                D
-              </span>
+              {org?.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={org.logoUrl} alt="" className="h-7 w-7 rounded-md object-contain" />
+              ) : (
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-primary text-sm text-primary-foreground">
+                  D
+                </span>
+              )}
               <span className="hidden max-w-[10rem] truncate lg:inline">{org?.name}</span>
             </Link>
             {branches.length > 1 && active && (

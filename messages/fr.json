@@ -174,7 +174,9 @@
     "forbidden_role": "Votre rôle ne permet pas cette action.",
     "last_owner": "L’organisation doit garder au moins un propriétaire.",
     "cannot_remove_self": "Vous ne pouvez pas vous retirer vous-même.",
-    "invitation_invalid": "Cette invitation est invalide, expirée ou déjà utilisée."
+    "invitation_invalid": "Cette invitation est invalide, expirée ou déjà utilisée.",
+    "invalid_image": "Image invalide : utilisez un fichier PNG, JPG ou WebP.",
+    "image_too_large": "Image trop lourde ({max} Mo maximum)."
   },
   "status": {
     "scheduled": "RDV à venir",
@@ -328,7 +330,13 @@
     "booking": "Réservation en ligne",
     "allowBooking": "Autoriser la prise de rendez-vous",
     "slotDuration": "Pas des créneaux (minutes)",
-    "bookingLocked": "La réservation est disponible à partir de l’offre Starter."
+    "bookingLocked": "La réservation est disponible à partir de l’offre Starter.",
+    "logo": "Logo",
+    "logoUpload": "Choisir un logo",
+    "logoRemove": "Retirer",
+    "logoHint": "PNG, JPG ou WebP, 2 Mo maximum. Affiché sur l’écran TV, la page client, le ticket et l’affiche.",
+    "logoUpdated": "Logo mis à jour",
+    "logoRemoved": "Logo retiré"
   },
   "analytics": {
     "title": "Analytics",
@@ -568,7 +576,8 @@
       "team_join": "Nouveau membre",
       "user_password_reset": "Mot de passe réinitialisé",
       "user_password_change": "Mot de passe modifié",
-      "user_email_change": "E-mail modifié"
+      "user_email_change": "E-mail modifié",
+      "org_logo": "Logo modifié"
     },
     "settingsSubtitle": "Gérez votre compte et la configuration de la plateforme",
     "tabProfile": "Profil",

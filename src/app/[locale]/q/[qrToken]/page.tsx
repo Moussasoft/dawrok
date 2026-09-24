@@ -70,6 +70,10 @@ export default async function PublicQueuePage({ params }: { params: Promise<{ qr
           <LanguageSwitcher />
         </div>
         <div className="mb-8 text-center">
+          {branch.organization.logoUrl && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={branch.organization.logoUrl} alt="" className="mx-auto mb-3 h-16 w-16 rounded-2xl bg-white object-contain p-1 shadow-sm" />
+          )}
           <div className="mb-3 inline-block rounded-full bg-primary/10 px-4 py-1 text-sm font-medium text-primary">
             {branch.organization.name}
           </div>

@@ -154,6 +154,10 @@ export function LiveTicket({ publicCode, initial }: { publicCode: string; initia
     <div className="space-y-4">
       {/* Carte ticket */}
       <div className="rounded-3xl border bg-card p-6 text-center shadow-md">
+        {view.branch.logoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={view.branch.logoUrl} alt="" className="mx-auto mb-2 h-12 w-12 rounded-xl object-contain" />
+        )}
         <div className="text-sm text-muted-foreground">{view.branch.orgName}</div>
         <div className="text-base font-medium">{view.branch.branchName}</div>
         <div className="mt-4 text-xs uppercase tracking-wider text-muted-foreground">{t('yourTicket')}</div>

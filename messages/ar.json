@@ -174,7 +174,9 @@
     "forbidden_role": "دورك في الفريق لا يسمح بهذا الإجراء.",
     "last_owner": "يجب أن تحتفظ المؤسسة بمالك واحد على الأقل.",
     "cannot_remove_self": "لا يمكنك إزالة نفسك.",
-    "invitation_invalid": "هذه الدعوة غير صالحة أو منتهية أو مستخدمة من قبل."
+    "invitation_invalid": "هذه الدعوة غير صالحة أو منتهية أو مستخدمة من قبل.",
+    "invalid_image": "صورة غير صالحة: استخدم ملف PNG أو JPG أو WebP.",
+    "image_too_large": "الصورة كبيرة جداً ({max} ميغابايت كحد أقصى)."
   },
   "status": {
     "scheduled": "موعد قادم",
@@ -328,7 +330,13 @@
     "booking": "الحجز عبر الإنترنت",
     "allowBooking": "السماح بحجز المواعيد",
     "slotDuration": "مدة الفترة (بالدقائق)",
-    "bookingLocked": "الحجز متاح ابتداءً من باقة Starter."
+    "bookingLocked": "الحجز متاح ابتداءً من باقة Starter.",
+    "logo": "الشعار",
+    "logoUpload": "اختيار شعار",
+    "logoRemove": "إزالة",
+    "logoHint": "PNG أو JPG أو WebP، بحد أقصى 2 ميغابايت. يظهر على شاشة التلفاز وصفحة العميل والتذكرة والملصق.",
+    "logoUpdated": "تم تحديث الشعار",
+    "logoRemoved": "تمت إزالة الشعار"
   },
   "analytics": {
     "title": "تحليلات",
@@ -568,7 +576,8 @@
       "team_join": "عضو جديد",
       "user_password_reset": "إعادة تعيين كلمة المرور",
       "user_password_change": "تغيير كلمة المرور",
-      "user_email_change": "تغيير البريد الإلكتروني"
+      "user_email_change": "تغيير البريد الإلكتروني",
+      "org_logo": "تغيير الشعار"
     },
     "settingsSubtitle": "أدر حسابك وإعدادات المنصة",
     "tabProfile": "الملف الشخصي",
