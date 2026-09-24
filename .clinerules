@@ -4,7 +4,7 @@
 - Next.js 15 (App Router), React 19, TypeScript strict
 - Tailwind CSS v3 (darkMode: class, design system avec variables CSS)
 - next-intl v4 (locales: fr, en, ar | defaultLocale: ar | localePrefix: as-needed)
-- Prisma ORM (SQLite dev, PostgreSQL production)
+- Prisma ORM (SQLite dev, PostgreSQL production : `prisma/postgres`, généré par `npm run db:pg:sync`)
 - next-themes v0.4 (ThemeProvider, light/dark/system)
 - Composants maison style shadcn/ui dans `src/components/ui/` (Button avec `asChild`, Dialog natif, Input/Label/Select)
 - Icônes Lucide React
@@ -26,10 +26,15 @@
 - Les codes d'erreur sont traduits côté client via `errors.<code>` (`useErrorMessage()` de `@/lib/api-client`)
 - Le flux public `/api/stream/branch/[qrToken]` ne doit JAMAIS contenir de données personnelles (utiliser `toPublicSnapshot`)
 - Après toute modification de la file : `await publishBranchUpdate(branchId)`
+- Limitation de débit : `await enforceRateLimit(clé, limite, fenêtreMs)` — asynchrone (Redis si `REDIS_URL`)
+- Données personnelles (loi 09-08) : aucune donnée client (prénom, téléphone) dans `audit()` ni dans les journaux ; erreurs serveur via `reportError()` (`@/lib/monitoring`)
 
 ## Coding
 - Toujours `useTranslations()` / `getTranslations()` pour les textes visibles, jamais de texte en dur
 - Les nouvelles clés vont dans `messages/fr.json`, `en.json` ET `ar.json` (le test `src/i18n/messages.test.ts` vérifie la parité)
+- Un composant client qui utilise un nouvel espace de noms : l'ajouter à `CLIENT_NAMESPACES` (`src/i18n/client-messages.ts`, vérifié par test) — les textes longs ou serveur (pages légales, e-mails, SMS) n'y vont pas
+- Recherche texte en base : `containsText()` de `@/lib/db` (insensible à la casse en SQLite comme en PostgreSQL)
+- Schéma Prisma modifié : `npm run db:push`, puis `npm run db:pg:sync` et une migration PostgreSQL (`npm run db:pg:new-migration`)
 - Navigation : `Link`, `useRouter`, `usePathname` de `@/i18n/routing` ; redirection serveur : `redirectTo()` de `@/i18n/server` (jamais `next/link` ni `next/navigation` directement : la langue serait perdue)
 - Dates/heures : `formatTime`, `formatDateTime`… de `@/lib/format` avec le fuseau de l'agence ; « aujourd'hui » se calcule avec `getDayWindow(now, branch.timezone)` de `@/lib/time`, jamais avec `setHours(0,0,0,0)`
 - TypeScript strict : pas de `any`, typer paramètres et retours

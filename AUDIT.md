@@ -4,7 +4,7 @@
 > Méthode : lecture intégrale du code, `tsc --noEmit`, `next build`, `npm audit`, vérification des flux (QR → ticket → suivi → dashboard → TV → admin).
 >
 > Légende sévérité : 🔴 critique · 🟠 majeur · 🟡 mineur · 🟢 amélioration/fonctionnalité
-> Statut : ✅ corrigé dans cette passe · ⏳ reste à faire (voir « Recommandations »)
+> Statut : ✅ corrigé — **tous les points sont traités** (1re passe : sécurité, bugs, dette, F1–F9 ; 2e passe : F10–F16 et recommandations de production, voir § 8)
 
 ---
 
@@ -76,21 +76,26 @@ L'application fonctionne (build et typage OK) et le cœur produit est bien pens�
 | F7 | P1 | **Multi-succursales** : création de succursale (dans la limite du plan) + sélecteur d'agence dans le dashboard (analytics, clients, QR, affiche suivent). | ✅ |
 | F8 | P1 | Boîte de dialogue « Pause » (durées prédéfinies + motif). | ✅ |
 | F9 | P1 | `/api/health` (supervision), pages 404 localisées. | ✅ |
-| F10 | P1 | Réinitialisation de mot de passe par e-mail (nécessite un fournisseur : Resend/SMTP). | ⏳ |
-| F11 | P1 | SMS / WhatsApp (Twilio ou WhatsApp Cloud API) pour les clients sans notif push. | ⏳ |
-| F12 | P2 | Gestion d'équipe : les rôles `owner/manager/staff` existent en base mais ne sont jamais vérifiés ; invitations. | ⏳ |
-| F13 | P2 | Upload de logo (`logoUrl` jamais renseigné). | ⏳ |
-| F14 | P2 | Avis client après service (note 1–5) → satisfaction dans les analytics. | ⏳ |
-| F15 | P2 | Paiement des abonnements (Stripe / CMI pour le Maroc). | ⏳ |
-| F16 | P2 | Conformité loi 09-08 (CNDP) : politique de confidentialité, consentement, purge automatique des données clients. | ⏳ |
+| F10 | P1 | Réinitialisation de mot de passe par e-mail (nécessite un fournisseur : Resend/SMTP). |✅ |
+| F11 | P1 | SMS / WhatsApp (Twilio ou WhatsApp Cloud API) pour les clients sans notif push. |✅ |
+| F12 | P2 | Gestion d'équipe : les rôles `owner/manager/staff` existent en base mais ne sont jamais vérifiés ; invitations. |✅ |
+| F13 | P2 | Upload de logo (`logoUrl` jamais renseigné). |✅ |
+| F14 | P2 | Avis client après service (note 1–5) → satisfaction dans les analytics. |✅ |
+| F15 | P2 | Paiement des abonnements (Stripe / CMI pour le Maroc). |✅ |
+| F16 | P2 | Conformité loi 09-08 (CNDP) : politique de confidentialité, consentement, purge automatique des données clients. |✅ |
 
-## 6. Recommandations production (hors code)
+## 6. Recommandations production
 
-- **Base** : passer à PostgreSQL (`provider = "postgresql"`) et à `prisma migrate` (au lieu de `db push`).
-- **Temps réel multi-instance** : le bus SSE et le rate limiting sont en mémoire → Redis (Upstash) dès qu'il y a plus d'une instance.
-- **Secrets** : `JWT_SECRET` (≥ 32 caractères aléatoires), clés VAPID (`npx web-push generate-vapid-keys`), `NEXT_PUBLIC_APP_URL` en HTTPS.
-- **Marketing** : les chiffres de la landing (« +500 commerces », « +50 000 tickets », « -40 % d'attente ») doivent être réels ou retirés (crédibilité, publicité trompeuse).
-- **Supervision** : brancher `/api/health` sur un moniteur (UptimeRobot, Better Stack) et un outil d'erreurs (Sentry).
+| Recommandation | Statut |
+|---|---|
+| **Base** : PostgreSQL et migrations versionnées (au lieu de `db push`). | ✅ `prisma/postgres` (schéma généré + migrations), scripts `db:pg:*`, test d'alignement des schémas ; les 8 suites de bout en bout passent sur PostgreSQL 14. |
+| **Temps réel multi-instance** : bus SSE et rate limiting en mémoire. | ✅ `REDIS_URL` : diffusion des instantanés, limitation de débit (script Lua) et dédoublonnage des notifications partagés ; repli immédiat en mémoire si Redis tombe. |
+| **Secrets** : `JWT_SECRET` fort, clés VAPID, URL en HTTPS. | ✅ Le serveur refuse de démarrer en production avec un secret faible ; variables documentées (`.env.example`, README). |
+| **Marketing** : chiffres de la landing invérifiables. | ✅ Remplacés par des faits produit ; logos de marques réelles masqués sur les photos. |
+| **Supervision** : moniteur et outil d'erreurs. | ✅ `/api/health` (base + Redis), journaux JSON, alertes `ERROR_WEBHOOK_URL`. |
+| **Déploiement** | ✅ `Dockerfile` (standalone, sans root, healthcheck) et `docker-compose` (PostgreSQL, Redis, migrations). |
+
+Reste hors code, à la charge de l'éditeur : faire valider les textes légaux par un juriste et effectuer la déclaration CNDP (renseigner `LEGAL_*`, `CNDP_DECLARATION`) ; ouvrir les comptes Stripe (ou CMI), Twilio (modèles WhatsApp validés par Meta) et le fournisseur d'e-mails ; générer les clés VAPID.
 
 ---
 
@@ -133,4 +138,50 @@ Une relecture du code par un second agent a trouvé 9 points, tous corrigés et 
 - Les **limites des offres sont désormais appliquées** : avec les valeurs par défaut, l'offre *Gratuit* n'a ni réservation ni analytics. Ajustez-les dans *Superadmin → Réglages → Offres & limites* si besoin.
 - Pour la production : définir `JWT_SECRET` (le serveur refuse les sessions sinon) et, pour le push, les clés VAPID + HTTPS.
 - Après mise à jour : `npm install` puis `npm run db:push` (nouvelles tables `DailyCounter`, `PushSubscription`, colonne `Ticket.recallCount`).
-- L'image `salon-coiffure.jpg` de la landing montre un logo de marque réelle (L'Oréal) : à remplacer pour un usage commercial.
+- ~~L'image `salon-coiffure.jpg` montre un logo de marque réelle (L'Oréal)~~ → traité lors de la 2e passe (enseigne et logos masqués).
+
+---
+
+## 8. Journal d'exécution — 2e passe (24/09/2026)
+
+Tous les points restants (F10–F16, recommandations de production) ont été traités, un commit par thème :
+
+| Commit | Thème |
+|---|---|
+| `d2b9e37` | F10 — mot de passe oublié (lien à usage unique 1 h), « Mon compte », révocation des sessions au changement de mot de passe |
+| `f5e54d4` | F12 — rôles owner / manager / staff appliqués (API et pages), invitations par lien (7 jours) |
+| `705e9f8`, `2dc9091` | F13 — logo (PNG/JPG/WebP, SVG refusé, 512 px WebP), stocké dans sa propre table |
+| `37fef30` | F14 — avis client (1–5 étoiles, commentaire), satisfaction et note par employé dans les analytics, export CSV |
+| `8cc4326` | F16 — loi 09-08 : `/privacy`, `/terms`, consentement horodaté, durée de conservation et purge quotidienne, export / effacement d'un client |
+| `48a4528`, `20e2b79` | F11 — SMS / WhatsApp (Twilio) : consentement, « bientôt votre tour » + appel, quota par offre, dédoublonnage en base |
+| `4467c6e` | Performance — seuls les messages des composants client sont envoyés au navigateur (page QR : 65 → 52 Ko) |
+| `54003c5` | F15 — abonnements : Stripe Checkout, portail, webhook signé ; contact manuel sans Stripe (Maroc) |
+| `236edcd` | Redis optionnel (plusieurs instances) |
+| `d837dcf` | PostgreSQL + migrations |
+| `a30273f` | Docker / docker compose |
+| `6efc726` | Supervision des erreurs, refus de démarrer sans secret fort |
+| `c9bfa6b` | vitest 4.1.11 (avis GHSA-82fw-gwwq-j7x9) |
+| `8c89537` | Landing : chiffres invérifiables retirés, marques réelles masquées |
+
+### Vérifications
+| Contrôle | Résultat |
+|---|---|
+| `tsc --noEmit`, ESLint | OK, 0 problème |
+| Tests unitaires (Vitest) | **261 tests, 22 fichiers** (phone, SMS/Twilio, facturation, rétention, Redis/Lua, diffusion multi-instance, supervision, i18n…) |
+| Tests de bout en bout (serveur de production local, faux Twilio et faux Stripe) | **205 contrôles, 8 suites** : socle 69, auth 16, équipe 22, logo 8, avis 18, confidentialité 30, SMS 21, abonnements 21 |
+| Même suites sur **PostgreSQL 14** et sur la **sortie standalone** (image Docker) | 205 / 205 |
+| Redis configuré mais injoignable | socle 69 / 69, repli immédiat en mémoire |
+| `npm audit` (dépendances de développement comprises) | **0 vulnérabilité** |
+
+### Découvert et corrigé pendant la passe
+- Le logo stocké dans `Organization` était chargé à chaque requête authentifiée → table `OrgLogo`.
+- Tout le catalogue de traductions (textes légaux, e-mails, SMS…) était sérialisé dans chaque page.
+- Arabe : « 09-08 » s'affichait « 08-09 » (algorithme bidirectionnel) → notation officielle « 09.08 ».
+- Pages légales rendues à la demande : éditeur et n° CNDP lus à l'exécution (image Docker construite sans secrets).
+- Redis injoignable : chaque requête attendait l'échec de la commande → repli immédiat tant que la connexion n'est pas prête.
+
+### À savoir (2e passe)
+- Après mise à jour : `npm install`, puis `npm run db:push` (SQLite) ou `npm run db:pg:migrate` (PostgreSQL) — nouvelles tables `Feedback`, `SmsMessage`, `OrgLogo`, `Invitation`, `PasswordResetToken` et colonnes (conservation, consentement, SMS, abonnement).
+- Non vérifiable sur ce poste : la construction de l'image Docker (Docker absent ; la sortie standalone a été testée), un vrai Redis (testé avec ioredis-mock et en panne simulée), les vrais services Twilio et Stripe (testés contre des serveurs factices fidèles à leurs API).
+- `enforceRateLimit` est désormais asynchrone : toujours l'appeler avec `await`.
+

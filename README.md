@@ -94,7 +94,8 @@ src/
 │   │   ├── q/[qrToken]/          # Page publique : prendre un ticket / réserver
 │   │   ├── t/[publicCode]/       # Suivi du ticket client (temps réel + notifications)
 │   │   ├── screen/[qrToken]/     # Écran TV (annonces vocales)
-│   │   ├── dashboard/            # Espace pro : file, analytics, clients, QR, réglages
+│   │   ├── dashboard/            # Espace pro : file, analytics, clients, QR, réglages, équipe, abonnement, compte
+│   │   ├── privacy, terms        # Politique de confidentialité, conditions d'utilisation
 │   │   ├── admin/                # Superadmin : vue globale, organisations, audit, réglages
 │   │   └── login, signup, poster
 │   └── api/
@@ -109,7 +110,12 @@ src/
 │   ├── time.ts, opening-hours.ts, slots.ts  # Fuseaux, horaires, créneaux (testés)
 │   ├── ticket-status.ts          # Machine à états des tickets (testée)
 │   ├── plans.ts                  # Limites des offres (appliquées côté serveur)
+│   ├── billing.ts                # Abonnements Stripe (Checkout, portail, synchronisation webhook)
 │   ├── push.ts / push-client.ts  # Web Push serveur / navigateur
+│   ├── sms.ts, sms-notify.ts     # SMS / WhatsApp (Twilio), quota et dédoublonnage
+│   ├── retention.ts              # Purge quotidienne des données expirées (loi 09-08)
+│   ├── redis.ts                  # État partagé entre instances (optionnel)
+│   ├── monitoring.ts             # Journal JSON et alertes des erreurs serveur
 │   └── rate-limit.ts, api.ts, api-client.ts, format.ts…
 └── i18n/                         # routing, request, redirectTo (redirections localisées)
 ```
