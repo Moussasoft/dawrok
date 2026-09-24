@@ -68,6 +68,7 @@ model Branch {
   tickets      Ticket[]
   customers    Customer[]
   auditLogs    AuditLog[]
+  counters     DailyCounter[]
 
   @@index([orgId])
 }
@@ -111,8 +112,9 @@ model Ticket {
   customerId   String?  // linked Customer for history
   serviceId    String?
   employeeId   String?
-  status       String   @default("waiting") // waiting | called | in_progress | done | no_show | cancelled
-  priority     Int      @default(0)
+  status       String   @default("waiting") // scheduled | waiting | called | in_progress | done | no_show | cancelled
+  priority     Int      @default(0)        // 1 = RDV arrivé à échéance (passe en tête de file)
+  recallCount  Int      @default(0)        // nombre de rappels (ré-annonce TV + notification)
   kind         String   @default("walkin")  // walkin | appointment
   scheduledFor DateTime? // for advance bookings
   cancelToken  String?  @unique             // token allowing public cancel via /api/tickets/cancel/[token]
@@ -126,11 +128,38 @@ model Ticket {
   service  Service?  @relation(fields: [serviceId], references: [id])
   employee Employee? @relation(fields: [employeeId], references: [id])
   customer Customer? @relation(fields: [customerId], references: [id])
+  pushSubscriptions PushSubscription[]
 
   @@index([branchId, status])
   @@index([branchId, createdAt])
   @@index([branchId, scheduledFor])
   @@index([customerId])
+}
+
+// Numérotation atomique : un compteur par agence et par jour local (fuseau de l'agence).
+model DailyCounter {
+  branchId String
+  day      String // AAAA-MM-JJ
+  value    Int    @default(0)
+
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@id([branchId, day])
+}
+
+// Abonnements Web Push d'un client pour suivre son ticket écran verrouillé.
+model PushSubscription {
+  id        String   @id @default(cuid())
+  ticketId  String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  locale    String   @default("ar")
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId])
 }
 
 // =========================================================

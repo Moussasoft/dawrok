@@ -1,6 +1,7 @@
-// Demo seed for Daourak
+// Données de démonstration Daourak
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
@@ -144,7 +145,7 @@ async function main() {
     }
   }
 
-  // Add a few live waiting tickets for today
+  // Quelques tickets en attente aujourd'hui
   for (let i = 0; i < 4; i++) {
     await prisma.ticket.create({
       data: {
@@ -153,10 +154,18 @@ async function main() {
         customerName: ['Ahmed', 'Sara', 'Omar', 'Lina'][i],
         serviceId: services[i % services.length].id,
         status: 'waiting',
+        cancelToken: crypto.randomBytes(16).toString('hex'),
         createdAt: new Date(Date.now() - (3 - i) * 5 * 60000),
       },
     });
   }
+  // Compteur du jour (fuseau de l'agence) aligné sur les tickets créés ci-dessus.
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: branch.timezone }).format(new Date());
+  await prisma.dailyCounter.upsert({
+    where: { branchId_day: { branchId: branch.id, day: today } },
+    update: { value: 4 },
+    create: { branchId: branch.id, day: today, value: 4 },
+  });
 
   console.log('Seed termine.');
   console.log('');
