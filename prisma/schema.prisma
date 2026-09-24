@@ -107,6 +107,7 @@ model Branch {
   customers    Customer[]
   auditLogs    AuditLog[]
   counters     DailyCounter[]
+  feedbacks    Feedback[]
 
   @@index([orgId])
 }
@@ -167,6 +168,7 @@ model Ticket {
   employee Employee? @relation(fields: [employeeId], references: [id])
   customer Customer? @relation(fields: [customerId], references: [id])
   pushSubscriptions PushSubscription[]
+  feedback Feedback?
 
   @@index([branchId, status])
   @@index([branchId, createdAt])
@@ -198,6 +200,21 @@ model PushSubscription {
   ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId])
+}
+
+// Avis du client après son passage : un seul par ticket, possible pendant 7 jours.
+model Feedback {
+  id        String   @id @default(cuid())
+  ticketId  String   @unique
+  branchId  String
+  rating    Int      // 1 à 5
+  comment   String?
+  createdAt DateTime @default(now())
+
+  ticket Ticket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  branch Branch @relation(fields: [branchId], references: [id], onDelete: Cascade)
+
+  @@index([branchId, createdAt])
 }
 
 // =========================================================

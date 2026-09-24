@@ -101,4 +101,6 @@ export type TicketView = {
   /** Clients en cours de service (appelés ou en cours). */
   nowServing: number;
   cancelToken: string | null;
+  /** Avis après passage : null tant que le ticket n'est pas terminé. */
+  feedback: { open: boolean; rating: number | null } | null;
 };

@@ -176,7 +176,9 @@
     "cannot_remove_self": "Vous ne pouvez pas vous retirer vous-même.",
     "invitation_invalid": "Cette invitation est invalide, expirée ou déjà utilisée.",
     "invalid_image": "Image invalide : utilisez un fichier PNG, JPG ou WebP.",
-    "image_too_large": "Image trop lourde ({max} Mo maximum)."
+    "image_too_large": "Image trop lourde ({max} Mo maximum).",
+    "feedback_closed": "Il n’est plus possible de noter ce passage.",
+    "feedback_exists": "Vous avez déjà donné votre avis."
   },
   "status": {
     "scheduled": "RDV à venir",
@@ -361,7 +363,13 @@
     "tickets": "Tickets",
     "hourTooltip": "{hour} h : {count} tickets",
     "lockedTitle": "Analytics non incluses",
-    "lockedDesc": "Passez à l’offre Pro pour suivre l’affluence, les durées et les performances de votre équipe."
+    "lockedDesc": "Passez à l’offre Pro pour suivre l’affluence, les durées et les performances de votre équipe.",
+    "satisfaction": "Satisfaction client",
+    "ratingsCount": "{count, plural, one {# avis} other {# avis}}",
+    "noFeedback": "Aucun avis pour l’instant : les clients peuvent noter leur passage depuis leur ticket.",
+    "recentComments": "Derniers commentaires",
+    "noComments": "Aucun commentaire sur la période.",
+    "rating": "Note"
   },
   "customers": {
     "title": "Clients",
@@ -478,7 +486,14 @@
     "appointmentStartedDesc": "Vous êtes maintenant en file d’attente.",
     "paused": "File temporairement fermée",
     "reopenPlanned": "Réouverture prévue : {time}",
-    "countdownDays": "{days} j"
+    "countdownDays": "{days} j",
+    "feedbackTitle": "Comment s’est passée votre visite ?",
+    "feedbackStars": "{count, plural, one {# étoile} other {# étoiles}}",
+    "feedbackCommentPlaceholder": "Un commentaire ? (facultatif)",
+    "feedbackSend": "Envoyer mon avis",
+    "feedbackSending": "Envoi…",
+    "feedbackThanks": "Merci pour votre avis !",
+    "feedbackPrivacy": "Seul l’établissement voit votre avis."
   },
   "tv": {
     "now": "Maintenant",
@@ -651,7 +666,9 @@
       "kind": "type",
       "scheduledFor": "rdv_prevu",
       "serviceMin": "duree_service_min",
-      "waitMin": "attente_min"
+      "waitMin": "attente_min",
+      "rating": "note",
+      "comment": "commentaire"
     },
     "statuses": {
       "scheduled": "RDV à venir",

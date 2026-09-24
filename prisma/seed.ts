@@ -5,6 +5,14 @@ import crypto from 'crypto';
 
 const prisma = new PrismaClient();
 
+const DEMO_RATINGS = [5, 5, 5, 5, 4, 4, 4, 3, 2];
+const DEMO_COMMENTS: Record<number, string> = {
+  5: 'Très bon accueil, et plus besoin d’attendre sur place !',
+  4: 'Service rapide, estimation d’attente fiable.',
+  3: 'Correct, mais un peu d’attente à mon arrivée.',
+  2: 'Appelé plus tard que prévu.',
+};
+
 async function main() {
   console.log('Seeding demo data...');
 
@@ -128,7 +136,7 @@ async function main() {
       const completed = new Date(started.getTime() + dur * 60000);
       const r = Math.random();
       const status = r < 0.85 ? 'done' : r < 0.92 ? 'no_show' : 'cancelled';
-      await prisma.ticket.create({
+      const ticket = await prisma.ticket.create({
         data: {
           branchId: branch.id,
           number: i + 1,
@@ -142,6 +150,14 @@ async function main() {
           completedAt: completed,
         },
       });
+      // Avis de démonstration sur une partie des passages terminés.
+      if (status === 'done' && Math.random() < 0.4) {
+        const rating = DEMO_RATINGS[Math.floor(Math.random() * DEMO_RATINGS.length)];
+        const comment = Math.random() < 0.3 ? DEMO_COMMENTS[rating] : null;
+        await prisma.feedback.create({
+          data: { ticketId: ticket.id, branchId: branch.id, rating, comment, createdAt: new Date(completed.getTime() + 15 * 60000) },
+        });
+      }
     }
   }
 

@@ -13,6 +13,7 @@ import type { DashboardSnapshot, QueueTicket, TicketView } from './queue-types';
 import { DEFAULT_TIMEZONE, getDayWindow } from './time';
 import { isOpenAt, nextOpening, parseOpenHours } from './opening-hours';
 import { ACTIVE_STATUSES, TERMINAL_STATUSES } from './ticket-status';
+import { isFeedbackOpen } from './feedback';
 
 export { ACTIVE_STATUSES };
 
@@ -350,9 +351,10 @@ export async function getTicketView(
   if (active) return active;
   const raw = await prisma.ticket.findUnique({
     where: { publicCode: ticket.publicCode },
-    include: { service: true, employee: true },
+    include: { service: true, employee: true, feedback: { select: { rating: true } } },
   });
   if (!raw) return null;
+  const rating = raw.feedback?.rating ?? null;
   return {
     updatedAt: snap.updatedAt,
     branch: branchInfoOf(snap),
@@ -371,5 +373,6 @@ export async function getTicketView(
     },
     nowServing: snap.tickets.filter((x) => x.status !== 'waiting').length,
     cancelToken: raw.status === 'scheduled' ? raw.cancelToken : null,
+    feedback: raw.status === 'done' ? { open: rating === null && isFeedbackOpen(raw), rating } : null,
   };
 }

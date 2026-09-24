@@ -1,15 +1,17 @@
 import { Fragment } from 'react';
 import { getLocale, getTranslations } from 'next-intl/server';
-import { BarChart3, Download, Lock } from 'lucide-react';
+import { BarChart3, Download, Lock, MessageSquareQuote } from 'lucide-react';
 import { prisma } from '@/lib/db';
 import { requireOrgPageRole } from '@/lib/guards';
 import { getActiveBranch } from '@/lib/branch';
 import { getOrgLimits } from '@/lib/plans';
 import { redirectTo } from '@/i18n/server';
 import { Card, CardContent } from '@/components/ui/card';
-import { formatDuration, dayKeyParts, weekdayName } from '@/lib/format';
+import { formatDateTime, formatDecimal, formatDuration, dayKeyParts, weekdayName, ticketLabel } from '@/lib/format';
 import { DEFAULT_TIMEZONE, addDaysToKey, dayKey, getZonedParts } from '@/lib/time';
 import { effectiveTime } from '@/lib/queue-logic';
+import { summarizeRatings } from '@/lib/feedback';
+import { Stars } from '../../t/[publicCode]/feedback-form';
 
 export const dynamic = 'force-dynamic';
 
@@ -47,7 +49,7 @@ export default async function AnalyticsPage() {
 
   const tz = branch.timezone || DEFAULT_TIMEZONE;
   const since = new Date(Date.now() - 30 * 86_400_000);
-  const [tickets, employees] = await Promise.all([
+  const [tickets, employees, feedbacks] = await Promise.all([
     prisma.ticket.findMany({
       where: {
         branchId: branch.id,
@@ -67,6 +69,16 @@ export default async function AnalyticsPage() {
       },
     }),
     prisma.employee.findMany({ where: { branchId: branch.id }, select: { id: true, name: true } }),
+    prisma.feedback.findMany({
+      where: { branchId: branch.id, createdAt: { gte: since } },
+      select: {
+        rating: true,
+        comment: true,
+        createdAt: true,
+        ticket: { select: { number: true, employeeId: true, service: { select: { name: true } } } },
+      },
+      orderBy: { createdAt: 'desc' },
+    }),
   ]);
   const empName = new Map(employees.map((e) => [e.id, e.name]));
 
@@ -123,9 +135,24 @@ export default async function AnalyticsPage() {
     }
     empStats.set(name, e);
   }
+  // Satisfaction : avis laissés par les clients après leur passage.
+  const satisfaction = summarizeRatings(feedbacks.map((f) => f.rating));
+  const maxRating = Math.max(1, ...satisfaction.distribution);
+  const recentComments = feedbacks.filter((f) => f.comment).slice(0, 8);
+  const empRatings = new Map<string, number[]>();
+  for (const f of feedbacks) {
+    if (!f.ticket.employeeId) continue;
+    const name = empName.get(f.ticket.employeeId) ?? '—';
+    empRatings.set(name, [...(empRatings.get(name) ?? []), f.rating]);
+  }
+
   const empRows = Array.from(empStats.entries())
-    .map(([name, s]) => ({ name, total: s.total, done: s.done, noShow: s.noShow, avgDur: avg(s.durations) }))
+    .map(([name, s]) => {
+      const r = summarizeRatings(empRatings.get(name) ?? []);
+      return { name, total: s.total, done: s.done, noShow: s.noShow, avgDur: avg(s.durations), rating: r.count ? r.average : null };
+    })
     .sort((a, b) => b.total - a.total);
+  const ratingLabel = (v: number) => formatDecimal(v, locale);
 
   return (
     <div className="container py-6">
@@ -220,6 +247,63 @@ export default async function AnalyticsPage() {
             </ul>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="mb-4 font-semibold">{t('satisfaction')}</h2>
+            {satisfaction.count === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('noFeedback')}</p>
+            ) : (
+              <div className="flex flex-wrap items-center gap-6">
+                <div className="text-center">
+                  <div className="text-4xl font-extrabold tabular-nums">
+                    {ratingLabel(satisfaction.average)}
+                    <span className="text-lg font-medium text-muted-foreground"> / 5</span>
+                  </div>
+                  <Stars value={satisfaction.average} className="mt-1" />
+                  <div className="mt-1 text-xs text-muted-foreground">{t('ratingsCount', { count: satisfaction.count })}</div>
+                </div>
+                <div className="min-w-[180px] flex-1 space-y-1.5">
+                  {[5, 4, 3, 2, 1].map((n) => (
+                    <div key={n} className="flex items-center gap-2 text-xs">
+                      <span className="w-3 tabular-nums">{n}</span>
+                      <div className="h-2.5 flex-1 overflow-hidden rounded bg-muted">
+                        <div className="h-full bg-amber-400" style={{ width: `${(satisfaction.distribution[n - 1] / maxRating) * 100}%` }} />
+                      </div>
+                      <span className="w-6 text-end tabular-nums text-muted-foreground">{satisfaction.distribution[n - 1]}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="mb-4 flex items-center gap-2 font-semibold">
+              <MessageSquareQuote className="h-4 w-4 text-primary" /> {t('recentComments')}
+            </h2>
+            {recentComments.length === 0 ? (
+              <p className="text-sm text-muted-foreground">{t('noComments')}</p>
+            ) : (
+              <ul className="max-h-72 space-y-3 overflow-y-auto pe-1">
+                {recentComments.map((f, i) => (
+                  <li key={i} className="rounded-lg bg-muted/60 p-3 text-sm">
+                    <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                      <Stars value={f.rating} className="[&_svg]:h-3.5 [&_svg]:w-3.5" />
+                      <span>{formatDateTime(f.createdAt, locale, tz)}</span>
+                      <span>· {ticketLabel(f.ticket.number)}</span>
+                      {f.ticket.service?.name && <span>· {f.ticket.service.name}</span>}
+                      {f.ticket.employeeId && <span>· {empName.get(f.ticket.employeeId) ?? '—'}</span>}
+                    </div>
+                    <p className="whitespace-pre-line break-words">{f.comment}</p>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <Card className="mt-6">
@@ -263,6 +347,7 @@ export default async function AnalyticsPage() {
                   <th className="text-end">{t('served')}</th>
                   <th className="text-end">{t('noShow')}</th>
                   <th className="text-end">{t('avgService')}</th>
+                  <th className="text-end">{t('rating')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -273,6 +358,7 @@ export default async function AnalyticsPage() {
                     <td className="text-end tabular-nums text-emerald-600">{r.done}</td>
                     <td className="text-end tabular-nums text-amber-600">{r.noShow}</td>
                     <td className="text-end tabular-nums">{formatDuration(r.avgDur, locale)}</td>
+                    <td className="text-end tabular-nums">{r.rating === null ? '—' : `${ratingLabel(r.rating)} ★`}</td>
                   </tr>
                 ))}
               </tbody>

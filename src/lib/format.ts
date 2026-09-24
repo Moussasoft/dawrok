@@ -33,6 +33,11 @@ export function formatNumber(value: number, locale: string): string {
   return new Intl.NumberFormat(intlLocale(locale)).format(value);
 }
 
+/** Nombre à décimales fixes (ex. note moyenne « 4,5 »). */
+export function formatDecimal(value: number, locale: string, digits = 1): string {
+  return new Intl.NumberFormat(intlLocale(locale), { minimumFractionDigits: digits, maximumFractionDigits: digits }).format(value);
+}
+
 /** Nom court du jour de semaine (0 = dimanche), dans la langue. */
 export function weekdayName(weekday: number, locale: string, style: 'short' | 'long' = 'short'): string {
   // 4 janvier 1970 était un dimanche.

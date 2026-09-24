@@ -3,6 +3,7 @@ import {
   dayKeyParts,
   formatDate,
   formatDateTime,
+  formatDecimal,
   formatDuration,
   formatLongDateTime,
   formatNumber,
@@ -115,5 +116,13 @@ describe('formatTime et formats de date', () => {
   it('formate les nombres selon la langue', () => {
     expect(formatNumber(1234.5, 'fr')).toMatch(/^1\s234,5$/);
     expect(formatNumber(1234.5, 'en')).toBe('1,234.5');
+  });
+});
+
+describe('formatDecimal', () => {
+  it('affiche une décimale avec le séparateur de la langue, en chiffres latins', () => {
+    expect(formatDecimal(4.5, 'fr')).toBe('4,5');
+    expect(formatDecimal(4, 'en')).toBe('4.0');
+    expect(formatDecimal(3.25, 'ar')).not.toMatch(EASTERN_DIGITS);
   });
 });

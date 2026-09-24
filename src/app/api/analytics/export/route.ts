@@ -13,7 +13,22 @@ import { isTicketStatus } from '@/lib/ticket-status';
 
 export const dynamic = 'force-dynamic';
 
-const COLUMNS = ['number', 'date', 'time', 'customer', 'phone', 'service', 'employee', 'status', 'kind', 'scheduledFor', 'serviceMin', 'waitMin'] as const;
+const COLUMNS = [
+  'number',
+  'date',
+  'time',
+  'customer',
+  'phone',
+  'service',
+  'employee',
+  'status',
+  'kind',
+  'scheduledFor',
+  'serviceMin',
+  'waitMin',
+  'rating',
+  'comment',
+] as const;
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -30,7 +45,7 @@ export const GET = route(async (req) => {
   const since = new Date(Date.now() - 90 * 86_400_000);
   const tickets = await prisma.ticket.findMany({
     where: { branchId: branch.id, createdAt: { gte: since } },
-    include: { service: true, employee: true },
+    include: { service: true, employee: true, feedback: { select: { rating: true, comment: true } } },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -54,6 +69,8 @@ export const GET = route(async (req) => {
         sched ? `${sched.year}-${pad(sched.month)}-${pad(sched.day)} ${pad(sched.hour)}:${pad(sched.minute)}` : '',
         dur,
         wait,
+        tk.feedback?.rating ?? '',
+        tk.feedback?.comment ?? '',
       ]
         .map(csvEscape)
         .join(',')

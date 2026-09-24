@@ -18,6 +18,7 @@ import {
 import type { TicketView } from '@/lib/queue-types';
 import { WaitingView } from '@/components/client-ticket-view';
 import { Button } from '@/components/ui/button';
+import { FeedbackForm } from './feedback-form';
 
 type NotifState = 'off' | 'local' | 'push' | 'denied' | 'unsupported';
 
@@ -221,7 +222,10 @@ export function LiveTicket({ publicCode, initial }: { publicCode: string; initia
           </div>
         )}
         {tk.status === 'done' && (
-          <FinalState icon={<CheckCircle2 className="h-16 w-16 text-success" />} title={t('done')} desc={t('thanks')} />
+          <>
+            <FinalState icon={<CheckCircle2 className="h-16 w-16 text-success" />} title={t('done')} desc={t('thanks')} />
+            {view.feedback && <FeedbackForm publicCode={publicCode} feedback={view.feedback} />}
+          </>
         )}
         {tk.status === 'cancelled' && <FinalState icon={<Ban className="h-14 w-14 text-muted-foreground" />} title={t('cancelled')} />}
         {tk.status === 'no_show' && (

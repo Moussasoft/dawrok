@@ -166,6 +166,7 @@ export function toActiveTicketView(
     },
     nowServing: snap.tickets.filter((x) => x.status !== 'waiting').length,
     cancelToken: t.status === 'in_progress' ? null : cancelToken,
+    feedback: null,
   };
 }
 

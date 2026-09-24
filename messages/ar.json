@@ -176,7 +176,9 @@
     "cannot_remove_self": "لا يمكنك إزالة نفسك.",
     "invitation_invalid": "هذه الدعوة غير صالحة أو منتهية أو مستخدمة من قبل.",
     "invalid_image": "صورة غير صالحة: استخدم ملف PNG أو JPG أو WebP.",
-    "image_too_large": "الصورة كبيرة جداً ({max} ميغابايت كحد أقصى)."
+    "image_too_large": "الصورة كبيرة جداً ({max} ميغابايت كحد أقصى).",
+    "feedback_closed": "لم يعد بالإمكان تقييم هذه الزيارة.",
+    "feedback_exists": "لقد قدّمت رأيك مسبقاً."
   },
   "status": {
     "scheduled": "موعد قادم",
@@ -361,7 +363,13 @@
     "tickets": "التذاكر",
     "hourTooltip": "{hour}:00 : {count} تذكرة",
     "lockedTitle": "التحليلات غير مشمولة",
-    "lockedDesc": "انتقل إلى باقة Pro لمتابعة الإقبال والمدد وأداء فريقك."
+    "lockedDesc": "انتقل إلى باقة Pro لمتابعة الإقبال والمدد وأداء فريقك.",
+    "satisfaction": "رضا العملاء",
+    "ratingsCount": "{count, plural, zero {لا تقييمات} one {تقييم واحد} two {تقييمان} few {# تقييمات} many {# تقييماً} other {# تقييم}}",
+    "noFeedback": "لا توجد تقييمات بعد: يمكن للعملاء تقييم زيارتهم من تذكرتهم.",
+    "recentComments": "آخر التعليقات",
+    "noComments": "لا توجد تعليقات خلال هذه الفترة.",
+    "rating": "التقييم"
   },
   "customers": {
     "title": "العملاء",
@@ -478,7 +486,14 @@
     "appointmentStartedDesc": "أنت الآن في طابور الانتظار.",
     "paused": "الطابور مغلق مؤقتاً",
     "reopenPlanned": "إعادة الفتح المتوقعة: {time}",
-    "countdownDays": "{days} ي"
+    "countdownDays": "{days} ي",
+    "feedbackTitle": "كيف كانت زيارتك؟",
+    "feedbackStars": "{count, plural, one {نجمة واحدة} two {نجمتان} few {# نجوم} many {# نجمة} other {# نجمة}}",
+    "feedbackCommentPlaceholder": "تعليق؟ (اختياري)",
+    "feedbackSend": "إرسال رأيي",
+    "feedbackSending": "جارٍ الإرسال…",
+    "feedbackThanks": "شكراً على رأيك!",
+    "feedbackPrivacy": "رأيك يطّلع عليه المحل فقط."
   },
   "tv": {
     "now": "الآن",
@@ -651,7 +666,9 @@
       "kind": "النوع",
       "scheduledFor": "وقت_الموعد",
       "serviceMin": "مدة_الخدمة_د",
-      "waitMin": "الانتظار_د"
+      "waitMin": "الانتظار_د",
+      "rating": "التقييم",
+      "comment": "التعليق"
     },
     "statuses": {
       "scheduled": "موعد قادم",

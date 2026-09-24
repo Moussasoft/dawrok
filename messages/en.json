@@ -176,7 +176,9 @@
     "cannot_remove_self": "You cannot remove yourself.",
     "invitation_invalid": "This invitation is invalid, expired or already used.",
     "invalid_image": "Invalid image: use a PNG, JPG or WebP file.",
-    "image_too_large": "Image too large ({max} MB maximum)."
+    "image_too_large": "Image too large ({max} MB maximum).",
+    "feedback_closed": "This visit can no longer be rated.",
+    "feedback_exists": "You have already given your feedback."
   },
   "status": {
     "scheduled": "Upcoming appointment",
@@ -361,7 +363,13 @@
     "tickets": "Tickets",
     "hourTooltip": "{hour}:00: {count} tickets",
     "lockedTitle": "Analytics not included",
-    "lockedDesc": "Upgrade to the Pro plan to track traffic, durations and your team's performance."
+    "lockedDesc": "Upgrade to the Pro plan to track traffic, durations and your team's performance.",
+    "satisfaction": "Customer satisfaction",
+    "ratingsCount": "{count, plural, one {# review} other {# reviews}}",
+    "noFeedback": "No feedback yet: customers can rate their visit from their ticket.",
+    "recentComments": "Latest comments",
+    "noComments": "No comments over this period.",
+    "rating": "Rating"
   },
   "customers": {
     "title": "Customers",
@@ -478,7 +486,14 @@
     "appointmentStartedDesc": "You are now in the queue.",
     "paused": "Queue temporarily closed",
     "reopenPlanned": "Planned reopening: {time}",
-    "countdownDays": "{days} d"
+    "countdownDays": "{days} d",
+    "feedbackTitle": "How was your visit?",
+    "feedbackStars": "{count, plural, one {# star} other {# stars}}",
+    "feedbackCommentPlaceholder": "Any comment? (optional)",
+    "feedbackSend": "Send my feedback",
+    "feedbackSending": "Sending…",
+    "feedbackThanks": "Thank you for your feedback!",
+    "feedbackPrivacy": "Only the business can see your feedback."
   },
   "tv": {
     "now": "Now serving",
@@ -651,7 +666,9 @@
       "kind": "type",
       "scheduledFor": "appointment_time",
       "serviceMin": "service_duration_min",
-      "waitMin": "wait_min"
+      "waitMin": "wait_min",
+      "rating": "rating",
+      "comment": "comment"
     },
     "statuses": {
       "scheduled": "upcoming appointment",
