@@ -73,9 +73,12 @@
     "restaurantDesc": "مطاعم ومقاهي"
   },
   "home": {
-    "statsClients": "+500 متجر",
-    "statsTickets": "+50,000 تذكرة",
-    "statsTime": "-40% وقت انتظار",
+    "statsLanguages": "3 لغات",
+    "statsLanguagesDesc": "العربية · الفرنسية · الإنجليزية",
+    "statsNoApp": "بدون تطبيق",
+    "statsNoAppDesc": "كل شيء يعمل من المتصفح",
+    "statsRealtime": "متابعة فورية",
+    "statsRealtimeDesc": "شاشة التلفاز والهاتف والإشعارات",
     "preview": "نظرة على لوحة التحكم",
     "phonePreview": "العميل يمسح الرمز ويتابع دوره"
   },

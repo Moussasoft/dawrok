@@ -73,9 +73,12 @@
     "restaurantDesc": "Restaurants et cafés"
   },
   "home": {
-    "statsClients": "+500 commerces",
-    "statsTickets": "+50 000 tickets",
-    "statsTime": "-40% d'attente",
+    "statsLanguages": "3 langues",
+    "statsLanguagesDesc": "arabe · français · anglais",
+    "statsNoApp": "0 appli à installer",
+    "statsNoAppDesc": "tout se passe dans le navigateur",
+    "statsRealtime": "Temps réel",
+    "statsRealtimeDesc": "écran TV, mobile et notifications",
     "preview": "Aperçu du dashboard",
     "phonePreview": "Le client scanne et suit son tour"
   },

@@ -15,7 +15,7 @@ import {
   UtensilsCrossed,
   Zap,
   Clock,
-  Star,
+  Languages,
 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
@@ -182,14 +182,16 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
 
       <section className="border-y bg-muted/30 py-10">
         <div className="container grid grid-cols-3 gap-4 text-center">
+          {/* Des faits vérifiables sur le produit, pas des chiffres de clientèle invérifiables. */}
           {[
-            { i: Star, l: t('home.statsClients') },
-            { i: QrCode, l: t('home.statsTickets') },
-            { i: Clock, l: t('home.statsTime') },
+            { i: Languages, l: t('home.statsLanguages'), d: t('home.statsLanguagesDesc') },
+            { i: Smartphone, l: t('home.statsNoApp'), d: t('home.statsNoAppDesc') },
+            { i: Clock, l: t('home.statsRealtime'), d: t('home.statsRealtimeDesc') },
           ].map((s) => (
             <div key={s.l} className="flex flex-col items-center gap-1">
               <s.i className="mb-1 h-5 w-5 text-primary" />
-              <span className="text-2xl font-extrabold md:text-3xl">{s.l}</span>
+              <span className="text-xl font-extrabold md:text-3xl">{s.l}</span>
+              <span className="text-xs text-muted-foreground md:text-sm">{s.d}</span>
             </div>
           ))}
         </div>
