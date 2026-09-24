@@ -29,10 +29,11 @@ export const POST = route(async (req) => {
     throw e;
   }
   const logoUrl = `/api/orgs/${auth.orgId}/logo?v=${Date.now()}`;
-  await prisma.organization.update({
-    where: { id: auth.orgId },
-    data: { logoData: processed.data, logoMime: processed.mime, logoUrl },
-  });
+  const image = { data: processed.data, mime: processed.mime };
+  await prisma.$transaction([
+    prisma.orgLogo.upsert({ where: { orgId: auth.orgId }, update: image, create: { orgId: auth.orgId, ...image } }),
+    prisma.organization.update({ where: { id: auth.orgId }, data: { logoUrl } }),
+  ]);
   await audit({ action: 'org.logo', actor: auth, orgId: auth.orgId, targetType: 'organization', targetId: auth.orgId });
   await republish(auth.orgId);
   return NextResponse.json({ ok: true, logoUrl });
@@ -40,7 +41,10 @@ export const POST = route(async (req) => {
 
 export const DELETE = route(async () => {
   const auth = await requireOrgRole('owner');
-  await prisma.organization.update({ where: { id: auth.orgId }, data: { logoData: null, logoMime: null, logoUrl: null } });
+  await prisma.$transaction([
+    prisma.orgLogo.deleteMany({ where: { orgId: auth.orgId } }),
+    prisma.organization.update({ where: { id: auth.orgId }, data: { logoUrl: null } }),
+  ]);
   await republish(auth.orgId);
   return NextResponse.json({ ok: true });
 });

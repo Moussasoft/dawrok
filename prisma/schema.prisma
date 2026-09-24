@@ -19,8 +19,6 @@ model Organization {
   plan       String   @default("free")  // free | starter | pro | business
   brandColor String   @default("#6366F1")
   logoUrl    String?  // /api/orgs/{id}/logo?v=… (versionnée pour le cache)
-  logoData   Bytes?   // logo redimensionné (WebP), stocké en base : portable, sans disque partagé
-  logoMime   String?
   suspended  Boolean  @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
@@ -28,6 +26,18 @@ model Organization {
   branches    Branch[]
   users       User[]
   invitations Invitation[]
+  logo        OrgLogo?
+}
+
+// Logo redimensionné (WebP), stocké en base (portable, sans disque partagé) mais dans sa propre
+// table : charger une organisation (à chaque requête authentifiée) ne charge pas l'image.
+model OrgLogo {
+  orgId     String   @id
+  data      Bytes
+  mime      String
+  updatedAt DateTime @updatedAt
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 }
 
 model User {
