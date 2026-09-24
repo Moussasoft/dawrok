@@ -14,6 +14,8 @@ const securityHeaders = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Image Docker : serveur autonome minimal (NEXT_OUTPUT=standalone, défini dans le Dockerfile).
+  ...(process.env.NEXT_OUTPUT === 'standalone' ? { output: 'standalone' } : {}),
   poweredByHeader: false,
   images: { formats: ['image/avif', 'image/webp'] },
   async headers() {

@@ -37,6 +37,15 @@ npm run build && npm start
 
 Après une modification du schéma : `npm run db:push` (SQLite), `npm run db:pg:sync`, puis `npm run db:pg:new-migration -- --name <nom>` contre une base PostgreSQL de développement, et commiter la migration (un test vérifie que les deux schémas restent alignés).
 
+### Docker
+
+```bash
+cp .env.example .env        # au minimum JWT_SECRET ; NEXT_PUBLIC_APP_URL = URL publique
+docker compose up --build   # PostgreSQL + Redis + migrations + application sur le port 3000
+```
+
+Image seule : `docker build --build-arg NEXT_PUBLIC_APP_URL=https://votre-domaine -t daourak .` (les variables `NEXT_PUBLIC_*` sont intégrées au build), migrations avec `docker compose run --rm migrate`. L'image utilise la sortie autonome de Next.js (`NEXT_OUTPUT=standalone`), tourne sans les droits root et expose un healthcheck sur `/api/health`.
+
 ## ⚙️ Variables d'environnement
 
 | Variable | Obligatoire | Rôle |

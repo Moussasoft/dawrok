@@ -1,0 +1,62 @@
+# Pile complète : PostgreSQL, Redis, migrations puis application.
+#   cp .env.example .env   # renseigner au moins JWT_SECRET (et les services optionnels)
+#   docker compose up --build
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: daourak
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-daourak}
+      POSTGRES_DB: daourak
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U daourak -d daourak"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    # Données éphémères (limitation de débit, dédoublonnage, diffusion) : pas de persistance.
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  migrate:
+    build:
+      context: .
+      target: builder
+    command: ["npx", "prisma", "migrate", "deploy", "--schema", "prisma/postgres/schema.prisma"]
+    environment:
+      DATABASE_URL: postgresql://daourak:${POSTGRES_PASSWORD:-daourak}@db:5432/daourak
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+        NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${NEXT_PUBLIC_VAPID_PUBLIC_KEY:-}
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://daourak:${POSTGRES_PASSWORD:-daourak}@db:5432/daourak
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "3000:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  pgdata:
