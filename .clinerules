@@ -2,39 +2,40 @@
 
 ## Stack technique
 - Next.js 15 (App Router), React 19, TypeScript strict
-- Tailwind CSS v4 (darkMode: class, design system with CSS variables)
+- Tailwind CSS v3 (darkMode: class, design system avec variables CSS)
 - next-intl v4 (locales: fr, en, ar | defaultLocale: ar | localePrefix: as-needed)
-- Prisma ORM (SQLite dev, pg production)
+- Prisma ORM (SQLite dev, PostgreSQL production)
 - next-themes v0.4 (ThemeProvider, light/dark/system)
-- Composants shadcn/ui dans `src/components/ui/`
+- Composants maison style shadcn/ui dans `src/components/ui/` (Button avec `asChild`, Dialog natif, Input/Label/Select)
 - Icônes Lucide React
-- Dossier `src/app/[locale]/` pour les pages internationalisées
-- Traductions dans `messages/{fr,en,ar}.json`
+- Toutes les pages sont dans `src/app/[locale]/` ; traductions dans `messages/{fr,en,ar}.json`
+- Tests : Vitest (`npm test`) pour la logique pure de `src/lib`
 
 ## Conception & Design
 - Toujours utiliser les classes Tailwind existantes et les variables CSS du thème
-- Supporter le RTL pour l'arabe : vérifier `dir="rtl"` et les classes `rtl:`
-- Toujours gérer le dark mode avec `dark:` variants
-- Composants réutilisables dans `src/components/`, utiliser `'use client'` uniquement si nécessaire
-- Mobile-first : commencer par le responsive mobile, puis `md:`, `lg:`
-- Privilégier `shadcn/ui` pour les nouveaux composants (Button, Card, Input, Label, etc.)
+- Supporter le RTL pour l'arabe : propriétés logiques (`ms-*`, `me-*`, `ps-*`, `pe-*`, `start-*`, `end-*`, `text-start`, `text-end`) et `rtl:-scale-x-100` pour les icônes directionnelles
+- Toujours gérer le dark mode avec les variantes `dark:`
+- `'use client'` uniquement si nécessaire
+- Mobile-first : commencer par le mobile, puis `md:`, `lg:`
+- Ne jamais bloquer le zoom (accessibilité)
+
+## Sécurité (obligatoire)
+- Chaque page protégée appelle `requireOrgPage()` ou `requireSuperadminPage()` (`@/lib/guards`) — un layout seul ne suffit pas
+- Chaque route API protégée appelle `requireOrg()` ou `requireSuperadmin()` et filtre les requêtes par `auth.orgId` (ex. `requireOwnBranch`)
+- Envelopper les handlers avec `route()` de `@/lib/api`, valider le corps avec `parseBody(req, schemaZod)`, lever `new ApiError(status, 'code')`
+- Les codes d'erreur sont traduits côté client via `errors.<code>` (`useErrorMessage()` de `@/lib/api-client`)
+- Le flux public `/api/stream/branch/[qrToken]` ne doit JAMAIS contenir de données personnelles (utiliser `toPublicSnapshot`)
+- Après toute modification de la file : `await publishBranchUpdate(branchId)`
 
 ## Coding
-- Toujours utiliser `useTranslations()` de next-intl pour les textes visibles
-- Les nouvelles clés de traduction doivent être ajoutées dans `messages/fr.json`, `en.json`, ET `ar.json`
-- Utiliser `getSession()` de `@/lib/auth` pour les vérifications d'authentification serveur
-- Routes API dans `src/app/api/`, utiliser `{ status: 200 }` et gérer les erreurs avec `NextResponse.json({ error }, { status: 400 })`
-- Valider les entrées avec Zod côté API
-- TypeScript strict : pas de `any`, typer tous les paramètres et retours
-- Pour le RTL : inverser les marges/paddings (ml ↔ mr, pl ↔ pr) avec les variants Tailwind `ms-*` / `me-*` (start/end logiques)
-
-## Internationalisation (i18n)
-- Les fichiers dans `src/app/[locale]/...` utilisent `next-intl`
-- Les anciens fichiers dans `src/app/...` (sans [locale]) sont des vestiges à supprimer
-- Toujours utiliser `t('section.key')` pour les textes, jamais en dur
-- Les noms de clés sont en camelCase (ex: `vehicleInspection`, pas `vehicle_inspection`)
+- Toujours `useTranslations()` / `getTranslations()` pour les textes visibles, jamais de texte en dur
+- Les nouvelles clés vont dans `messages/fr.json`, `en.json` ET `ar.json` (le test `src/i18n/messages.test.ts` vérifie la parité)
+- Navigation : `Link`, `useRouter`, `usePathname` de `@/i18n/routing` ; redirection serveur : `redirectTo()` de `@/i18n/server` (jamais `next/link` ni `next/navigation` directement : la langue serait perdue)
+- Dates/heures : `formatTime`, `formatDateTime`… de `@/lib/format` avec le fuseau de l'agence ; « aujourd'hui » se calcule avec `getDayWindow(now, branch.timezone)` de `@/lib/time`, jamais avec `setHours(0,0,0,0)`
+- TypeScript strict : pas de `any`, typer paramètres et retours
+- Clés de traduction en camelCase (ex: `vehicleInspection`)
 
 ## Langue du code & commentaires
 - Noms de variables/fonctions en anglais
-- Commentaires en français (langue du projet)
-- Messages commit en français ou conventionnel (feat:, fix:, chore:)
+- Commentaires en français
+- Messages de commit conventionnels (feat:, fix:, chore:), en français

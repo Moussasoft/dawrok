@@ -44,7 +44,7 @@ description: Coding standards for Daourak - Next.js 15 App Router, TypeScript st
   return NextResponse.json({ error: 'message' }, { status: 400 });
   ```
 - Valider les entrées avec **Zod**
-- Authentification : `getSession()` depuis `@/lib/auth`
+- Authentification : `requireOrgPage()` / `requireSuperadminPage()` (pages) et `requireOrg()` / `requireSuperadmin()` (API) depuis `@/lib/guards` — jamais `getSession()` seul
 
 ## Base de données (Prisma)
 - `prisma/schema.prisma` pour le schéma

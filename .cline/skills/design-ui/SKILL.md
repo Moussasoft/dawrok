@@ -1,12 +1,12 @@
 ---
 name: design-ui
-description: Design and UI tasks for Daourak - Tailwind CSS v4, shadcn/ui components, RTL Arabic support, dark mode responsive design. Use when creating or modifying UI components, pages, layouts, or styling.
+description: Design and UI tasks for Daourak - Tailwind CSS v3, shadcn-style components, RTL Arabic support, dark mode responsive design. Use when creating or modifying UI components, pages, layouts, or styling.
 ---
 
 # Design & UI — Daourak
 
 ## Stack Design
-- **Tailwind CSS v4** avec `darkMode: ['class']`
+- **Tailwind CSS v3** avec `darkMode: ['class']`
 - **shadcn/ui** : tous les composants dans `src/components/ui/` (Button, Card, Input, Label, etc.)
 - **next-themes v0.4** : `ThemeProvider` avec `defaultTheme="system"` (clair/sombre/auto)
 - **Icônes** : Lucide React
