@@ -2,6 +2,7 @@
 // (un layout seul ne suffit pas : il n'est pas réexécuté à chaque navigation).
 import { getAuth, type AuthContext } from './auth';
 import { ApiError } from './api';
+import { hasRole, type Role } from './roles';
 import { redirectTo } from '@/i18n/server';
 
 export type OrgAuth = AuthContext & { orgId: string };
@@ -27,6 +28,13 @@ export async function requireSuperadmin(): Promise<AuthContext> {
   return auth;
 }
 
+/** Membre de l'organisation avec au moins ce rôle (un superadmin qui imite agit en propriétaire). */
+export async function requireOrgRole(min: Role): Promise<OrgAuth> {
+  const auth = await requireOrg();
+  if (!hasRole(auth.role, min)) throw new ApiError(403, 'forbidden_role');
+  return auth;
+}
+
 // ─── Pages serveur (redirigent en conservant la langue) ──────────────────────
 
 export async function requireOrgPage(): Promise<OrgAuth> {
@@ -35,6 +43,12 @@ export async function requireOrgPage(): Promise<OrgAuth> {
   if (!auth.orgId) return redirectTo(auth.isSuperadmin ? '/admin' : '/login');
   if (auth.orgSuspended && !auth.isSuperadmin) return redirectTo('/login?reason=suspended');
   return auth as OrgAuth;
+}
+
+export async function requireOrgPageRole(min: Role): Promise<OrgAuth> {
+  const auth = await requireOrgPage();
+  if (!hasRole(auth.role, min)) return redirectTo('/dashboard');
+  return auth;
 }
 
 export async function requireSuperadminPage(): Promise<AuthContext> {

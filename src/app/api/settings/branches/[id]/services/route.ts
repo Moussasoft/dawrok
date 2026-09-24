@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { parseBody, route } from '@/lib/api';
-import { requireOrg } from '@/lib/guards';
+import { requireOrgRole } from '@/lib/guards';
 import { requireOwnBranch } from '@/lib/branch';
 import { assertCanAdd } from '@/lib/plans';
 
@@ -13,7 +13,7 @@ const schema = z.object({
 });
 
 export const POST = route<{ params: Promise<{ id: string }> }>(async (req, ctx) => {
-  const auth = await requireOrg();
+  const auth = await requireOrgRole('manager');
   const { id } = await ctx.params;
   await requireOwnBranch(auth, id);
   const data = await parseBody(req, schema);

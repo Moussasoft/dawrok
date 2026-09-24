@@ -21,7 +21,7 @@
 
 ## Sécurité (obligatoire)
 - Chaque page protégée appelle `requireOrgPage()` ou `requireSuperadminPage()` (`@/lib/guards`) — un layout seul ne suffit pas
-- Chaque route API protégée appelle `requireOrg()` ou `requireSuperadmin()` et filtre les requêtes par `auth.orgId` (ex. `requireOwnBranch`)
+- Chaque route API protégée appelle `requireOrg()` / `requireOrgRole('manager' | 'owner')` ou `requireSuperadmin()` et filtre les requêtes par `auth.orgId` (ex. `requireOwnBranch`) ; côté pages : `requireOrgPageRole(...)`
 - Envelopper les handlers avec `route()` de `@/lib/api`, valider le corps avec `parseBody(req, schemaZod)`, lever `new ApiError(status, 'code')`
 - Les codes d'erreur sont traduits côté client via `errors.<code>` (`useErrorMessage()` de `@/lib/api-client`)
 - Le flux public `/api/stream/branch/[qrToken]` ne doit JAMAIS contenir de données personnelles (utiliser `toPublicSnapshot`)

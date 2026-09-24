@@ -5,7 +5,7 @@ import { getActiveBranch, listOrgBranches } from '@/lib/branch';
 import { prisma } from '@/lib/db';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
-import { LogoutButton } from '@/components/logout-button';
+import { UserMenu } from '@/components/user-menu';
 import { DashboardNav } from './dashboard-nav';
 import { BranchSwitcher } from './branch-switcher';
 import { ImpersonationBanner } from '@/components/impersonation-banner';
@@ -42,11 +42,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
             )}
           </div>
           <div className="flex items-center gap-1">
-            <DashboardNav />
+            <DashboardNav role={auth.role} />
             <ThemeToggle className="ms-1 hidden md:inline-flex" />
             <LanguageSwitcher compact className="sm:hidden" />
             <LanguageSwitcher className="hidden sm:inline-flex" />
-            <LogoutButton />
+            <UserMenu name={auth.name} email={auth.email} role={auth.role} />
           </div>
         </div>
       </header>

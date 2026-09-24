@@ -1,7 +1,7 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Phone, User, Calendar, X, Award, Search } from 'lucide-react';
 import { prisma } from '@/lib/db';
-import { requireOrgPage } from '@/lib/guards';
+import { requireOrgPageRole } from '@/lib/guards';
 import { getActiveBranch } from '@/lib/branch';
 import { redirectTo } from '@/i18n/server';
 import { Card, CardContent } from '@/components/ui/card';
@@ -16,7 +16,7 @@ export async function generateMetadata() {
 }
 
 export default async function CustomersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  const auth = await requireOrgPage();
+  const auth = await requireOrgPageRole('manager');
   const [branch, t, locale, sp] = await Promise.all([
     getActiveBranch(auth),
     getTranslations('customers'),

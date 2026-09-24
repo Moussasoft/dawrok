@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { ApiError, parseBody, route } from '@/lib/api';
-import { requireOrg, type OrgAuth } from '@/lib/guards';
+import { requireOrgRole, type OrgAuth } from '@/lib/guards';
 import { publishBranchUpdate } from '@/lib/queue';
 import { assertCanAdd } from '@/lib/plans';
 
@@ -20,7 +20,7 @@ async function findOwnEmployee(auth: OrgAuth, id: string) {
 }
 
 export const PATCH = route<Ctx>(async (req, ctx) => {
-  const auth = await requireOrg();
+  const auth = await requireOrgRole('manager');
   const { id } = await ctx.params;
   const employee = await findOwnEmployee(auth, id);
   const data = await parseBody(req, patchSchema);
@@ -33,7 +33,7 @@ export const PATCH = route<Ctx>(async (req, ctx) => {
 
 // Un employé ayant déjà servi des clients est désactivé plutôt que supprimé (statistiques conservées).
 export const DELETE = route<Ctx>(async (_req, ctx) => {
-  const auth = await requireOrg();
+  const auth = await requireOrgRole('manager');
   const { id } = await ctx.params;
   const employee = await findOwnEmployee(auth, id);
   const used = await prisma.ticket.count({ where: { employeeId: id } });

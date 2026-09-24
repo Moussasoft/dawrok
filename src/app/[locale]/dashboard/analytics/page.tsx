@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import { getLocale, getTranslations } from 'next-intl/server';
 import { BarChart3, Download, Lock } from 'lucide-react';
 import { prisma } from '@/lib/db';
-import { requireOrgPage } from '@/lib/guards';
+import { requireOrgPageRole } from '@/lib/guards';
 import { getActiveBranch } from '@/lib/branch';
 import { getOrgLimits } from '@/lib/plans';
 import { redirectTo } from '@/i18n/server';
@@ -22,7 +22,7 @@ export async function generateMetadata() {
 const WEEK_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 export default async function AnalyticsPage() {
-  const auth = await requireOrgPage();
+  const auth = await requireOrgPageRole('manager');
   const [branch, limits, t, locale] = await Promise.all([
     getActiveBranch(auth),
     getOrgLimits(auth.orgId),

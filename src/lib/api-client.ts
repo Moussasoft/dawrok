@@ -2,6 +2,7 @@
 // Appels API côté client : renvoie un code d'erreur stable, traduit via `errors.<code>`.
 import { useTranslations } from 'next-intl';
 import { useCallback } from 'react';
+import { toast } from 'sonner';
 
 export type ApiResult<T> =
   | { ok: true; data: T }
@@ -41,5 +42,21 @@ export function useErrorMessage() {
       return t.has(result.error) ? t(result.error, params) : t('generic');
     },
     [t]
+  );
+}
+
+/** Appel API avec toast d'erreur traduit ; renvoie les données, ou null en cas d'échec. */
+export function useApiCall() {
+  const errorMessage = useErrorMessage();
+  return useCallback(
+    async <T = Record<string, unknown>>(url: string, method: string, json?: unknown): Promise<T | null> => {
+      const res = await apiFetch<T>(url, { method, json });
+      if (!res.ok) {
+        toast.error(errorMessage(res));
+        return null;
+      }
+      return res.data;
+    },
+    [errorMessage]
   );
 }

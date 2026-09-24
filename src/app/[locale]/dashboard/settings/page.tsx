@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
-import { requireOrgPage } from '@/lib/guards';
+import { requireOrgPageRole } from '@/lib/guards';
+import { hasRole } from '@/lib/roles';
 import { countOrgResources, getOrgLimits } from '@/lib/plans';
 import { parseOpenHours } from '@/lib/opening-hours';
 import { redirectTo } from '@/i18n/server';
@@ -14,7 +15,7 @@ export async function generateMetadata() {
 }
 
 export default async function SettingsPage() {
-  const auth = await requireOrgPage();
+  const auth = await requireOrgPageRole('manager');
   const [org, limits, usage] = await Promise.all([
     prisma.organization.findUnique({
       where: { id: auth.orgId },
@@ -32,8 +33,7 @@ export default async function SettingsPage() {
 
   return (
     <SettingsClient
-      // Pendant une imitation, le compte affiché serait celui du superadmin : on le masque.
-      account={auth.impersonating ? null : { name: auth.actorName, email: auth.actorEmail }}
+      canEditOrg={hasRole(auth.role, 'owner')}
       org={{ id: org.id, name: org.name, slug: org.slug, sector: org.sector, plan: org.plan, brandColor: org.brandColor }}
       limits={limits}
       usage={usage}

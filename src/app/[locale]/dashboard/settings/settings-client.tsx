@@ -3,12 +3,12 @@
 import { useMemo, useState, useTransition } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Building2, Clock, CalendarDays, MapPin, Plus, Lock, Pencil, Trash2, Power, UserRound } from 'lucide-react';
+import { Building2, Clock, CalendarDays, MapPin, Plus, Lock, Pencil, Trash2, Power } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input, Label, Select } from '@/components/ui/input';
-import { apiFetch, useErrorMessage } from '@/lib/api-client';
+import { useApiCall } from '@/lib/api-client';
 import { SECTORS, SECTOR_I18N_KEY } from '@/lib/sectors';
 import { WEEKDAYS, type Weekday } from '@/lib/time';
 import { weekdayName } from '@/lib/format';
@@ -40,27 +40,16 @@ type Limits = {
 };
 type Usage = { branches: number; employees: number; services: number };
 
-/** Appel API avec toast d'erreur traduit ; renvoie null en cas d'échec. */
-function useApi() {
-  const errorMessage = useErrorMessage();
-  return async function call<T = Record<string, unknown>>(url: string, method: string, json?: unknown): Promise<T | null> {
-    const res = await apiFetch<T>(url, { method, json });
-    if (!res.ok) {
-      toast.error(errorMessage(res));
-      return null;
-    }
-    return res.data;
-  };
-}
 
 export function SettingsClient({
-  account,
+  canEditOrg,
   org,
   limits,
   usage,
   branches,
 }: {
-  account: { name: string; email: string } | null;
+  /** Seul le propriétaire modifie l'organisation (nom, secteur, marque). */
+  canEditOrg: boolean;
   org: Org;
   limits: Limits;
   usage: Usage;
@@ -76,8 +65,7 @@ export function SettingsClient({
       <h1 className="mb-1 text-2xl font-bold">{t('title')}</h1>
       <p className="mb-6 text-muted-foreground">{t('subtitle')}</p>
 
-      {account && <AccountCard account={account} onRefresh={refresh} />}
-      <OrgCard org={org} limits={limits} usage={usage} onRefresh={refresh} />
+      <OrgCard org={org} limits={limits} usage={usage} canEdit={canEditOrg} onRefresh={refresh} />
 
       <h2 className="mb-3 mt-8 flex items-center gap-2 text-lg font-semibold">
         <MapPin className="h-5 w-5 text-primary" /> {t('branches')}
@@ -90,104 +78,26 @@ export function SettingsClient({
   );
 }
 
-// ─── Mon compte ───────────────────────────────────────────────────────────────
-
-function AccountCard({ account, onRefresh }: { account: { name: string; email: string }; onRefresh: () => void }) {
-  const t = useTranslations('account');
-  const tc = useTranslations('common');
-  const call = useApi();
-  const [editing, setEditing] = useState(false);
-  const [profile, setProfile] = useState(account);
-  const [pwd, setPwd] = useState({ current: '', next: '', confirm: '' });
-  const [busy, setBusy] = useState(false);
-
-  async function saveProfile() {
-    setBusy(true);
-    const ok = await call('/api/account', 'PATCH', profile);
-    setBusy(false);
-    if (!ok) return;
-    toast.success(t('profileUpdated'));
-    setEditing(false);
-    onRefresh();
-  }
-
-  async function changePassword(e: React.FormEvent) {
-    e.preventDefault();
-    if (pwd.next !== pwd.confirm) {
-      toast.error(t('mismatch'));
-      return;
-    }
-    setBusy(true);
-    const ok = await call('/api/account/password', 'POST', { currentPassword: pwd.current, newPassword: pwd.next });
-    setBusy(false);
-    if (!ok) return;
-    toast.success(t('passwordChanged'));
-    setPwd({ current: '', next: '', confirm: '' });
-  }
-
-  return (
-    <Card className="mb-4">
-      <CardContent className="space-y-5 p-6">
-        <div className="flex items-center justify-between">
-          <h2 className="flex items-center gap-2 font-semibold">
-            <UserRound className="h-5 w-5 text-primary" /> {t('title')}
-          </h2>
-          {!editing && (
-            <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
-              <Pencil className="h-3.5 w-3.5" /> {tc('edit')}
-            </Button>
-          )}
-        </div>
-        {editing ? (
-          <div className="space-y-3">
-            <Field label={t('name')} htmlFor="acc-name">
-              <Input id="acc-name" value={profile.name} maxLength={80} onChange={(e) => setProfile({ ...profile, name: e.target.value })} />
-            </Field>
-            <Field label={t('email')} htmlFor="acc-email">
-              <Input id="acc-email" type="email" dir="ltr" value={profile.email} onChange={(e) => setProfile({ ...profile, email: e.target.value })} />
-            </Field>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={saveProfile} disabled={busy || profile.name.trim().length < 2}>
-                {busy ? tc('saving') : tc('save')}
-              </Button>
-              <Button size="sm" variant="outline" disabled={busy} onClick={() => { setProfile(account); setEditing(false); }}>
-                {tc('cancel')}
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <dl className="grid grid-cols-2 gap-3 text-sm">
-            <dt className="text-muted-foreground">{t('name')}</dt>
-            <dd className="font-medium">{account.name}</dd>
-            <dt className="text-muted-foreground">{t('email')}</dt>
-            <dd className="font-medium" dir="ltr">{account.email}</dd>
-          </dl>
-        )}
-        <form onSubmit={changePassword} className="space-y-3 border-t pt-4">
-          <h3 className="text-xs font-medium uppercase text-muted-foreground">{t('changePassword')}</h3>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Input type="password" autoComplete="current-password" placeholder={t('currentPassword')} aria-label={t('currentPassword')} value={pwd.current} onChange={(e) => setPwd({ ...pwd, current: e.target.value })} required />
-            <Input type="password" autoComplete="new-password" minLength={8} placeholder={t('newPassword')} aria-label={t('newPassword')} value={pwd.next} onChange={(e) => setPwd({ ...pwd, next: e.target.value })} required />
-            <Input type="password" autoComplete="new-password" minLength={8} placeholder={t('confirmPassword')} aria-label={t('confirmPassword')} value={pwd.confirm} onChange={(e) => setPwd({ ...pwd, confirm: e.target.value })} required />
-          </div>
-          <p className="text-xs text-muted-foreground">{t('passwordHint')}</p>
-          <Button size="sm" type="submit" disabled={busy}>
-            {t('changePassword')}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
-
 // ─── Organisation ─────────────────────────────────────────────────────────────
 
-function OrgCard({ org, limits, usage, onRefresh }: { org: Org; limits: Limits; usage: Usage; onRefresh: () => void }) {
+function OrgCard({
+  org,
+  limits,
+  usage,
+  canEdit,
+  onRefresh,
+}: {
+  org: Org;
+  limits: Limits;
+  usage: Usage;
+  canEdit: boolean;
+  onRefresh: () => void;
+}) {
   const t = useTranslations('settings');
   const tc = useTranslations('common');
   const ts = useTranslations('sectors');
   const tp = useTranslations('plans');
-  const call = useApi();
+  const call = useApiCall();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: org.name, sector: org.sector, brandColor: org.brandColor });
   const [saving, setSaving] = useState(false);
@@ -212,7 +122,7 @@ function OrgCard({ org, limits, usage, onRefresh }: { org: Org; limits: Limits; 
           <h2 className="flex items-center gap-2 font-semibold">
             <Building2 className="h-5 w-5 text-primary" /> {t('organization')}
           </h2>
-          {!editing && (
+          {!editing && canEdit && (
             <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
               <Pencil className="h-3.5 w-3.5" /> {tc('edit')}
             </Button>
@@ -326,7 +236,7 @@ function UsageBar({ label, used, max }: { label: string; used: number; max: numb
 function BranchCard({ branch, limits, usage, onRefresh }: { branch: Branch; limits: Limits; usage: Usage; onRefresh: () => void }) {
   const t = useTranslations('settings');
   const tc = useTranslations('common');
-  const call = useApi();
+  const call = useApiCall();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name: branch.name, address: branch.address ?? '', timezone: branch.timezone });
   const [saving, setSaving] = useState(false);
@@ -481,7 +391,7 @@ function OpeningHoursEditor({ branch, onRefresh }: { branch: Branch; onRefresh: 
   const t = useTranslations('settings');
   const tc = useTranslations('common');
   const locale = useLocale();
-  const call = useApi();
+  const call = useApiCall();
   const [hours, setHours] = useState<OpenHours | null>(branch.openHours);
   const [saving, setSaving] = useState(false);
 
@@ -577,7 +487,7 @@ function OpeningHoursEditor({ branch, onRefresh }: { branch: Branch; onRefresh: 
 
 function BookingSettings({ branch, allowed, onRefresh }: { branch: Branch; allowed: boolean; onRefresh: () => void }) {
   const t = useTranslations('settings');
-  const call = useApi();
+  const call = useApiCall();
   const [pending, setPending] = useState(false);
 
   async function patch(data: { allowBooking?: boolean; bookingSlotMin?: number }) {
@@ -751,7 +661,7 @@ function ResourceRow({
 }) {
   const t = useTranslations('settings');
   const tc = useTranslations('common');
-  const call = useApi();
+  const call = useApiCall();
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({ name, duration: duration ?? 20 });
   const [busy, setBusy] = useState(false);
@@ -871,7 +781,7 @@ function AddBranchForm({ disabled, max, onAdded }: { disabled: boolean; max: num
   const t = useTranslations('settings');
   const tc = useTranslations('common');
   const te = useTranslations('errors');
-  const call = useApi();
+  const call = useApiCall();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');

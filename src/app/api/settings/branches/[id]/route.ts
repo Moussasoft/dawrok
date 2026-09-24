@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { ApiError, parseBody, route } from '@/lib/api';
-import { requireOrg } from '@/lib/guards';
+import { requireOrgRole } from '@/lib/guards';
 import { requireOwnBranch } from '@/lib/branch';
 import { openHoursSchema } from '@/lib/opening-hours';
 import { isValidTimeZone } from '@/lib/time';
@@ -20,7 +20,7 @@ const schema = z.object({
 });
 
 export const PATCH = route<{ params: Promise<{ id: string }> }>(async (req, ctx) => {
-  const auth = await requireOrg();
+  const auth = await requireOrgRole('manager');
   const { id } = await ctx.params;
   const branch = await requireOwnBranch(auth, id);
   const { openHours, timezone, ...rest } = await parseBody(req, schema);

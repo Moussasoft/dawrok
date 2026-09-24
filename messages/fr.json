@@ -170,7 +170,11 @@
     "push_not_configured": "Les notifications push ne sont pas configurées sur ce serveur.",
     "ticket_conflict": "Ce ticket vient d’être modifié depuis un autre poste.",
     "invalid_reset_token": "Ce lien de réinitialisation est invalide ou a expiré.",
-    "password_too_short": "Mot de passe trop court : au moins {min} caractères."
+    "password_too_short": "Mot de passe trop court : au moins {min} caractères.",
+    "forbidden_role": "Votre rôle ne permet pas cette action.",
+    "last_owner": "L’organisation doit garder au moins un propriétaire.",
+    "cannot_remove_self": "Vous ne pouvez pas vous retirer vous-même.",
+    "invitation_invalid": "Cette invitation est invalide, expirée ou déjà utilisée."
   },
   "status": {
     "scheduled": "RDV à venir",
@@ -556,7 +560,15 @@
       "ticket_cancel_staff": "Annulation par le staff",
       "superadmin_invite": "Superadmin ajouté",
       "superadmin_revoke": "Superadmin révoqué",
-      "superadmin_password": "Mot de passe superadmin modifié"
+      "superadmin_password": "Mot de passe superadmin modifié",
+      "team_invite": "Invitation d’un membre",
+      "team_invite_revoke": "Invitation révoquée",
+      "team_role": "Changement de rôle",
+      "team_remove": "Membre retiré",
+      "team_join": "Nouveau membre",
+      "user_password_reset": "Mot de passe réinitialisé",
+      "user_password_change": "Mot de passe modifié",
+      "user_email_change": "E-mail modifié"
     },
     "settingsSubtitle": "Gérez votre compte et la configuration de la plateforme",
     "tabProfile": "Profil",
@@ -682,7 +694,8 @@
     "passwordHint": "Au moins 8 caractères. Vos autres appareils seront déconnectés.",
     "passwordChanged": "Mot de passe modifié",
     "profileUpdated": "Compte mis à jour",
-    "mismatch": "Les mots de passe ne correspondent pas."
+    "mismatch": "Les mots de passe ne correspondent pas.",
+    "impersonatingNote": "Pendant une imitation, gérez votre propre compte depuis la console superadmin."
   },
   "emails": {
     "footer": "Daourak — la file d’attente intelligente",
@@ -696,6 +709,64 @@
     "inviteIntro": "{inviter} vous invite à rejoindre {org} sur Daourak en tant que {role}.",
     "inviteButton": "Rejoindre l’équipe",
     "inviteExpiry": "Ce lien expire dans 7 jours."
+  },
+  "roles": {
+    "owner": "Propriétaire",
+    "manager": "Responsable",
+    "staff": "Employé",
+    "ownerDesc": "Tous les droits : équipe, facturation, organisation.",
+    "managerDesc": "File, analytics, clients et réglages des agences.",
+    "staffDesc": "Gestion de la file uniquement."
+  },
+  "userMenu": {
+    "open": "Menu du compte",
+    "account": "Mon compte",
+    "team": "Équipe",
+    "billing": "Offre & facturation",
+    "logout": "Déconnexion"
+  },
+  "team": {
+    "title": "Équipe",
+    "subtitle": "Invitez vos collaborateurs et gérez leurs droits.",
+    "members": "Membres",
+    "you": "vous",
+    "joined": "Membre depuis le {date}",
+    "role": "Rôle",
+    "remove": "Retirer de l’équipe",
+    "confirmRemove": "Retirer {name} de l’équipe ? Son compte sera supprimé.",
+    "removed": "Membre retiré",
+    "roleUpdated": "Rôle mis à jour",
+    "invite": "Inviter un membre",
+    "inviteEmail": "E-mail du collaborateur",
+    "sendInvite": "Créer l’invitation",
+    "inviteCreated": "Invitation créée",
+    "inviteLink": "Lien d’invitation (valable 7 jours)",
+    "emailSent": "Un e-mail d’invitation a été envoyé à {email}.",
+    "emailFailed": "L’e-mail n’a pas pu être envoyé : partagez ce lien vous-même.",
+    "shareManually": "Aucun e-mail n’est configuré sur ce serveur : partagez ce lien vous-même.",
+    "copy": "Copier",
+    "copied": "Copié",
+    "close": "Fermer",
+    "shareWhatsApp": "Partager sur WhatsApp",
+    "whatsappText": "Rejoignez notre équipe sur Daourak : {url}",
+    "pending": "Invitations en attente",
+    "noPending": "Aucune invitation en attente.",
+    "expires": "expire le {date}",
+    "revoke": "Révoquer",
+    "revoked": "Invitation révoquée"
+  },
+  "invite": {
+    "metaTitle": "Invitation",
+    "title": "Rejoindre {org}",
+    "description": "Vous êtes invité(e) en tant que {role}.",
+    "email": "E-mail",
+    "name": "Votre nom",
+    "password": "Choisissez un mot de passe",
+    "passwordHint": "Au moins 8 caractères",
+    "submit": "Rejoindre l’équipe",
+    "submitting": "Création…",
+    "invalid": "Cette invitation est invalide, expirée ou déjà utilisée.",
+    "goLogin": "Aller à la connexion"
   },
   "language": {
     "fr": "Français",

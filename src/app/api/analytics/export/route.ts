@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createTranslator } from 'next-intl';
 import { prisma } from '@/lib/db';
 import { ApiError, route } from '@/lib/api';
-import { requireOrg } from '@/lib/guards';
+import { requireOrgRole } from '@/lib/guards';
 import { getActiveBranch } from '@/lib/branch';
 import { assertFeature } from '@/lib/plans';
 import { DEFAULT_TIMEZONE, getZonedParts } from '@/lib/time';
@@ -18,7 +18,7 @@ const COLUMNS = ['number', 'date', 'time', 'customer', 'phone', 'service', 'empl
 const pad = (n: number) => String(n).padStart(2, '0');
 
 export const GET = route(async (req) => {
-  const auth = await requireOrg();
+  const auth = await requireOrgRole('manager');
   await assertFeature(auth.orgId, 'allowAnalytics');
   const branch = await getActiveBranch(auth);
   if (!branch) throw new ApiError(404, 'branch_not_found');

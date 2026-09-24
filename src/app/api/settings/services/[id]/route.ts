@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { ApiError, parseBody, route } from '@/lib/api';
-import { requireOrg, type OrgAuth } from '@/lib/guards';
+import { requireOrgRole, type OrgAuth } from '@/lib/guards';
 import { publishBranchUpdate } from '@/lib/queue';
 import { assertCanAdd } from '@/lib/plans';
 
@@ -22,7 +22,7 @@ async function findOwnService(auth: OrgAuth, id: string) {
 }
 
 export const PATCH = route<Ctx>(async (req, ctx) => {
-  const auth = await requireOrg();
+  const auth = await requireOrgRole('manager');
   const { id } = await ctx.params;
   const service = await findOwnService(auth, id);
   const data = await parseBody(req, patchSchema);
@@ -35,7 +35,7 @@ export const PATCH = route<Ctx>(async (req, ctx) => {
 
 // Un service déjà utilisé est archivé (désactivé) plutôt que supprimé, pour garder l'historique.
 export const DELETE = route<Ctx>(async (_req, ctx) => {
-  const auth = await requireOrg();
+  const auth = await requireOrgRole('manager');
   const { id } = await ctx.params;
   const service = await findOwnService(auth, id);
   const used = await prisma.ticket.count({ where: { serviceId: id } });

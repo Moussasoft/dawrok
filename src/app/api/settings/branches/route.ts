@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { parseBody, route } from '@/lib/api';
-import { requireOrg } from '@/lib/guards';
+import { requireOrgRole } from '@/lib/guards';
 import { assertCanAdd } from '@/lib/plans';
 import { audit } from '@/lib/audit';
 
@@ -13,7 +13,7 @@ const schema = z.object({
 
 // Nouvelle succursale (dans la limite du plan). Elle démarre avec un poste au nom du compte.
 export const POST = route(async (req) => {
-  const auth = await requireOrg();
+  const auth = await requireOrgRole('manager');
   const data = await parseBody(req, schema);
   await assertCanAdd(auth.orgId, 'branches');
 

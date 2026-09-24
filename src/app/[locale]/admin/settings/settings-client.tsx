@@ -8,7 +8,7 @@ import { useRouter } from '@/i18n/routing';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
-import { apiFetch, useErrorMessage } from '@/lib/api-client';
+import { useApiCall } from '@/lib/api-client';
 import { cn } from '@/lib/utils';
 
 type PlanConfig = {
@@ -36,17 +36,6 @@ type TabId = (typeof TABS)[number]['id'];
 
 const SUPERADMIN_MIN_PASSWORD = 12;
 
-function useApi() {
-  const errorMessage = useErrorMessage();
-  return async function call<T = Record<string, unknown>>(url: string, method: string, json?: unknown): Promise<T | null> {
-    const res = await apiFetch<T>(url, { method, json });
-    if (!res.ok) {
-      toast.error(errorMessage(res));
-      return null;
-    }
-    return res.data;
-  };
-}
 
 function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
@@ -89,7 +78,7 @@ function PasswordInput({ id, value, onChange, show, placeholder }: { id: string;
 function ProfileSection({ user, onRefresh }: { user: CurrentUser; onRefresh: () => void }) {
   const t = useTranslations('admin');
   const tc = useTranslations('common');
-  const call = useApi();
+  const call = useApiCall();
   const [form, setForm] = useState({ name: user.name, email: user.email });
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -169,7 +158,7 @@ function ProfileSection({ user, onRefresh }: { user: CurrentUser; onRefresh: () 
 function SecuritySection() {
   const t = useTranslations('admin');
   const tc = useTranslations('common');
-  const call = useApi();
+  const call = useApiCall();
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [show, setShow] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -251,7 +240,7 @@ function PlansSection({ initialConfigs, currency }: { initialConfigs: PlanConfig
   const t = useTranslations('admin');
   const tc = useTranslations('common');
   const tp = useTranslations('plans');
-  const call = useApi();
+  const call = useApiCall();
   const [configs, setConfigs] = useState(initialConfigs);
   const [editingPlan, setEditingPlan] = useState<string | null>(null);
   const [form, setForm] = useState<PlanConfig | null>(null);
@@ -375,7 +364,7 @@ function FeatureRow({ label, enabled }: { label: string; enabled: boolean }) {
 function SuperadminsSection({ initialList, currentUserId }: { initialList: Superadmin[]; currentUserId: string }) {
   const t = useTranslations('admin');
   const tc = useTranslations('common');
-  const call = useApi();
+  const call = useApiCall();
   const [list, setList] = useState(initialList);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
@@ -496,7 +485,7 @@ function SuperadminsSection({ initialList, currentUserId }: { initialList: Super
 function NotificationsSection({ initialConfig }: { initialConfig: Notifications }) {
   const t = useTranslations('admin');
   const tc = useTranslations('common');
-  const call = useApi();
+  const call = useApiCall();
   const [config, setConfig] = useState(initialConfig);
   const [saving, setSaving] = useState(false);
 

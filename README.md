@@ -93,6 +93,7 @@ src/
 - **Réservation** : créneaux calculés dans le fuseau de l'agence et ses horaires d'ouverture, capacité = employés actifs, chevauchements pris en compte, validation côté serveur.
 - **Horaires d'ouverture** : optionnels. S'ils sont définis, les tickets QR sont refusés hors horaires (le staff peut toujours créer un ticket comptoir).
 - **Offres** : limites de succursales / employés / prestations et fonctionnalités (réservation, analytics, couleur de marque) éditables par le superadmin et appliquées par l'API.
+- **Équipe** : rôles `owner` (tout : équipe, facturation, organisation), `manager` (file, analytics, clients, réglages des agences) et `staff` (file uniquement). Invitations par lien à usage unique (7 jours), envoyé par e-mail si un fournisseur est configuré, sinon partageable (copie, WhatsApp).
 
 ## 🔐 Sécurité
 

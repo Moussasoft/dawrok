@@ -23,8 +23,9 @@ model Organization {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  branches Branch[]
-  users    User[]
+  branches    Branch[]
+  users       User[]
+  invitations Invitation[]
 }
 
 model User {
@@ -32,7 +33,7 @@ model User {
   email        String   @unique
   passwordHash String
   name         String
-  role         String   @default("owner") // owner | manager | staff
+  role         String   @default("owner") // owner (tout) | manager (file, analytics, réglages) | staff (file)
   isSuperadmin Boolean  @default(false)
   orgId        String?
   organization Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
@@ -41,6 +42,23 @@ model User {
   passwordChangedAt DateTime?
 
   passwordResetTokens PasswordResetToken[]
+
+  @@index([orgId])
+}
+
+// Invitation d'un membre d'équipe : lien à usage unique (hash stocké), valable 7 jours.
+model Invitation {
+  id          String    @id @default(cuid())
+  orgId       String
+  email       String
+  role        String    @default("staff")
+  tokenHash   String    @unique
+  invitedById String?
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@index([orgId])
 }

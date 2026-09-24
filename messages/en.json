@@ -170,7 +170,11 @@
     "push_not_configured": "Push notifications are not configured on this server.",
     "ticket_conflict": "This ticket was just updated from another desk.",
     "invalid_reset_token": "This reset link is invalid or has expired.",
-    "password_too_short": "Password too short: at least {min} characters."
+    "password_too_short": "Password too short: at least {min} characters.",
+    "forbidden_role": "Your role does not allow this action.",
+    "last_owner": "The organization must keep at least one owner.",
+    "cannot_remove_self": "You cannot remove yourself.",
+    "invitation_invalid": "This invitation is invalid, expired or already used."
   },
   "status": {
     "scheduled": "Upcoming appointment",
@@ -556,7 +560,15 @@
       "ticket_cancel_staff": "Cancelled by staff",
       "superadmin_invite": "Superadmin added",
       "superadmin_revoke": "Superadmin revoked",
-      "superadmin_password": "Superadmin password changed"
+      "superadmin_password": "Superadmin password changed",
+      "team_invite": "Member invited",
+      "team_invite_revoke": "Invitation revoked",
+      "team_role": "Role changed",
+      "team_remove": "Member removed",
+      "team_join": "New member",
+      "user_password_reset": "Password reset",
+      "user_password_change": "Password changed",
+      "user_email_change": "Email changed"
     },
     "settingsSubtitle": "Manage your account and the platform configuration",
     "tabProfile": "Profile",
@@ -682,7 +694,8 @@
     "passwordHint": "At least 8 characters. Your other devices will be signed out.",
     "passwordChanged": "Password changed",
     "profileUpdated": "Account updated",
-    "mismatch": "Passwords do not match."
+    "mismatch": "Passwords do not match.",
+    "impersonatingNote": "While impersonating, manage your own account from the superadmin console."
   },
   "emails": {
     "footer": "Daourak — the smart queue",
@@ -696,6 +709,64 @@
     "inviteIntro": "{inviter} invites you to join {org} on Daourak as {role}.",
     "inviteButton": "Join the team",
     "inviteExpiry": "This link expires in 7 days."
+  },
+  "roles": {
+    "owner": "Owner",
+    "manager": "Manager",
+    "staff": "Staff",
+    "ownerDesc": "Full access: team, billing, organization.",
+    "managerDesc": "Queue, analytics, customers and branch settings.",
+    "staffDesc": "Queue management only."
+  },
+  "userMenu": {
+    "open": "Account menu",
+    "account": "My account",
+    "team": "Team",
+    "billing": "Plan & billing",
+    "logout": "Logout"
+  },
+  "team": {
+    "title": "Team",
+    "subtitle": "Invite your colleagues and manage their access.",
+    "members": "Members",
+    "you": "you",
+    "joined": "Member since {date}",
+    "role": "Role",
+    "remove": "Remove from team",
+    "confirmRemove": "Remove {name} from the team? Their account will be deleted.",
+    "removed": "Member removed",
+    "roleUpdated": "Role updated",
+    "invite": "Invite a member",
+    "inviteEmail": "Colleague's email",
+    "sendInvite": "Create invitation",
+    "inviteCreated": "Invitation created",
+    "inviteLink": "Invitation link (valid for 7 days)",
+    "emailSent": "An invitation email was sent to {email}.",
+    "emailFailed": "The email could not be sent: share this link yourself.",
+    "shareManually": "No email is configured on this server: share this link yourself.",
+    "copy": "Copy",
+    "copied": "Copied",
+    "close": "Close",
+    "shareWhatsApp": "Share on WhatsApp",
+    "whatsappText": "Join our team on Daourak: {url}",
+    "pending": "Pending invitations",
+    "noPending": "No pending invitations.",
+    "expires": "expires on {date}",
+    "revoke": "Revoke",
+    "revoked": "Invitation revoked"
+  },
+  "invite": {
+    "metaTitle": "Invitation",
+    "title": "Join {org}",
+    "description": "You are invited as {role}.",
+    "email": "Email",
+    "name": "Your name",
+    "password": "Choose a password",
+    "passwordHint": "At least 8 characters",
+    "submit": "Join the team",
+    "submitting": "Creating…",
+    "invalid": "This invitation is invalid, expired or already used.",
+    "goLogin": "Go to login"
   },
   "language": {
     "fr": "Français",

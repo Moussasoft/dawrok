@@ -3,21 +3,23 @@ import { useTranslations } from 'next-intl';
 import { LayoutDashboard, BarChart3, QrCode, Settings, Users } from 'lucide-react';
 import { Link, usePathname } from '@/i18n/routing';
 import { cn } from '@/lib/utils';
+import { hasRole, type Role } from '@/lib/roles';
 
+// Onglets visibles selon le rôle (les pages et l'API vérifient aussi les droits).
 const ITEMS = [
-  { href: '/dashboard', key: 'file', icon: LayoutDashboard },
-  { href: '/dashboard/analytics', key: 'analytics', icon: BarChart3 },
-  { href: '/dashboard/customers', key: 'customers', icon: Users },
-  { href: '/dashboard/qr', key: 'qrCode', icon: QrCode },
-  { href: '/dashboard/settings', key: 'settings', icon: Settings },
-] as const;
+  { href: '/dashboard', key: 'file', icon: LayoutDashboard, min: 'staff' },
+  { href: '/dashboard/analytics', key: 'analytics', icon: BarChart3, min: 'manager' },
+  { href: '/dashboard/customers', key: 'customers', icon: Users, min: 'manager' },
+  { href: '/dashboard/qr', key: 'qrCode', icon: QrCode, min: 'staff' },
+  { href: '/dashboard/settings', key: 'settings', icon: Settings, min: 'manager' },
+] as const satisfies readonly { href: string; key: string; icon: unknown; min: Role }[];
 
-export function DashboardNav() {
+export function DashboardNav({ role }: { role: string }) {
   const t = useTranslations('dashboard');
   const pathname = usePathname();
   return (
     <nav className="flex items-center gap-0.5">
-      {ITEMS.map(({ href, key, icon: Icon }) => {
+      {ITEMS.filter((item) => hasRole(role, item.min)).map(({ href, key, icon: Icon }) => {
         const active = href === '/dashboard' ? pathname === href : pathname.startsWith(href);
         return (
           <Link

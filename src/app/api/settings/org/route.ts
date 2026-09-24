@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { prisma } from '@/lib/db';
 import { ApiError, parseBody, route } from '@/lib/api';
-import { requireOrg } from '@/lib/guards';
+import { requireOrgRole } from '@/lib/guards';
 import { SECTORS } from '@/lib/sectors';
 import { DEFAULT_BRAND_COLOR, getOrgLimits } from '@/lib/plans';
 import { publishBranchUpdate } from '@/lib/queue';
@@ -14,7 +14,7 @@ const schema = z.object({
 });
 
 export const PATCH = route(async (req) => {
-  const auth = await requireOrg();
+  const auth = await requireOrgRole('owner');
   const data = await parseBody(req, schema);
 
   if (data.brandColor && data.brandColor.toLowerCase() !== DEFAULT_BRAND_COLOR.toLowerCase()) {
