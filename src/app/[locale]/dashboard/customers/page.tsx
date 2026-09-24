@@ -7,6 +7,7 @@ import { redirectTo } from '@/i18n/server';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatDate } from '@/lib/format';
 import { DEFAULT_TIMEZONE } from '@/lib/time';
+import { CustomerActions } from './customer-actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,6 +75,9 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
                 <th className="p-3 text-end">{t('visits')}</th>
                 <th className="hidden p-3 text-end md:table-cell">{t('noShow')}</th>
                 <th className="hidden p-3 text-end md:table-cell">{t('lastVisit')}</th>
+                <th className="p-3 text-end">
+                  <span className="sr-only">{t('actions')}</span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -116,6 +120,9 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
                     ) : (
                       '—'
                     )}
+                  </td>
+                  <td className="p-2">
+                    <CustomerActions id={c.id} name={c.name} />
                   </td>
                 </tr>
               ))}

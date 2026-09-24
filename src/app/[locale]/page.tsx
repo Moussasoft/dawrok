@@ -22,6 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { LegalLinks } from '@/components/legal-links';
 
 // Page statique (composant serveur) : aucun JavaScript client hormis les sélecteurs thème/langue.
 
@@ -326,7 +327,10 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       </section>
 
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        <div className="container">{t('common.copyright', { year: new Date().getFullYear() })}</div>
+        <div className="container space-y-2">
+          <div>{t('common.copyright', { year: new Date().getFullYear() })}</div>
+          <LegalLinks />
+        </div>
       </footer>
     </main>
   );

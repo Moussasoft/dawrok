@@ -18,11 +18,13 @@ const schema = z.object({
   email: z.string().trim().email().max(200),
   password: z.string().min(8).max(100),
   locale: z.enum(routing.locales).optional(),
+  acceptTerms: z.boolean().optional(),
 });
 
 export const POST = route(async (req) => {
   enforceRateLimit(`signup:ip:${clientIp(req)}`, 5, 60 * 60_000);
-  const { orgName, sector, name, email: rawEmail, password, locale } = await parseBody(req, schema);
+  const { orgName, sector, name, email: rawEmail, password, locale, acceptTerms } = await parseBody(req, schema);
+  if (!acceptTerms) throw new ApiError(400, 'terms_required');
   const email = rawEmail.toLowerCase();
 
   const taken = await prisma.user.findFirst({ where: { email: { in: Array.from(new Set([rawEmail, email])) } } });
@@ -44,7 +46,7 @@ export const POST = route(async (req) => {
           name: orgName,
           slug,
           sector,
-          users: { create: { email, passwordHash, name, role: 'owner' } },
+          users: { create: { email, passwordHash, name, role: 'owner', termsAcceptedAt: new Date() } },
           branches: {
             create: {
               name: preset.branchName,

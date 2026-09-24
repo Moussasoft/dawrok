@@ -7,6 +7,7 @@ import { Input, Label, Select } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiFetch, useErrorMessage } from '@/lib/api-client';
 import { SECTORS, SECTOR_I18N_KEY } from '@/lib/sectors';
+import { AcceptTerms } from '@/components/accept-terms';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -16,7 +17,7 @@ export default function SignupPage() {
   const errorMessage = useErrorMessage();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form, setForm] = useState({ orgName: '', sector: 'hairdresser', name: '', email: '', password: '' });
+  const [form, setForm] = useState({ orgName: '', sector: 'hairdresser', name: '', email: '', password: '', acceptTerms: false });
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -105,6 +106,7 @@ export default function SignupPage() {
               />
               <p className="text-xs text-muted-foreground">{t('passwordHint')}</p>
             </div>
+            <AcceptTerms checked={form.acceptTerms} onChange={(acceptTerms) => setForm({ ...form, acceptTerms })} />
             {error && (
               <p role="alert" className="text-sm text-destructive">
                 {error}

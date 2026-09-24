@@ -20,6 +20,8 @@ model Organization {
   brandColor String   @default("#6366F1")
   logoUrl    String?  // /api/orgs/{id}/logo?v=… (versionnée pour le cache)
   suspended  Boolean  @default(false)
+  // Loi 09-08 : au-delà, tickets anonymisés et fiches clients inactives supprimées (purge quotidienne).
+  retentionDays Int   @default(365)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
@@ -52,6 +54,8 @@ model User {
   createdAt    DateTime @default(now())
   // Toute session émise avant ce moment est refusée (mot de passe changé ou réinitialisé).
   passwordChangedAt DateTime?
+  // Acceptation des conditions d'utilisation et de la politique de confidentialité.
+  termsAcceptedAt   DateTime?
 
   passwordResetTokens PasswordResetToken[]
 
@@ -167,6 +171,7 @@ model Ticket {
   kind         String   @default("walkin")  // walkin | appointment
   scheduledFor DateTime? // for advance bookings
   cancelToken  String?  @unique             // token allowing public cancel via /api/tickets/cancel/[token]
+  locale       String   @default("ar")      // langue du client (SMS, e-mails)
 
   createdAt    DateTime @default(now())
   calledAt     DateTime?

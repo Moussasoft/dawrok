@@ -6,6 +6,8 @@ import { getSnapshot } from '@/lib/queue';
 import { getPlanLimits } from '@/lib/plans';
 import { formatDateTime, weekdayName } from '@/lib/format';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { LegalLinks } from '@/components/legal-links';
+import { Link } from '@/i18n/routing';
 import { MyTicketBanner, PublicQueueClient } from './public-queue-client';
 
 export const dynamic = 'force-dynamic';
@@ -98,7 +100,18 @@ export default async function PublicQueuePage({ params }: { params: Promise<{ qr
           />
         )}
 
-        <p className="mt-auto pt-6 text-center text-xs text-muted-foreground">{t('common.poweredBy')}</p>
+        {!suspended && (
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            {t('publicQueue.privacyNotice', { org: branch.organization.name })}{' '}
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+              {t('legal.learnMore')}
+            </Link>
+          </p>
+        )}
+        <div className="mt-auto space-y-2 pt-6 text-center text-xs text-muted-foreground">
+          <p>{t('common.poweredBy')}</p>
+          <LegalLinks />
+        </div>
       </div>
     </main>
   );

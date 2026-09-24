@@ -35,6 +35,8 @@ Ouvrez :
 | `SMTP_URL` ou `RESEND_API_KEY`, `MAIL_FROM` | non | E-mails (mot de passe oublié, invitations d'équipe). Sans fournisseur, les e-mails s'affichent dans la console en développement. |
 | `TRUSTED_PROXY_HOPS` | non | Nombre de proxys de confiance devant l'app (défaut 1) pour lire l'IP réelle du client (rate limiting). |
 | `TRUST_X_REAL_IP` | non | `1` pour lire `X-Real-IP` — seulement si le proxy l'écrase toujours (sinon falsifiable). |
+| `LEGAL_COMPANY_NAME`, `LEGAL_CONTACT_EMAIL`, `LEGAL_ADDRESS`, `CNDP_DECLARATION` | **oui en prod** | Éditeur, contact, adresse et n° de déclaration CNDP affichés dans `/privacy` et `/terms`. |
+| `RETENTION_SCHEDULER`, `CRON_SECRET` | non | Purge quotidienne des données expirées : planifiée dans le serveur Node par défaut ; en serverless, `RETENTION_SCHEDULER=off` et un cron sur `GET /api/cron/retention` (`Authorization: Bearer $CRON_SECRET`). |
 
 ## 🧪 Qualité
 
@@ -94,6 +96,13 @@ src/
 - **Horaires d'ouverture** : optionnels. S'ils sont définis, les tickets QR sont refusés hors horaires (le staff peut toujours créer un ticket comptoir).
 - **Offres** : limites de succursales / employés / prestations et fonctionnalités (réservation, analytics, couleur de marque) éditables par le superadmin et appliquées par l'API.
 - **Équipe** : rôles `owner` (tout : équipe, facturation, organisation), `manager` (file, analytics, clients, réglages des agences) et `staff` (file uniquement). Invitations par lien à usage unique (7 jours), envoyé par e-mail si un fournisseur est configuré, sinon partageable (copie, WhatsApp).
+
+## 🛡 Données personnelles (loi 09-08)
+
+- **Information** : politique de confidentialité (`/privacy`) et conditions d'utilisation (`/terms`) dans les trois langues, liées depuis la page de prise de ticket, le ticket, la landing et la connexion. Les textes sont un modèle à faire valider par un juriste (éditeur, contact et n° CNDP viennent des variables `LEGAL_*`).
+- **Consentement** : acceptation des conditions obligatoire à l'inscription et à l'acceptation d'une invitation (horodatée dans `User.termsAcceptedAt`).
+- **Conservation** : chaque organisation choisit une durée (90, 180, 365 — par défaut — ou 730 jours). Chaque jour, les tickets plus anciens sont anonymisés, les commentaires effacés et les fiches clients inactives supprimées ; les journaux d'audit sont gardés au moins un an.
+- **Droits des clients** : export JSON (droit d'accès) et suppression avec anonymisation des tickets (droit à l'effacement) depuis la page *Clients*.
 
 ## 🔐 Sécurité
 

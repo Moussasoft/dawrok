@@ -15,6 +15,7 @@ import { weekdayName } from '@/lib/format';
 import type { OpenHours } from '@/lib/opening-hours';
 import { cn } from '@/lib/utils';
 import { LogoUploader } from './logo-uploader';
+import { PrivacyCard } from './privacy-card';
 
 type Service = { id: string; name: string; avgDurationMin: number; active: boolean };
 type Employee = { id: string; name: string; active: boolean };
@@ -29,7 +30,16 @@ type Branch = {
   services: Service[];
   employees: Employee[];
 };
-type Org = { id: string; name: string; slug: string; sector: string; plan: string; brandColor: string; logoUrl: string | null };
+type Org = {
+  id: string;
+  name: string;
+  slug: string;
+  sector: string;
+  plan: string;
+  brandColor: string;
+  logoUrl: string | null;
+  retentionDays: number;
+};
 type Limits = {
   plan: string;
   maxBranches: number;
@@ -67,6 +77,7 @@ export function SettingsClient({
       <p className="mb-6 text-muted-foreground">{t('subtitle')}</p>
 
       <OrgCard org={org} limits={limits} usage={usage} canEdit={canEditOrg} onRefresh={refresh} />
+      <PrivacyCard retentionDays={org.retentionDays} canEdit={canEditOrg} onRefresh={refresh} />
 
       <h2 className="mb-3 mt-8 flex items-center gap-2 text-lg font-semibold">
         <MapPin className="h-5 w-5 text-primary" /> {t('branches')}

@@ -178,7 +178,9 @@
     "invalid_image": "Invalid image: use a PNG, JPG or WebP file.",
     "image_too_large": "Image too large ({max} MB maximum).",
     "feedback_closed": "This visit can no longer be rated.",
-    "feedback_exists": "You have already given your feedback."
+    "feedback_exists": "You have already given your feedback.",
+    "terms_required": "Please accept the terms of use and the privacy policy.",
+    "customer_has_active_ticket": "This customer has a ticket or appointment in progress: complete or cancel it first."
   },
   "status": {
     "scheduled": "Upcoming appointment",
@@ -338,7 +340,13 @@
     "logoRemove": "Remove",
     "logoHint": "PNG, JPG or WebP, 2 MB maximum. Shown on the TV screen, customer page, ticket and poster.",
     "logoUpdated": "Logo updated",
-    "logoRemoved": "Logo removed"
+    "logoRemoved": "Logo removed",
+    "privacyTitle": "Personal data",
+    "retention": "Customer data retention",
+    "retentionOption": "{days} days",
+    "retentionHint": "After this period, tickets are anonymized, comments erased and inactive customer records deleted (Law 09-08). Automatic purge every day.",
+    "retentionSaved": "Retention period saved",
+    "privacyPolicyLink": "Privacy policy"
   },
   "analytics": {
     "title": "Analytics",
@@ -382,7 +390,12 @@
     "visits": "Visits",
     "noShow": "No-show",
     "lastVisit": "Last visit",
-    "vip": "Loyal customer (10+ visits)"
+    "vip": "Loyal customer (10+ visits)",
+    "actions": "Actions",
+    "exportData": "Export their data",
+    "delete": "Delete",
+    "confirmDelete": "Permanently delete {name}’s record? Their past tickets will be anonymized. This cannot be undone.",
+    "deleted": "Customer record deleted"
   },
   "qr": {
     "title": "Your QR code",
@@ -436,7 +449,8 @@
     "estimatedWait": "Estimated wait",
     "cancel": "Cancel",
     "myTicket": "You already have a ticket",
-    "viewMyTicket": "View my ticket →"
+    "viewMyTicket": "View my ticket →",
+    "privacyNotice": "Your details are only used to manage your visit to {org}."
   },
   "ticket": {
     "yourTicket": "Your ticket",
@@ -592,7 +606,11 @@
       "user_password_reset": "Password reset",
       "user_password_change": "Password changed",
       "user_email_change": "Email changed",
-      "org_logo": "Logo changed"
+      "org_logo": "Logo changed",
+      "customer_delete": "Customer record deleted",
+      "customer_export": "Customer data exported",
+      "retention_purge": "Expired data purged",
+      "org_retention": "Retention period changed"
     },
     "settingsSubtitle": "Manage your account and the platform configuration",
     "tabProfile": "Profile",
@@ -793,6 +811,105 @@
     "submitting": "Creating…",
     "invalid": "This invitation is invalid, expired or already used.",
     "goLogin": "Go to login"
+  },
+  "legal": {
+    "home": "← Home",
+    "navLabel": "Legal information",
+    "privacyLink": "Privacy",
+    "termsLink": "Terms of use",
+    "privacyTitle": "Privacy policy",
+    "termsTitle": "Terms of use",
+    "updated": "Last updated: {date}",
+    "cndpDeclared": "Processing declared to the CNDP under no. {number}.",
+    "address": "Address: {address}",
+    "acceptTerms": "I accept the <terms>terms of use</terms> and the <privacy>privacy policy</privacy>.",
+    "learnMore": "Learn more",
+    "privacy": {
+      "intro": {
+        "title": "In short",
+        "p1": "{company} publishes Daourak, a virtual queue and appointment booking service. This policy explains what data is processed, why, for how long and how to exercise your rights, in accordance with Moroccan Law No. 09-08 on the protection of individuals with regard to the processing of personal data."
+      },
+      "roles": {
+        "title": "Who is responsible?",
+        "p1": "For customers who take a ticket or book an appointment, the business (salon, practice, branch…) is the data controller: it decides how its queue and history are used. {company} acts on its behalf as a processor.",
+        "p2": "For business accounts (sign-up, team, billing), {company} is the data controller."
+      },
+      "data": {
+        "title": "Data processed",
+        "p1": "Customers of businesses: first name, phone number (optional for a ticket, required for an appointment), chosen service, visit times, feedback left after the service and, if you enable them, your browser’s technical notification identifiers.",
+        "p2": "Businesses: name, email address, password (stored as an irreversible hash), organization, role and a log of sensitive actions.",
+        "p3": "Technical data: the IP address is only used to prevent abuse and is not stored long-term. No advertising cookies or trackers: only strictly necessary cookies (session, language, theme) are used."
+      },
+      "purposes": {
+        "title": "Why?",
+        "p1": "To manage your visit (number, estimated wait, call), your appointments and your notifications; to let the business follow its attendance and customer loyalty; to secure the service; to bill subscriptions. Your data is never sold or used for advertising."
+      },
+      "recipients": {
+        "title": "Who has access?",
+        "p1": "The business concerned and its team, according to each member’s role; {company} for hosting, maintenance and support; strictly necessary technical providers (hosting, sending emails or text messages, payment), bound by confidentiality.",
+        "p2": "Push notifications go through your browser’s service (Google, Apple, Mozilla…), which may be located outside Morocco; they only contain the call message. Any transfer abroad is governed in accordance with Law 09-08."
+      },
+      "retention": {
+        "title": "How long?",
+        "p1": "Tickets are anonymized (first name and phone erased) after the retention period chosen by the business, {retention} days by default; inactive customer records and comments are deleted at the same time. Anonymous statistics may be kept.",
+        "p2": "Business accounts are kept for the duration of the subscription, then deleted on request or after termination, subject to legal obligations (invoicing)."
+      },
+      "rights": {
+        "title": "Your rights",
+        "p1": "You have the right to access, rectify and object on legitimate grounds, as well as the right to request the deletion of your data (articles 7 to 9 of Law 09-08).",
+        "p2": "Customer of a business: contact the business, or write to us at {email} and we will forward your request. Business: write to {email}. You can also contact the CNDP (www.cndp.ma)."
+      },
+      "security": {
+        "title": "Security",
+        "p1": "Encrypted connections (HTTPS), hashed passwords, access limited by each team member’s role, revocable sessions and logging of sensitive actions."
+      },
+      "contact": {
+        "title": "Contact",
+        "p1": "{company} — {email}"
+      }
+    },
+    "terms": {
+      "object": {
+        "title": "Purpose",
+        "p1": "These terms govern the use of Daourak, a service published by {company}: QR code virtual queue, real-time tracking, appointments, display screen and dashboard for businesses."
+      },
+      "account": {
+        "title": "Business account",
+        "p1": "Sign-up is reserved for businesses. You agree to provide accurate information, to keep your password confidential and to invite only authorized people to your team. You are responsible for the actions carried out from your account."
+      },
+      "plans": {
+        "title": "Plans and payment",
+        "p1": "Each plan has limits (branches, employees, services) and features, shown when subscribing. Paid subscriptions are billed monthly in advance; you can cancel at any time, with cancellation taking effect at the end of the current period."
+      },
+      "dataDuty": {
+        "title": "Your customers’ data",
+        "p1": "As the controller of your customers’ data, you agree to inform them (the ticket page links to the privacy policy), to collect only the data that is necessary and to comply with Law 09-08, including any formalities with the CNDP that apply to you. {company} processes this data only on your behalf and according to your instructions."
+      },
+      "customers": {
+        "title": "Customers of businesses",
+        "p1": "Tickets are personal. By taking a ticket or booking an appointment, you agree to provide accurate information and to show up on time; the business may mark as absent a customer who does not show up."
+      },
+      "availability": {
+        "title": "Availability",
+        "p1": "We do our best to provide a continuous service, but cannot guarantee it will never be interrupted (maintenance, network incidents). Wait estimates are indicative and notifications depend on your device, browser and connection."
+      },
+      "liability": {
+        "title": "Liability",
+        "p1": "{company} cannot be held liable for indirect damages, nor for how the business organizes its reception. Its liability is limited to the amounts paid for the service during the previous twelve months."
+      },
+      "suspension": {
+        "title": "Suspension and termination",
+        "p1": "In the event of unlawful or fraudulent use, use contrary to these terms, or non-payment, the account may be suspended after notifying its holder, except in emergencies."
+      },
+      "law": {
+        "title": "Governing law",
+        "p1": "These terms are governed by Moroccan law. Failing an amicable agreement, the competent courts of Morocco shall have jurisdiction."
+      },
+      "contact": {
+        "title": "Contact",
+        "p1": "{company} — {email}"
+      }
+    }
   },
   "language": {
     "fr": "Français",

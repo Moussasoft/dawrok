@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { Plus, Ticket } from 'lucide-react';
 import { Dialog } from '@/components/ui/dialog';
@@ -20,6 +20,7 @@ type Props = {
 export function CounterTicketDialog({ open, onClose, branchId, services }: Props) {
   const t = useTranslations('dashboard');
   const tc = useTranslations('common');
+  const locale = useLocale();
   const errorMessage = useErrorMessage();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -43,7 +44,14 @@ export function CounterTicketDialog({ open, onClose, branchId, services }: Props
     setSaving(true);
     const res = await apiFetch<{ number: number }>('/api/dashboard/tickets', {
       method: 'POST',
-      json: { branchId, customerName: name.trim() || undefined, customerPhone: phone.trim() || null, serviceId: serviceId || null },
+      json: {
+        branchId,
+        customerName: name.trim() || undefined,
+        customerPhone: phone.trim() || null,
+        serviceId: serviceId || null,
+        // Langue du client inconnue : celle de l'écran du staff.
+        locale,
+      },
     });
     setSaving(false);
     if (!res.ok) {

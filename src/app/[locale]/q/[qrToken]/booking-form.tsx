@@ -62,7 +62,7 @@ export function BookingForm({ qrToken, services, timezone }: { qrToken: string; 
     setSubmitting(true);
     const res = await apiFetch<{ publicCode: string }>('/api/appointments', {
       method: 'POST',
-      json: { qrToken, customerName: name.trim(), customerPhone: phone.trim(), serviceId: serviceId || null, scheduledFor: slot },
+      json: { qrToken, customerName: name.trim(), customerPhone: phone.trim(), serviceId: serviceId || null, scheduledFor: slot, locale },
     });
     if (!res.ok) {
       setSubmitting(false);

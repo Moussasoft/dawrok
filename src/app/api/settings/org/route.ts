@@ -6,11 +6,14 @@ import { requireOrgRole } from '@/lib/guards';
 import { SECTORS } from '@/lib/sectors';
 import { DEFAULT_BRAND_COLOR, getOrgLimits } from '@/lib/plans';
 import { publishBranchUpdate } from '@/lib/queue';
+import { isRetentionChoice } from '@/lib/retention-rules';
+import { audit } from '@/lib/audit';
 
 const schema = z.object({
   name: z.string().trim().min(1).max(100).optional(),
   sector: z.enum(SECTORS).optional(),
   brandColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  retentionDays: z.number().int().refine(isRetentionChoice).optional(),
 });
 
 export const PATCH = route(async (req) => {
@@ -22,11 +25,15 @@ export const PATCH = route(async (req) => {
     if (!limits.allowCustomBrand) throw new ApiError(403, 'plan_feature_custombrand', { plan: limits.plan });
   }
 
+  const before = await prisma.organization.findUnique({ where: { id: auth.orgId }, select: { retentionDays: true } });
   const org = await prisma.organization.update({
     where: { id: auth.orgId },
     data,
-    select: { id: true, name: true, sector: true, brandColor: true },
+    select: { id: true, name: true, sector: true, brandColor: true, retentionDays: true },
   });
+  if (data.retentionDays !== undefined && data.retentionDays !== before?.retentionDays) {
+    await audit({ action: 'org.retention', actor: auth, metadata: { from: before?.retentionDays, to: data.retentionDays } });
+  }
   const branches = await prisma.branch.findMany({ where: { orgId: auth.orgId }, select: { id: true } });
   await Promise.all(branches.map((b) => publishBranchUpdate(b.id)));
   return NextResponse.json(org);

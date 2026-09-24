@@ -6,12 +6,14 @@ import { createTicket } from '@/lib/tickets';
 import { clientIp, enforceRateLimit } from '@/lib/rate-limit';
 import { isOpenAt, nextOpening, parseOpenHours } from '@/lib/opening-hours';
 import { DEFAULT_TIMEZONE } from '@/lib/time';
+import { routing } from '@/i18n/routing';
 
 const schema = z.object({
   qrToken: z.string().min(4).max(64),
   customerName: z.string().trim().min(1).max(80),
   customerPhone: z.string().trim().max(30).optional().nullable(),
   serviceId: z.string().max(64).optional().nullable(),
+  locale: z.enum(routing.locales).optional(),
 });
 
 // Endpoint public — le client scanne le QR et prend son ticket.
@@ -59,6 +61,7 @@ export const POST = route(async (req) => {
     customerName: data.customerName,
     customerPhone: phone,
     serviceId,
+    locale: data.locale,
   });
   return NextResponse.json({ ok: true, publicCode: ticket.publicCode, number: ticket.number });
 });

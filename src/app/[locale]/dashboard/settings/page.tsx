@@ -34,7 +34,16 @@ export default async function SettingsPage() {
   return (
     <SettingsClient
       canEditOrg={hasRole(auth.role, 'owner')}
-      org={{ id: org.id, name: org.name, slug: org.slug, sector: org.sector, plan: org.plan, brandColor: org.brandColor, logoUrl: org.logoUrl }}
+      org={{
+        id: org.id,
+        name: org.name,
+        slug: org.slug,
+        sector: org.sector,
+        plan: org.plan,
+        brandColor: org.brandColor,
+        logoUrl: org.logoUrl,
+        retentionDays: org.retentionDays,
+      }}
       limits={limits}
       usage={usage}
       branches={org.branches.map((b) => ({

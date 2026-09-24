@@ -1,6 +1,6 @@
 'use client';
 import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { Ticket } from 'lucide-react';
 import { useRouter } from '@/i18n/routing';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ export function TakeTicketForm({ qrToken, services }: { qrToken: string; service
   const t = useTranslations('publicQueue');
   const tc = useTranslations('common');
   const router = useRouter();
+  const locale = useLocale();
   const errorMessage = useErrorMessage();
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -28,7 +29,7 @@ export function TakeTicketForm({ qrToken, services }: { qrToken: string; service
     setError(null);
     const res = await apiFetch<{ publicCode: string }>('/api/tickets', {
       method: 'POST',
-      json: { qrToken, customerName: name.trim(), customerPhone: phone.trim() || null, serviceId },
+      json: { qrToken, customerName: name.trim(), customerPhone: phone.trim() || null, serviceId, locale },
     });
     if (!res.ok) {
       setLoading(false);

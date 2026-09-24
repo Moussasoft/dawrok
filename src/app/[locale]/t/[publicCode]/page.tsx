@@ -3,6 +3,7 @@ import { getTranslations } from 'next-intl/server';
 import { prisma } from '@/lib/db';
 import { getSnapshot, getTicketView } from '@/lib/queue';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { LegalLinks } from '@/components/legal-links';
 import { LiveTicket } from './live-ticket';
 
 export const dynamic = 'force-dynamic';
@@ -33,6 +34,7 @@ export default async function TicketPage({ params }: { params: Promise<{ publicC
         </div>
         <LiveTicket publicCode={publicCode} initial={initial} />
         <p className="mt-auto pt-6 text-center text-xs text-muted-foreground">{t('keepOpen')}</p>
+        <LegalLinks className="mt-3" />
       </div>
     </main>
   );

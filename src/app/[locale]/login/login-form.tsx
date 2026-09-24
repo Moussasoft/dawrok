@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiFetch, useErrorMessage } from '@/lib/api-client';
+import { LegalLinks } from '@/components/legal-links';
 
 export function LoginForm({ suspended }: { suspended: boolean }) {
   const router = useRouter();
@@ -34,7 +35,7 @@ export function LoginForm({ suspended }: { suspended: boolean }) {
   }
 
   return (
-    <main className="gradient-mesh flex min-h-screen items-center justify-center p-4">
+    <main className="gradient-mesh flex min-h-screen flex-col items-center justify-center gap-6 p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
           <Link href="/" className="mb-2 text-sm text-muted-foreground hover:text-foreground">
@@ -92,6 +93,7 @@ export function LoginForm({ suspended }: { suspended: boolean }) {
           </form>
         </CardContent>
       </Card>
+      <LegalLinks />
     </main>
   );
 }

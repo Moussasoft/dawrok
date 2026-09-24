@@ -6,12 +6,14 @@ import { requireOrg } from '@/lib/guards';
 import { requireOwnBranch } from '@/lib/branch';
 import { createTicket } from '@/lib/tickets';
 import { DEFAULT_TIMEZONE } from '@/lib/time';
+import { routing } from '@/i18n/routing';
 
 const schema = z.object({
   branchId: z.string().min(1).max(64),
   customerName: z.string().trim().max(80).optional(),
   customerPhone: z.string().trim().max(30).optional().nullable(),
   serviceId: z.string().max(64).optional().nullable(),
+  locale: z.enum(routing.locales).optional(),
 });
 
 // Ticket « comptoir » créé par le staff pour un client sans smartphone.
@@ -34,6 +36,7 @@ export const POST = route(async (req) => {
     customerName: data.customerName || '—',
     customerPhone: data.customerPhone || null,
     serviceId,
+    locale: data.locale,
   });
   return NextResponse.json({ ok: true, number: ticket.number, publicCode: ticket.publicCode }, { status: 201 });
 });

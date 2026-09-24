@@ -11,6 +11,7 @@ import { parseOpenHours } from '@/lib/opening-hours';
 import { generateSlots, isSlotBookable, type SlotQuery } from '@/lib/slots';
 import { DEFAULT_TIMEZONE, dayBounds, dayKey, parseDayKey } from '@/lib/time';
 import { DEFAULT_SERVICE_MIN } from '@/lib/queue-logic';
+import { routing } from '@/i18n/routing';
 
 const MIN_LEAD_MIN = 30;
 const MAX_DAYS_AHEAD = 90;
@@ -69,6 +70,7 @@ const postSchema = z.object({
   customerPhone: z.string().trim().min(6).max(30),
   serviceId: z.string().max(64).optional().nullable(),
   scheduledFor: z.string().datetime(),
+  locale: z.enum(routing.locales).optional(),
 });
 
 // Endpoint public — réserver un rendez-vous.
@@ -103,6 +105,7 @@ export const POST = route(async (req) => {
       scheduledFor: scheduled,
       status: 'scheduled',
       cancelToken: crypto.randomBytes(16).toString('hex'),
+      ...(data.locale ? { locale: data.locale } : {}),
     },
   });
 

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input, Label } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiFetch, useErrorMessage } from '@/lib/api-client';
+import { AcceptTerms } from '@/components/accept-terms';
 
 export function InviteForm({ token, orgName, email, roleLabel }: { token: string; orgName: string; email: string; roleLabel: string }) {
   const t = useTranslations('invite');
@@ -13,6 +14,7 @@ export function InviteForm({ token, orgName, email, roleLabel }: { token: string
   const errorMessage = useErrorMessage();
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -20,7 +22,7 @@ export function InviteForm({ token, orgName, email, roleLabel }: { token: string
     e.preventDefault();
     setLoading(true);
     setError(null);
-    const res = await apiFetch('/api/auth/accept-invitation', { method: 'POST', json: { token, name, password } });
+    const res = await apiFetch('/api/auth/accept-invitation', { method: 'POST', json: { token, name, password, acceptTerms } });
     if (!res.ok) {
       setLoading(false);
       setError(errorMessage(res));
@@ -61,6 +63,7 @@ export function InviteForm({ token, orgName, email, roleLabel }: { token: string
             />
             <p className="text-xs text-muted-foreground">{t('passwordHint')}</p>
           </div>
+          <AcceptTerms checked={acceptTerms} onChange={setAcceptTerms} />
           {error && (
             <p role="alert" className="text-sm text-destructive">
               {error}

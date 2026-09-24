@@ -178,7 +178,9 @@
     "invalid_image": "Image invalide : utilisez un fichier PNG, JPG ou WebP.",
     "image_too_large": "Image trop lourde ({max} Mo maximum).",
     "feedback_closed": "Il n’est plus possible de noter ce passage.",
-    "feedback_exists": "Vous avez déjà donné votre avis."
+    "feedback_exists": "Vous avez déjà donné votre avis.",
+    "terms_required": "Veuillez accepter les conditions d’utilisation et la politique de confidentialité.",
+    "customer_has_active_ticket": "Ce client a un ticket ou un rendez-vous en cours : terminez-le ou annulez-le d’abord."
   },
   "status": {
     "scheduled": "RDV à venir",
@@ -338,7 +340,13 @@
     "logoRemove": "Retirer",
     "logoHint": "PNG, JPG ou WebP, 2 Mo maximum. Affiché sur l’écran TV, la page client, le ticket et l’affiche.",
     "logoUpdated": "Logo mis à jour",
-    "logoRemoved": "Logo retiré"
+    "logoRemoved": "Logo retiré",
+    "privacyTitle": "Données personnelles",
+    "retention": "Conservation des données clients",
+    "retentionOption": "{days} jours",
+    "retentionHint": "Au-delà, les tickets sont anonymisés, les commentaires effacés et les fiches clients inactives supprimées (loi 09-08). Purge automatique chaque jour.",
+    "retentionSaved": "Durée de conservation enregistrée",
+    "privacyPolicyLink": "Politique de confidentialité"
   },
   "analytics": {
     "title": "Analytics",
@@ -382,7 +390,12 @@
     "visits": "Visites",
     "noShow": "No-show",
     "lastVisit": "Dernière visite",
-    "vip": "Client fidèle (10 visites et plus)"
+    "vip": "Client fidèle (10 visites et plus)",
+    "actions": "Actions",
+    "exportData": "Exporter ses données",
+    "delete": "Supprimer",
+    "confirmDelete": "Supprimer définitivement la fiche de {name} ? Ses tickets passés seront anonymisés. Cette action est irréversible.",
+    "deleted": "Fiche client supprimée"
   },
   "qr": {
     "title": "Votre QR code",
@@ -436,7 +449,8 @@
     "estimatedWait": "Temps estimé",
     "cancel": "Annuler",
     "myTicket": "Vous avez déjà un ticket",
-    "viewMyTicket": "Voir mon ticket →"
+    "viewMyTicket": "Voir mon ticket →",
+    "privacyNotice": "Vos informations servent uniquement à gérer votre passage chez {org}."
   },
   "ticket": {
     "yourTicket": "Votre ticket",
@@ -592,7 +606,11 @@
       "user_password_reset": "Mot de passe réinitialisé",
       "user_password_change": "Mot de passe modifié",
       "user_email_change": "E-mail modifié",
-      "org_logo": "Logo modifié"
+      "org_logo": "Logo modifié",
+      "customer_delete": "Fiche client supprimée",
+      "customer_export": "Données client exportées",
+      "retention_purge": "Purge des données expirées",
+      "org_retention": "Durée de conservation modifiée"
     },
     "settingsSubtitle": "Gérez votre compte et la configuration de la plateforme",
     "tabProfile": "Profil",
@@ -793,6 +811,105 @@
     "submitting": "Création…",
     "invalid": "Cette invitation est invalide, expirée ou déjà utilisée.",
     "goLogin": "Aller à la connexion"
+  },
+  "legal": {
+    "home": "← Accueil",
+    "navLabel": "Informations légales",
+    "privacyLink": "Confidentialité",
+    "termsLink": "Conditions d’utilisation",
+    "privacyTitle": "Politique de confidentialité",
+    "termsTitle": "Conditions d’utilisation",
+    "updated": "Dernière mise à jour : {date}",
+    "cndpDeclared": "Traitement déclaré auprès de la CNDP sous le n° {number}.",
+    "address": "Adresse : {address}",
+    "acceptTerms": "J’accepte les <terms>conditions d’utilisation</terms> et la <privacy>politique de confidentialité</privacy>.",
+    "learnMore": "En savoir plus",
+    "privacy": {
+      "intro": {
+        "title": "En bref",
+        "p1": "{company} édite Daourak, un service de file d’attente virtuelle et de prise de rendez-vous. Cette politique explique quelles données sont traitées, pourquoi, combien de temps et comment exercer vos droits, conformément à la loi n° 09-08 relative à la protection des personnes physiques à l’égard du traitement des données à caractère personnel."
+      },
+      "roles": {
+        "title": "Qui est responsable ?",
+        "p1": "Pour les clients qui prennent un ticket ou un rendez-vous, l’établissement (salon, cabinet, agence…) est responsable du traitement : il décide de l’usage de sa file et de son historique. {company} agit pour son compte, en tant que sous-traitant.",
+        "p2": "Pour les comptes professionnels (inscription, équipe, facturation), {company} est responsable du traitement."
+      },
+      "data": {
+        "title": "Données traitées",
+        "p1": "Clients des établissements : prénom, numéro de téléphone (facultatif pour un ticket, requis pour un rendez-vous), prestation choisie, horaires de passage, avis laissé après le service et, si vous les activez, les identifiants techniques de notification de votre navigateur.",
+        "p2": "Professionnels : nom, adresse e-mail, mot de passe (conservé sous une forme chiffrée irréversible), organisation, rôle et journal des actions sensibles.",
+        "p3": "Données techniques : l’adresse IP sert uniquement à limiter les abus et n’est pas conservée durablement. Aucun cookie publicitaire ni outil de pistage : seuls des cookies strictement nécessaires (session, langue, thème) sont utilisés."
+      },
+      "purposes": {
+        "title": "Pourquoi ?",
+        "p1": "Gérer votre passage (numéro, estimation d’attente, appel), vos rendez-vous et vos notifications ; permettre à l’établissement de suivre sa fréquentation et la fidélité de sa clientèle ; sécuriser le service ; facturer les abonnements. Vos données ne sont jamais vendues ni utilisées à des fins publicitaires."
+      },
+      "recipients": {
+        "title": "Qui y a accès ?",
+        "p1": "L’établissement concerné et son équipe, selon le rôle de chacun ; {company} pour l’hébergement, la maintenance et le support ; des prestataires techniques strictement nécessaires (hébergement, envoi d’e-mails ou de SMS, paiement), tenus à la confidentialité.",
+        "p2": "Les notifications push transitent par le service de votre navigateur (Google, Apple, Mozilla…), qui peut être situé hors du Maroc ; elles ne contiennent que le message d’appel. Tout transfert à l’étranger est encadré conformément à la loi 09-08."
+      },
+      "retention": {
+        "title": "Combien de temps ?",
+        "p1": "Les tickets sont anonymisés (prénom et téléphone effacés) après la durée de conservation choisie par l’établissement, {retention} jours par défaut ; les fiches clients inactives et les commentaires sont supprimés au même terme. Les statistiques anonymes peuvent être conservées.",
+        "p2": "Les comptes professionnels sont conservés pendant la durée de l’abonnement, puis supprimés sur demande ou après résiliation, sous réserve des obligations légales (facturation)."
+      },
+      "rights": {
+        "title": "Vos droits",
+        "p1": "Vous disposez d’un droit d’accès, de rectification et d’opposition pour motifs légitimes, ainsi que du droit de demander la suppression de vos données (articles 7 à 9 de la loi 09-08).",
+        "p2": "Client d’un établissement : adressez-vous à lui, ou écrivez-nous à {email} et nous transmettrons votre demande. Professionnel : écrivez à {email}. Vous pouvez aussi saisir la CNDP (www.cndp.ma)."
+      },
+      "security": {
+        "title": "Sécurité",
+        "p1": "Connexions chiffrées (HTTPS), mots de passe hachés, accès limité selon le rôle de chaque membre de l’équipe, sessions révocables et journalisation des actions sensibles."
+      },
+      "contact": {
+        "title": "Contact",
+        "p1": "{company} — {email}"
+      }
+    },
+    "terms": {
+      "object": {
+        "title": "Objet",
+        "p1": "Les présentes conditions encadrent l’utilisation de Daourak, service édité par {company} : file d’attente virtuelle par QR code, suivi en temps réel, rendez-vous, écran d’affichage et tableau de bord pour les professionnels."
+      },
+      "account": {
+        "title": "Compte professionnel",
+        "p1": "L’inscription est réservée aux professionnels. Vous vous engagez à fournir des informations exactes, à garder votre mot de passe confidentiel et à n’inviter dans votre équipe que des personnes autorisées. Vous êtes responsable des actions effectuées depuis votre compte."
+      },
+      "plans": {
+        "title": "Offres et paiement",
+        "p1": "Chaque offre comporte des limites (agences, employés, prestations) et des fonctionnalités, affichées lors de la souscription. Les abonnements payants sont facturés par mois, à l’avance ; vous pouvez résilier à tout moment, la résiliation prenant effet à la fin de la période en cours."
+      },
+      "dataDuty": {
+        "title": "Données de vos clients",
+        "p1": "En tant que responsable du traitement des données de vos clients, vous vous engagez à les informer (la page de prise de ticket renvoie à la politique de confidentialité), à ne collecter que les données nécessaires et à respecter la loi 09-08, y compris les formalités auprès de la CNDP qui vous incombent. {company} traite ces données uniquement pour votre compte et selon vos instructions."
+      },
+      "customers": {
+        "title": "Clients des établissements",
+        "p1": "Le ticket est personnel. En prenant un ticket ou un rendez-vous, vous vous engagez à donner des informations exactes et à vous présenter à temps ; l’établissement peut marquer absent un client qui ne se présente pas."
+      },
+      "availability": {
+        "title": "Disponibilité",
+        "p1": "Nous mettons tout en œuvre pour assurer un service continu, sans pouvoir garantir l’absence d’interruption (maintenance, incident réseau). Les estimations d’attente sont indicatives et les notifications dépendent de votre appareil, de votre navigateur et de votre connexion."
+      },
+      "liability": {
+        "title": "Responsabilité",
+        "p1": "{company} ne saurait être tenue responsable des dommages indirects, ni de l’organisation de l’accueil par l’établissement. Sa responsabilité est limitée aux sommes payées pour le service au cours des douze derniers mois."
+      },
+      "suspension": {
+        "title": "Suspension et résiliation",
+        "p1": "En cas d’usage illicite, frauduleux ou contraire aux présentes conditions, ou d’impayé, le compte peut être suspendu après information de son titulaire, sauf urgence."
+      },
+      "law": {
+        "title": "Droit applicable",
+        "p1": "Les présentes conditions sont régies par le droit marocain. À défaut d’accord amiable, les tribunaux compétents du Maroc seront saisis."
+      },
+      "contact": {
+        "title": "Contact",
+        "p1": "{company} — {email}"
+      }
+    }
   },
   "language": {
     "fr": "Français",

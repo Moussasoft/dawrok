@@ -13,11 +13,13 @@ const schema = z.object({
   token: z.string().min(20).max(200),
   name: z.string().trim().min(2).max(80),
   password: z.string().min(MIN_PASSWORD_LENGTH).max(100),
+  acceptTerms: z.boolean().optional(),
 });
 
 export const POST = route(async (req) => {
   enforceRateLimit(`accept:ip:${clientIp(req)}`, 20, 15 * 60_000);
-  const { token, name, password } = await parseBody(req, schema);
+  const { token, name, password, acceptTerms } = await parseBody(req, schema);
+  if (!acceptTerms) throw new ApiError(400, 'terms_required');
 
   const invitation = await prisma.invitation.findUnique({
     where: { tokenHash: hashToken(token) },
@@ -37,7 +39,14 @@ export const POST = route(async (req) => {
       });
       if (claimed.count === 0) throw new ApiError(400, 'invitation_invalid');
       const user = await tx.user.create({
-        data: { email: invitation.email, name, passwordHash, role: invitation.role, orgId: invitation.orgId },
+        data: {
+          email: invitation.email,
+          name,
+          passwordHash,
+          role: invitation.role,
+          orgId: invitation.orgId,
+          termsAcceptedAt: new Date(),
+        },
       });
       return user.id;
     });
