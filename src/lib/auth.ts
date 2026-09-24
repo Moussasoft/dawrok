@@ -2,6 +2,7 @@ import { SignJWT, jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { prisma } from './db';
+import { isSessionStale } from './tokens';
 
 const COOKIE = 'daourak_session';
 const SESSION_DAYS = 30;
@@ -28,10 +29,12 @@ export type SessionPayload = {
   userId: string;
   /** Renseigné quand un superadmin imite un propriétaire : id du superadmin. */
   impersonatedFromUserId?: string;
+  /** Date d'émission (secondes), comparée au dernier changement de mot de passe. */
+  iat?: number;
 };
 
-export async function createSession(payload: SessionPayload): Promise<string> {
-  return await new SignJWT({ ...payload })
+export async function createSession({ userId, impersonatedFromUserId }: SessionPayload): Promise<string> {
+  return await new SignJWT({ userId, ...(impersonatedFromUserId && { impersonatedFromUserId }) })
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(`${SESSION_DAYS}d`)
@@ -46,6 +49,7 @@ export async function verifySession(token: string): Promise<SessionPayload | nul
       userId: payload.userId,
       impersonatedFromUserId:
         typeof payload.impersonatedFromUserId === 'string' ? payload.impersonatedFromUserId : undefined,
+      iat: typeof payload.iat === 'number' ? payload.iat : undefined,
     };
   } catch {
     return null;
@@ -103,6 +107,8 @@ export async function resolveAuth(session: SessionPayload): Promise<AuthContext 
       prisma.user.findUnique({ where: { id: session.userId }, include: { organization: true } }),
     ]);
     if (!actor?.isSuperadmin || !target) return null;
+    // La personne réellement connectée est le superadmin : c'est son mot de passe qui compte.
+    if (isSessionStale(session.iat, actor.passwordChangedAt)) return null;
     return {
       userId: target.id,
       name: target.name,
@@ -120,6 +126,7 @@ export async function resolveAuth(session: SessionPayload): Promise<AuthContext 
 
   const user = await prisma.user.findUnique({ where: { id: session.userId }, include: { organization: true } });
   if (!user) return null;
+  if (isSessionStale(session.iat, user.passwordChangedAt)) return null;
   return {
     userId: user.id,
     name: user.name,

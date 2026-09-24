@@ -37,8 +37,26 @@ model User {
   orgId        String?
   organization Organization? @relation(fields: [orgId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
+  // Toute session émise avant ce moment est refusée (mot de passe changé ou réinitialisé).
+  passwordChangedAt DateTime?
+
+  passwordResetTokens PasswordResetToken[]
 
   @@index([orgId])
+}
+
+// Lien « mot de passe oublié » : seul le hash du jeton est stocké, usage unique, 1 h.
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 // =========================================================

@@ -32,6 +32,7 @@ Ouvrez :
 | `JWT_SECRET` | **oui en prod** | ≥ 32 caractères aléatoires (`openssl rand -base64 48`). Le serveur refuse de démarrer une session avec un secret absent ou d'exemple. |
 | `NEXT_PUBLIC_APP_URL` | oui | URL publique (QR codes, liens des notifications) |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | non | Notifications push. Générer avec `npx web-push generate-vapid-keys`. Sans ces clés, seules les alertes « page ouverte » fonctionnent. |
+| `SMTP_URL` ou `RESEND_API_KEY`, `MAIL_FROM` | non | E-mails (mot de passe oublié, invitations d'équipe). Sans fournisseur, les e-mails s'affichent dans la console en développement. |
 | `TRUSTED_PROXY_HOPS` | non | Nombre de proxys de confiance devant l'app (défaut 1) pour lire l'IP réelle du client (rate limiting). |
 | `TRUST_X_REAL_IP` | non | `1` pour lire `X-Real-IP` — seulement si le proxy l'écrase toujours (sinon falsifiable). |
 

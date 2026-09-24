@@ -106,7 +106,8 @@
     "noAccount": "Pas de compte ?",
     "createAccount": "Créer un compte",
     "error": "Email ou mot de passe incorrect",
-    "suspended": "Le compte de votre organisation est suspendu. Contactez le support."
+    "suspended": "Le compte de votre organisation est suspendu. Contactez le support.",
+    "forgot": "Mot de passe oublié ?"
   },
   "signup": {
     "back": "← Retour",
@@ -167,7 +168,9 @@
     "owner_not_found": "Propriétaire introuvable.",
     "stop_impersonation_first": "Quittez d’abord le mode imitation.",
     "push_not_configured": "Les notifications push ne sont pas configurées sur ce serveur.",
-    "ticket_conflict": "Ce ticket vient d’être modifié depuis un autre poste."
+    "ticket_conflict": "Ce ticket vient d’être modifié depuis un autre poste.",
+    "invalid_reset_token": "Ce lien de réinitialisation est invalide ou a expiré.",
+    "password_too_short": "Mot de passe trop court : au moins {min} caractères."
   },
   "status": {
     "scheduled": "RDV à venir",
@@ -647,6 +650,52 @@
     "title": "Page introuvable",
     "description": "Ce lien n’existe pas ou n’est plus valable.",
     "backHome": "Retour à l’accueil"
+  },
+  "forgot": {
+    "back": "← Retour à la connexion",
+    "title": "Mot de passe oublié",
+    "description": "Saisissez votre e-mail : nous vous enverrons un lien pour choisir un nouveau mot de passe.",
+    "email": "Email",
+    "submit": "Envoyer le lien",
+    "submitting": "Envoi…",
+    "sent": "Si un compte existe pour cette adresse, un e-mail vient d’être envoyé. Pensez à vérifier vos courriers indésirables."
+  },
+  "reset": {
+    "title": "Nouveau mot de passe",
+    "description": "Choisissez un nouveau mot de passe. Vos autres appareils seront déconnectés.",
+    "password": "Nouveau mot de passe",
+    "confirm": "Confirmer le mot de passe",
+    "submit": "Enregistrer et me connecter",
+    "submitting": "Enregistrement…",
+    "mismatch": "Les mots de passe ne correspondent pas.",
+    "invalidLink": "Lien invalide ou incomplet.",
+    "requestNew": "Demander un nouveau lien"
+  },
+  "account": {
+    "title": "Mon compte",
+    "name": "Nom",
+    "email": "Email",
+    "changePassword": "Changer le mot de passe",
+    "currentPassword": "Mot de passe actuel",
+    "newPassword": "Nouveau mot de passe",
+    "confirmPassword": "Confirmation",
+    "passwordHint": "Au moins 8 caractères. Vos autres appareils seront déconnectés.",
+    "passwordChanged": "Mot de passe modifié",
+    "profileUpdated": "Compte mis à jour",
+    "mismatch": "Les mots de passe ne correspondent pas."
+  },
+  "emails": {
+    "footer": "Daourak — la file d’attente intelligente",
+    "resetSubject": "Réinitialisation de votre mot de passe Daourak",
+    "resetTitle": "Choisissez un nouveau mot de passe",
+    "resetIntro": "Vous avez demandé à réinitialiser le mot de passe de votre compte Daourak. Cliquez sur le bouton ci-dessous :",
+    "resetButton": "Choisir un nouveau mot de passe",
+    "resetExpiry": "Ce lien expire dans 1 heure. Si vous n’êtes pas à l’origine de cette demande, ignorez simplement cet e-mail.",
+    "inviteSubject": "{org} vous invite sur Daourak",
+    "inviteTitle": "Vous êtes invité(e) à rejoindre une équipe",
+    "inviteIntro": "{inviter} vous invite à rejoindre {org} sur Daourak en tant que {role}.",
+    "inviteButton": "Rejoindre l’équipe",
+    "inviteExpiry": "Ce lien expire dans 7 jours."
   },
   "language": {
     "fr": "Français",

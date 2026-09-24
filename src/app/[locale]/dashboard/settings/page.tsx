@@ -32,6 +32,8 @@ export default async function SettingsPage() {
 
   return (
     <SettingsClient
+      // Pendant une imitation, le compte affiché serait celui du superadmin : on le masque.
+      account={auth.impersonating ? null : { name: auth.actorName, email: auth.actorEmail }}
       org={{ id: org.id, name: org.name, slug: org.slug, sector: org.sector, plan: org.plan, brandColor: org.brandColor }}
       limits={limits}
       usage={usage}

@@ -60,7 +60,12 @@ export function LoginForm({ suspended }: { suspended: boolean }) {
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="password">{t('password')}</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="password">{t('password')}</Label>
+                <Link href="/forgot-password" className="text-xs text-primary hover:underline">
+                  {t('forgot')}
+                </Link>
+              </div>
               <Input
                 id="password"
                 type="password"

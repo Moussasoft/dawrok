@@ -4,8 +4,8 @@ import { createTranslator } from 'next-intl';
 import { prisma } from './db';
 import type { DashboardSnapshot } from './queue-types';
 import type { PushKind } from './queue-logic';
-import { routing } from '@/i18n/routing';
 import { MESSAGES, toAppLocale } from '@/i18n/messages';
+import { localizedUrl } from './urls';
 
 let configured: boolean | null = null;
 
@@ -25,9 +25,7 @@ export function isPushConfigured(): boolean {
 }
 
 export function ticketUrl(publicCode: string, locale: string): string {
-  const base = (process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').replace(/\/$/, '');
-  const prefix = locale === routing.defaultLocale ? '' : `/${locale}`;
-  return `${base}${prefix}/t/${publicCode}`;
+  return localizedUrl(`/t/${publicCode}`, locale);
 }
 
 export async function notifyTransitions(

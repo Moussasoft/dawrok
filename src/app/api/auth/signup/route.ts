@@ -1,5 +1,4 @@
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { NextResponse } from 'next/server';
 import { Prisma } from '@prisma/client';
@@ -10,6 +9,7 @@ import { slugify } from '@/lib/utils';
 import { SECTORS, getSectorPreset } from '@/lib/sectors';
 import { clientIp, enforceRateLimit } from '@/lib/rate-limit';
 import { routing } from '@/i18n/routing';
+import { hashPassword } from '@/lib/passwords';
 
 const schema = z.object({
   orgName: z.string().trim().min(2).max(100),
@@ -30,7 +30,7 @@ export const POST = route(async (req) => {
 
   // Prestations de départ nommées dans la langue de l'inscription.
   const preset = getSectorPreset(sector, locale ?? routing.defaultLocale);
-  const passwordHash = await bcrypt.hash(password, 12);
+  const passwordHash = await hashPassword(password);
   // Un nom en arabe donne un slug vide : on complète par un suffixe aléatoire plutôt que
   // de produire « org », « org-2 »… jusqu'à épuisement des tentatives.
   const baseSlug = slugify(orgName);

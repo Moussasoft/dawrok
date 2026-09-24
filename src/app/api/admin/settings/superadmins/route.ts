@@ -1,10 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import bcrypt from 'bcryptjs';
 import { prisma } from '@/lib/db';
 import { ApiError, parseBody, route } from '@/lib/api';
 import { requireSuperadmin } from '@/lib/guards';
 import { audit } from '@/lib/audit';
+import { MIN_SUPERADMIN_PASSWORD_LENGTH, hashPassword } from '@/lib/passwords';
 
 export const GET = route(async () => {
   await requireSuperadmin();
@@ -19,7 +19,7 @@ export const GET = route(async () => {
 const inviteSchema = z.object({
   name: z.string().trim().min(2).max(80),
   email: z.string().trim().toLowerCase().email().max(200),
-  password: z.string().min(12).max(100),
+  password: z.string().min(MIN_SUPERADMIN_PASSWORD_LENGTH).max(100),
 });
 
 export const POST = route(async (req) => {
@@ -31,7 +31,7 @@ export const POST = route(async (req) => {
     data: {
       name: data.name,
       email: data.email,
-      passwordHash: await bcrypt.hash(data.password, 12),
+      passwordHash: await hashPassword(data.password),
       role: 'owner',
       isSuperadmin: true,
     },

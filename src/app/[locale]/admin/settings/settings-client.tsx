@@ -96,7 +96,7 @@ function ProfileSection({ user, onRefresh }: { user: CurrentUser; onRefresh: () 
 
   async function save() {
     setSaving(true);
-    const ok = await call('/api/admin/settings/profile', 'PATCH', form);
+    const ok = await call('/api/account', 'PATCH', form);
     setSaving(false);
     if (!ok) return;
     toast.success(t('profileUpdated'));
@@ -182,7 +182,7 @@ function SecuritySection() {
       return;
     }
     setSaving(true);
-    const ok = await call('/api/admin/settings/password', 'POST', {
+    const ok = await call('/api/account/password', 'POST', {
       currentPassword: form.currentPassword,
       newPassword: form.newPassword,
     });
@@ -221,7 +221,7 @@ function SecuritySection() {
               id="pw-new"
               show={show}
               value={form.newPassword}
-              placeholder={t('passwordMin', { count: 8 })}
+              placeholder={t('passwordMin', { count: SUPERADMIN_MIN_PASSWORD })}
               onChange={(v) => setForm({ ...form, newPassword: v })}
             />
           </div>
@@ -236,7 +236,7 @@ function SecuritySection() {
               {error}
             </p>
           )}
-          <Button size="sm" onClick={save} disabled={saving || !form.currentPassword || form.newPassword.length < 8}>
+          <Button size="sm" onClick={save} disabled={saving || !form.currentPassword || form.newPassword.length < SUPERADMIN_MIN_PASSWORD}>
             {saving ? tc('saving') : t('submitPassword')}
           </Button>
         </div>
