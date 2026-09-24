@@ -1,9 +1,17 @@
 node_modules
 .next
-.env*.local
-*.db
-*.db-journal
-.DS_Store
 .vercel
+.DS_Store
 next-env.d.ts
 tsconfig.tsbuildinfo
+coverage
+
+# Secrets — seul .env.example est versionné
+.env
+.env*.local
+
+# SQLite (base locale + fichiers WAL)
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
