@@ -36,7 +36,7 @@ export function resolveChannel(wanted: string): SmsChannel | null {
 export async function sendText(to: string, body: string, channel: SmsChannel): Promise<SendResult> {
   const e = env();
   if (!smsProviders()[channel]) {
-    if (process.env.NODE_ENV !== 'production') console.info(`[sms] (${channel} non configuré) → ${maskPhone(to)} : ${body}`);
+    if (process.env.NODE_ENV === 'development') console.info(`[sms] (${channel} non configuré) → ${maskPhone(to)} : ${body}`);
     return { ok: false, error: 'not_configured' };
   }
   const form = new URLSearchParams({ To: channel === 'whatsapp' ? `whatsapp:${to}` : to, Body: body });
