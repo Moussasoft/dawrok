@@ -1,27 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/auth';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
+import { ApiError, route } from '@/lib/api';
+import { requireSuperadmin } from '@/lib/guards';
+import { audit } from '@/lib/audit';
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await getSession();
-  if (!session?.isSuperadmin) return NextResponse.json({ error: 'Interdit' }, { status: 403 });
-
-  const { id } = await params;
-
-  // Cannot revoke yourself
-  if (id === session.userId) {
-    return NextResponse.json({ error: 'Impossible de révoquer votre propre compte' }, { status: 400 });
-  }
+// Révocation : effet immédiat, les sessions étant revérifiées en base à chaque requête.
+export const DELETE = route<{ params: Promise<{ id: string }> }>(async (_req, ctx) => {
+  const auth = await requireSuperadmin();
+  const { id } = await ctx.params;
+  if (id === auth.actorId) throw new ApiError(400, 'cannot_revoke_self');
 
   const target = await prisma.user.findUnique({ where: { id } });
-  if (!target || !target.isSuperadmin) {
-    return NextResponse.json({ error: 'Superadmin introuvable' }, { status: 404 });
-  }
+  if (!target || !target.isSuperadmin) throw new ApiError(404, 'not_found');
+  if ((await prisma.user.count({ where: { isSuperadmin: true } })) <= 1) throw new ApiError(409, 'last_superadmin');
 
-  await prisma.user.delete({ where: { id } });
+  // Un superadmin rattaché à une organisation perd seulement ses droits ; sinon le compte est supprimé.
+  if (target.orgId) await prisma.user.update({ where: { id }, data: { isSuperadmin: false } });
+  else await prisma.user.delete({ where: { id } });
 
+  await audit({ action: 'superadmin.revoke', actor: auth, targetType: 'user', targetId: id, metadata: { email: target.email } });
   return NextResponse.json({ ok: true });
-}
+});

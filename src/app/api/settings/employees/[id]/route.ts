@@ -1,47 +1,47 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { ApiError, parseBody, route } from '@/lib/api';
+import { requireOrg, type OrgAuth } from '@/lib/guards';
+import { publishBranchUpdate } from '@/lib/queue';
+import { assertCanAdd } from '@/lib/plans';
 
 const patchSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
+  name: z.string().trim().min(1).max(100).optional(),
   active: z.boolean().optional(),
 });
 
-async function findEmployee(id: string, orgId: string) {
-  return prisma.employee.findFirst({ where: { id, branch: { orgId } } });
+type Ctx = { params: Promise<{ id: string }> };
+
+async function findOwnEmployee(auth: OrgAuth, id: string) {
+  const employee = await prisma.employee.findFirst({ where: { id, branch: { orgId: auth.orgId } } });
+  if (!employee) throw new ApiError(404, 'not_found');
+  return employee;
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await getSession();
-  if (!session?.orgId) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-
-  const { id } = await params;
-  const emp = await findEmployee(id, session.orgId);
-  if (!emp) return NextResponse.json({ error: 'Introuvable' }, { status: 404 });
-
-  const body = await req.json().catch(() => null);
-  const parsed = patchSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: 'Données invalides' }, { status: 400 });
-
-  const updated = await prisma.employee.update({ where: { id }, data: parsed.data });
+export const PATCH = route<Ctx>(async (req, ctx) => {
+  const auth = await requireOrg();
+  const { id } = await ctx.params;
+  const employee = await findOwnEmployee(auth, id);
+  const data = await parseBody(req, patchSchema);
+  // Réactiver compte dans la limite de l'offre, comme une création.
+  if (data.active === true && !employee.active) await assertCanAdd(auth.orgId, 'employees');
+  const updated = await prisma.employee.update({ where: { id }, data });
+  await publishBranchUpdate(employee.branchId);
   return NextResponse.json(updated);
-}
+});
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await getSession();
-  if (!session?.orgId) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-
-  const { id } = await params;
-  const emp = await findEmployee(id, session.orgId);
-  if (!emp) return NextResponse.json({ error: 'Introuvable' }, { status: 404 });
-
-  await prisma.employee.delete({ where: { id } });
-  return new NextResponse(null, { status: 204 });
-}
+// Un employé ayant déjà servi des clients est désactivé plutôt que supprimé (statistiques conservées).
+export const DELETE = route<Ctx>(async (_req, ctx) => {
+  const auth = await requireOrg();
+  const { id } = await ctx.params;
+  const employee = await findOwnEmployee(auth, id);
+  const used = await prisma.ticket.count({ where: { employeeId: id } });
+  if (used > 0) {
+    await prisma.employee.update({ where: { id }, data: { active: false } });
+  } else {
+    await prisma.employee.delete({ where: { id } });
+  }
+  await publishBranchUpdate(employee.branchId);
+  return NextResponse.json({ ok: true, archived: used > 0 });
+});

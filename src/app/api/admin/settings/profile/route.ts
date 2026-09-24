@@ -1,44 +1,29 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getSession, createSession, setSessionCookie } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { ApiError, parseBody, route } from '@/lib/api';
+import { requireSuperadmin } from '@/lib/guards';
 
 const schema = z.object({
-  name: z.string().min(2).max(80).optional(),
-  email: z.string().email().optional(),
+  name: z.string().trim().min(2).max(80).optional(),
+  email: z.string().trim().toLowerCase().email().max(200).optional(),
 });
 
-export async function PATCH(req: NextRequest) {
-  const session = await getSession();
-  if (!session?.isSuperadmin) return NextResponse.json({ error: 'Interdit' }, { status: 403 });
+// Profil du superadmin réellement connecté (jamais celui d'un compte imité).
+export const PATCH = route(async (req) => {
+  const auth = await requireSuperadmin();
+  const { name, email } = await parseBody(req, schema);
+  if (!name && !email) throw new ApiError(400, 'nothing_to_update');
 
-  const body = await req.json().catch(() => null);
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: 'Données invalides' }, { status: 400 });
-
-  const { name, email } = parsed.data;
-  if (!name && !email) return NextResponse.json({ error: 'Rien à mettre à jour' }, { status: 400 });
-
-  if (email && email !== session.email) {
+  if (email && email !== auth.actorEmail) {
     const existing = await prisma.user.findUnique({ where: { email } });
-    if (existing) return NextResponse.json({ error: 'Email déjà utilisé' }, { status: 409 });
+    if (existing && existing.id !== auth.actorId) throw new ApiError(409, 'email_taken');
   }
 
   const updated = await prisma.user.update({
-    where: { id: session.userId },
+    where: { id: auth.actorId },
     data: { ...(name && { name }), ...(email && { email }) },
+    select: { id: true, name: true, email: true },
   });
-
-  // Refresh session with updated name/email
-  const token = await createSession({
-    userId: updated.id,
-    orgId: updated.orgId,
-    email: updated.email,
-    name: updated.name,
-    role: updated.role,
-    isSuperadmin: updated.isSuperadmin,
-  });
-  await setSessionCookie(token);
-
-  return NextResponse.json({ ok: true });
-}
+  return NextResponse.json({ ok: true, user: updated });
+});

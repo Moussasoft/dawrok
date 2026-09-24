@@ -1,30 +1,28 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
-import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { ApiError, parseBody, route } from '@/lib/api';
+import { requireSuperadmin } from '@/lib/guards';
+import { enforceRateLimit } from '@/lib/rate-limit';
+import { audit } from '@/lib/audit';
 
 const schema = z.object({
-  currentPassword: z.string().min(1),
+  currentPassword: z.string().min(1).max(200),
   newPassword: z.string().min(8).max(100),
 });
 
-export async function POST(req: NextRequest) {
-  const session = await getSession();
-  if (!session?.isSuperadmin) return NextResponse.json({ error: 'Interdit' }, { status: 403 });
+// S'applique toujours au superadmin réellement connecté, même pendant une imitation.
+export const POST = route(async (req) => {
+  const auth = await requireSuperadmin();
+  enforceRateLimit(`password:${auth.actorId}`, 10, 15 * 60_000);
+  const data = await parseBody(req, schema);
 
-  const body = await req.json().catch(() => null);
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: 'Données invalides' }, { status: 400 });
+  const user = await prisma.user.findUnique({ where: { id: auth.actorId } });
+  if (!user) throw new ApiError(404, 'not_found');
+  if (!(await bcrypt.compare(data.currentPassword, user.passwordHash))) throw new ApiError(400, 'wrong_password');
 
-  const user = await prisma.user.findUnique({ where: { id: session.userId } });
-  if (!user) return NextResponse.json({ error: 'Utilisateur introuvable' }, { status: 404 });
-
-  const valid = await bcrypt.compare(parsed.data.currentPassword, user.passwordHash);
-  if (!valid) return NextResponse.json({ error: 'Mot de passe actuel incorrect' }, { status: 400 });
-
-  const hash = await bcrypt.hash(parsed.data.newPassword, 12);
-  await prisma.user.update({ where: { id: session.userId }, data: { passwordHash: hash } });
-
+  await prisma.user.update({ where: { id: user.id }, data: { passwordHash: await bcrypt.hash(data.newPassword, 12) } });
+  await audit({ action: 'superadmin.password', actor: auth, targetType: 'user', targetId: user.id });
   return NextResponse.json({ ok: true });
-}
+});

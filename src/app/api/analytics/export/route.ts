@@ -1,72 +1,57 @@
 import { NextResponse } from 'next/server';
+import { createTranslator } from 'next-intl';
 import { prisma } from '@/lib/db';
-import { getSession } from '@/lib/auth';
+import { ApiError, route } from '@/lib/api';
+import { requireOrg } from '@/lib/guards';
+import { getActiveBranch } from '@/lib/branch';
+import { assertFeature } from '@/lib/plans';
+import { DEFAULT_TIMEZONE, getZonedParts } from '@/lib/time';
+import { effectiveTime } from '@/lib/queue-logic';
+import { MESSAGES, toAppLocale } from '@/i18n/messages';
+import { csvEscape } from '@/lib/csv';
+import { isTicketStatus } from '@/lib/ticket-status';
 
 export const dynamic = 'force-dynamic';
 
-function csvEscape(v: unknown): string {
-  if (v === null || v === undefined) return '';
-  const s = String(v);
-  if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-    return `"${s.replace(/"/g, '""')}"`;
-  }
-  return s;
-}
+const COLUMNS = ['number', 'date', 'time', 'customer', 'phone', 'service', 'employee', 'status', 'kind', 'scheduledFor', 'serviceMin', 'waitMin'] as const;
 
-export async function GET() {
-  const session = await getSession();
-  if (!session?.orgId) {
-    return NextResponse.json({ error: 'Non authentifié' }, { status: 401 });
-  }
-  const branch = await prisma.branch.findFirst({ where: { orgId: session.orgId ?? undefined } });
-  if (!branch) return NextResponse.json({ error: 'Aucune agence' }, { status: 404 });
+const pad = (n: number) => String(n).padStart(2, '0');
 
-  const since = new Date();
-  since.setDate(since.getDate() - 90);
+export const GET = route(async (req) => {
+  const auth = await requireOrg();
+  await assertFeature(auth.orgId, 'allowAnalytics');
+  const branch = await getActiveBranch(auth);
+  if (!branch) throw new ApiError(404, 'branch_not_found');
 
+  const locale = toAppLocale(req.nextUrl.searchParams.get('locale'));
+  const t = createTranslator({ locale, messages: MESSAGES[locale], namespace: 'csv' });
+  const tz = branch.timezone || DEFAULT_TIMEZONE;
+
+  const since = new Date(Date.now() - 90 * 86_400_000);
   const tickets = await prisma.ticket.findMany({
     where: { branchId: branch.id, createdAt: { gte: since } },
     include: { service: true, employee: true },
     orderBy: { createdAt: 'desc' },
   });
 
-  const headers = [
-    'numero',
-    'date',
-    'heure',
-    'client',
-    'telephone',
-    'service',
-    'employe',
-    'statut',
-    'type',
-    'rdv_prevu',
-    'duree_service_min',
-    'attente_min',
-  ];
-  const lines: string[] = [headers.join(',')];
-
-  for (const t of tickets) {
-    const created = t.createdAt;
-    const wait = t.startedAt
-      ? Math.round((t.startedAt.getTime() - t.createdAt.getTime()) / 60000)
-      : '';
-    const dur =
-      t.startedAt && t.completedAt
-        ? Math.round((t.completedAt.getTime() - t.startedAt.getTime()) / 60000)
-        : '';
+  const lines: string[] = [COLUMNS.map((c) => csvEscape(t(`columns.${c}`))).join(',')];
+  for (const tk of tickets) {
+    const p = getZonedParts(tk.createdAt, tz);
+    const wait = tk.calledAt ? Math.round((tk.calledAt.getTime() - effectiveTime(tk)) / 60000) : '';
+    const dur = tk.startedAt && tk.completedAt ? Math.round((tk.completedAt.getTime() - tk.startedAt.getTime()) / 60000) : '';
+    const sched = tk.scheduledFor ? getZonedParts(tk.scheduledFor, tz) : null;
     lines.push(
       [
-        t.number,
-        created.toISOString().slice(0, 10),
-        created.toISOString().slice(11, 16),
-        t.customerName,
-        t.customerPhone ?? '',
-        t.service?.name ?? '',
-        t.employee?.name ?? '',
-        t.status,
-        t.kind,
-        t.scheduledFor?.toISOString() ?? '',
+        tk.number,
+        `${p.year}-${pad(p.month)}-${pad(p.day)}`,
+        `${pad(p.hour)}:${pad(p.minute)}`,
+        tk.customerName,
+        tk.customerPhone ?? '',
+        tk.service?.name ?? '',
+        tk.employee?.name ?? '',
+        isTicketStatus(tk.status) ? t(`statuses.${tk.status}`) : tk.status,
+        t(`kinds.${tk.kind === 'appointment' ? 'appointment' : 'walkin'}`),
+        sched ? `${sched.year}-${pad(sched.month)}-${pad(sched.day)} ${pad(sched.hour)}:${pad(sched.minute)}` : '',
         dur,
         wait,
       ]
@@ -75,11 +60,12 @@ export async function GET() {
     );
   }
 
-  const filename = `daourak-tickets-${new Date().toISOString().slice(0, 10)}.csv`;
-  return new NextResponse('\uFEFF' + lines.join('\n'), {
+  const filename = `daourak-${branch.id.slice(-6)}-${new Date().toISOString().slice(0, 10)}.csv`;
+  return new NextResponse('﻿' + lines.join('\r\n'), {
     headers: {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': `attachment; filename="${filename}"`,
+      'Cache-Control': 'no-store',
     },
   });
-}
+});

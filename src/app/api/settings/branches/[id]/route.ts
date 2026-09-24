@@ -1,29 +1,40 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { ApiError, parseBody, route } from '@/lib/api';
+import { requireOrg } from '@/lib/guards';
+import { requireOwnBranch } from '@/lib/branch';
+import { openHoursSchema } from '@/lib/opening-hours';
+import { isValidTimeZone } from '@/lib/time';
+import { publishBranchUpdate } from '@/lib/queue';
+import { assertCanAdd } from '@/lib/plans';
 
 const schema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  address: z.string().max(200).nullable().optional(),
-  timezone: z.string().min(1).max(50).optional(),
+  name: z.string().trim().min(1).max(100).optional(),
+  address: z.string().trim().max(200).nullable().optional(),
+  timezone: z.string().min(1).max(60).optional(),
+  openHours: openHoursSchema.nullable().optional(),
+  allowBooking: z.boolean().optional(),
+  bookingSlotMin: z.number().int().min(5).max(120).optional(),
+  active: z.boolean().optional(),
 });
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await getSession();
-  if (!session?.orgId) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
+export const PATCH = route<{ params: Promise<{ id: string }> }>(async (req, ctx) => {
+  const auth = await requireOrg();
+  const { id } = await ctx.params;
+  const branch = await requireOwnBranch(auth, id);
+  const { openHours, timezone, ...rest } = await parseBody(req, schema);
+  if (timezone && !isValidTimeZone(timezone)) throw new ApiError(400, 'invalid_timezone');
+  if (rest.active === true && !branch.active) await assertCanAdd(auth.orgId, 'branches');
 
-  const { id } = await params;
-  const branch = await prisma.branch.findFirst({ where: { id, orgId: session.orgId } });
-  if (!branch) return NextResponse.json({ error: 'Introuvable' }, { status: 404 });
-
-  const body = await req.json().catch(() => null);
-  const parsed = schema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: 'Données invalides' }, { status: 400 });
-
-  const updated = await prisma.branch.update({ where: { id }, data: parsed.data });
+  const updated = await prisma.branch.update({
+    where: { id },
+    data: {
+      ...rest,
+      ...(timezone && { timezone }),
+      ...(openHours !== undefined && { openHours: openHours ? JSON.stringify(openHours) : null }),
+    },
+  });
+  await publishBranchUpdate(id);
   return NextResponse.json(updated);
-}
+});

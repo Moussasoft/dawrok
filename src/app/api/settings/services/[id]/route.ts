@@ -1,49 +1,50 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { z } from 'zod';
-import { getSession } from '@/lib/auth';
 import { prisma } from '@/lib/db';
+import { ApiError, parseBody, route } from '@/lib/api';
+import { requireOrg, type OrgAuth } from '@/lib/guards';
+import { publishBranchUpdate } from '@/lib/queue';
+import { assertCanAdd } from '@/lib/plans';
 
 const patchSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
+  name: z.string().trim().min(1).max(100).optional(),
   avgDurationMin: z.number().int().min(1).max(480).optional(),
   color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   active: z.boolean().optional(),
 });
 
-async function findService(id: string, orgId: string) {
-  return prisma.service.findFirst({ where: { id, branch: { orgId } } });
+type Ctx = { params: Promise<{ id: string }> };
+
+async function findOwnService(auth: OrgAuth, id: string) {
+  const service = await prisma.service.findFirst({ where: { id, branch: { orgId: auth.orgId } } });
+  if (!service) throw new ApiError(404, 'not_found');
+  return service;
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await getSession();
-  if (!session?.orgId) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-
-  const { id } = await params;
-  const svc = await findService(id, session.orgId);
-  if (!svc) return NextResponse.json({ error: 'Introuvable' }, { status: 404 });
-
-  const body = await req.json().catch(() => null);
-  const parsed = patchSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: 'Données invalides' }, { status: 400 });
-
-  const updated = await prisma.service.update({ where: { id }, data: parsed.data });
+export const PATCH = route<Ctx>(async (req, ctx) => {
+  const auth = await requireOrg();
+  const { id } = await ctx.params;
+  const service = await findOwnService(auth, id);
+  const data = await parseBody(req, patchSchema);
+  // Réactiver compte dans la limite de l'offre, comme une création.
+  if (data.active === true && !service.active) await assertCanAdd(auth.orgId, 'services');
+  const updated = await prisma.service.update({ where: { id }, data });
+  await publishBranchUpdate(service.branchId);
   return NextResponse.json(updated);
-}
+});
 
-export async function DELETE(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const session = await getSession();
-  if (!session?.orgId) return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
-
-  const { id } = await params;
-  const svc = await findService(id, session.orgId);
-  if (!svc) return NextResponse.json({ error: 'Introuvable' }, { status: 404 });
-
+// Un service déjà utilisé est archivé (désactivé) plutôt que supprimé, pour garder l'historique.
+export const DELETE = route<Ctx>(async (_req, ctx) => {
+  const auth = await requireOrg();
+  const { id } = await ctx.params;
+  const service = await findOwnService(auth, id);
+  const used = await prisma.ticket.count({ where: { serviceId: id } });
+  if (used > 0) {
+    await prisma.service.update({ where: { id }, data: { active: false } });
+    await publishBranchUpdate(service.branchId);
+    return NextResponse.json({ ok: true, archived: true });
+  }
   await prisma.service.delete({ where: { id } });
-  return new NextResponse(null, { status: 204 });
-}
+  await publishBranchUpdate(service.branchId);
+  return NextResponse.json({ ok: true, archived: false });
+});

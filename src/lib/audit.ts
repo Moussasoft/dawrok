@@ -1,9 +1,10 @@
 import { prisma } from './db';
-import type { SessionPayload } from './auth';
+import type { AuthContext } from './auth';
 
 type LogInput = {
   action: string;
-  session?: SessionPayload | null;
+  /** Auteur : c'est toujours la personne réellement connectée (le superadmin pendant une imitation). */
+  actor?: AuthContext | null;
   orgId?: string | null;
   branchId?: string | null;
   targetType?: string;
@@ -16,19 +17,19 @@ export async function audit(input: LogInput) {
     await prisma.auditLog.create({
       data: {
         action: input.action,
-        orgId: input.orgId ?? input.session?.orgId ?? null,
+        orgId: input.orgId ?? input.actor?.orgId ?? null,
         branchId: input.branchId ?? null,
-        actorId: input.session?.userId,
-        actorName: input.session?.name,
-        actorEmail: input.session?.email,
-        isSuperadmin: input.session?.isSuperadmin ?? false,
+        actorId: input.actor?.actorId,
+        actorName: input.actor?.actorName,
+        actorEmail: input.actor?.actorEmail,
+        isSuperadmin: input.actor?.isSuperadmin ?? false,
         targetType: input.targetType,
         targetId: input.targetId,
         metadata: input.metadata ? JSON.stringify(input.metadata) : null,
       },
     });
   } catch (e) {
-    // Audit failures should never break the main flow
-    console.error('[audit] failed:', e);
+    // Un échec d'audit ne doit jamais casser l'action principale
+    console.error('[audit] échec :', e);
   }
 }

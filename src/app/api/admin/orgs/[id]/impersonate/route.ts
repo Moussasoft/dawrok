@@ -1,37 +1,26 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
-import { requireSuperadmin } from '@/lib/admin-guard';
+import { ApiError, route } from '@/lib/api';
+import { requireSuperadmin } from '@/lib/guards';
 import { createSession, setSessionCookie } from '@/lib/auth';
 import { audit } from '@/lib/audit';
 
-// Issue a new session as the org owner, while keeping a marker that we're impersonating.
-export async function POST(_req: NextRequest, ctx: { params: Promise<{ id: string }> }) {
-  const guard = await requireSuperadmin();
-  if (guard.response) return guard.response;
+// Session « en tant que » propriétaire, en gardant la trace du superadmin (revérifiée à chaque requête).
+export const POST = route<{ params: Promise<{ id: string }> }>(async (_req, ctx) => {
+  const auth = await requireSuperadmin();
   const { id } = await ctx.params;
 
-  const owner = await prisma.user.findFirst({
-    where: { orgId: id, role: 'owner' },
-  });
-  if (!owner) return NextResponse.json({ error: 'Owner introuvable' }, { status: 404 });
+  const owner = await prisma.user.findFirst({ where: { orgId: id, role: 'owner' }, orderBy: { createdAt: 'asc' } });
+  if (!owner) throw new ApiError(404, 'owner_not_found');
 
-  const token = await createSession({
-    userId: owner.id,
-    orgId: owner.orgId,
-    email: owner.email,
-    name: owner.name,
-    role: owner.role,
-    isSuperadmin: true, // keep superadmin flag to allow stop-impersonation
-    impersonatedFromUserId: guard.session!.userId,
-  });
-  await setSessionCookie(token);
+  await setSessionCookie(await createSession({ userId: owner.id, impersonatedFromUserId: auth.actorId }));
   await audit({
     action: 'impersonate.start',
-    session: guard.session,
+    actor: auth,
     orgId: id,
     targetType: 'organization',
     targetId: id,
     metadata: { ownerEmail: owner.email },
   });
   return NextResponse.json({ ok: true });
-}
+});

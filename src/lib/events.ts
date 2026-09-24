@@ -1,5 +1,5 @@
-// In-memory pub/sub for SSE — single-process dev.
-// In production, replace with Redis pub/sub (Upstash) for multi-instance.
+// Bus pub/sub en mémoire pour le SSE — une seule instance.
+// En production multi-instance, remplacer par Redis pub/sub (Upstash).
 type Listener = (data: unknown) => void;
 
 class EventBus {
@@ -25,7 +25,7 @@ class EventBus {
       try {
         listener(data);
       } catch {
-        /* ignore */
+        /* un abonné défaillant ne doit pas bloquer les autres */
       }
     }
   }
@@ -36,5 +36,4 @@ export const bus: EventBus = globalForBus.__bus ?? (globalForBus.__bus = new Eve
 
 export const channels = {
   branch: (branchId: string) => `branch:${branchId}`,
-  ticket: (publicCode: string) => `ticket:${publicCode}`,
 };
