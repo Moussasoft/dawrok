@@ -1,56 +1,66 @@
+import { getLocale, getTranslations } from 'next-intl/server';
+import { Info } from 'lucide-react';
 import { prisma } from '@/lib/db';
+import { requireSuperadminPage } from '@/lib/guards';
+import { CURRENCY, getAllPlanLimits } from '@/lib/plans';
+import { SECTOR_I18N_KEY } from '@/lib/sectors';
+import { formatNumber } from '@/lib/format';
 import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { OrgRowActions } from './org-row-actions';
+import { OrgRowActions, PlanSelect } from './org-row-actions';
 
 export const dynamic = 'force-dynamic';
 
-const PLAN_PRICES: Record<string, number> = { free: 0, starter: 19, pro: 49, business: 129 };
+export async function generateMetadata() {
+  const t = await getTranslations('admin');
+  return { title: t('organizations') };
+}
 
 export default async function AdminOrgsPage() {
-  const orgs = await prisma.organization.findMany({
-    orderBy: { createdAt: 'desc' },
-    include: {
-      _count: { select: { branches: true, users: true } },
-      users: { where: { role: 'owner' }, select: { email: true, name: true }, take: 1 },
-    },
-  });
+  await requireSuperadminPage();
+  const [t, ts, locale, planLimits] = await Promise.all([
+    getTranslations('admin'),
+    getTranslations('sectors'),
+    getLocale(),
+    getAllPlanLimits(),
+  ]);
+  const since = new Date(Date.now() - 30 * 86_400_000);
 
-  // ticket counts per org last 30d
-  const since = new Date();
-  since.setDate(since.getDate() - 30);
-  const ticketsByOrg = await prisma.ticket.groupBy({
-    by: ['branchId'],
-    where: { createdAt: { gte: since } },
-    _count: { _all: true },
-  });
-  const branches = await prisma.branch.findMany({ select: { id: true, orgId: true } });
+  const [orgs, ticketsByBranch, branches] = await Promise.all([
+    prisma.organization.findMany({
+      orderBy: { createdAt: 'desc' },
+      include: {
+        users: { where: { role: 'owner' }, select: { email: true, name: true }, take: 1, orderBy: { createdAt: 'asc' } },
+      },
+    }),
+    prisma.ticket.groupBy({ by: ['branchId'], where: { createdAt: { gte: since } }, _count: { _all: true } }),
+    prisma.branch.findMany({ select: { id: true, orgId: true } }),
+  ]);
   const branchToOrg = new Map(branches.map((b) => [b.id, b.orgId]));
-  const ticketsByOrgId = new Map<string, number>();
-  for (const r of ticketsByOrg) {
+  const ticketsByOrg = new Map<string, number>();
+  for (const r of ticketsByBranch) {
     const orgId = branchToOrg.get(r.branchId);
-    if (!orgId) continue;
-    ticketsByOrgId.set(orgId, (ticketsByOrgId.get(orgId) ?? 0) + r._count._all);
+    if (orgId) ticketsByOrg.set(orgId, (ticketsByOrg.get(orgId) ?? 0) + r._count._all);
   }
+  const price = new Map(planLimits.map((p) => [p.plan, p.price]));
 
   return (
     <div className="container py-6">
-      <h1 className="text-2xl font-bold mb-1">Organisations</h1>
-      <p className="text-muted-foreground mb-6">{orgs.length} organisation{orgs.length > 1 ? 's' : ''} inscrite{orgs.length > 1 ? 's' : ''}.</p>
+      <h1 className="mb-1 text-2xl font-bold">{t('organizations')}</h1>
+      <p className="mb-6 text-muted-foreground">{t('orgsCount', { count: orgs.length })}</p>
 
       <Card>
-        <CardContent className="p-0 overflow-x-auto">
+        <CardContent className="overflow-x-auto p-0">
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/50">
-              <tr className="text-left">
-                <th className="p-3 font-medium">Nom</th>
-                <th className="p-3 font-medium">Secteur</th>
-                <th className="p-3 font-medium">Owner</th>
-                <th className="p-3 font-medium">Plan</th>
-                <th className="p-3 font-medium text-right">MRR</th>
-                <th className="p-3 font-medium text-right">Tickets 30j</th>
-                <th className="p-3 font-medium">Statut</th>
-                <th className="p-3 font-medium text-right">Actions</th>
+              <tr className="text-start">
+                <th className="p-3 text-start font-medium">{t('colName')}</th>
+                <th className="p-3 text-start font-medium">{t('colSector')}</th>
+                <th className="p-3 text-start font-medium">{t('colOwner')}</th>
+                <th className="p-3 text-start font-medium">{t('colPlan')}</th>
+                <th className="p-3 text-end font-medium">{t('colMrr')}</th>
+                <th className="p-3 text-end font-medium">{t('colTickets30')}</th>
+                <th className="p-3 text-start font-medium">{t('colStatus')}</th>
+                <th className="p-3 text-end font-medium">{t('colActions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -58,42 +68,44 @@ export default async function AdminOrgsPage() {
                 <tr key={o.id} className="border-b last:border-0 hover:bg-muted/30">
                   <td className="p-3">
                     <div className="font-medium">{o.name}</div>
-                    <div className="text-xs text-muted-foreground font-mono">{o.slug}</div>
+                    <div className="font-mono text-xs text-muted-foreground" dir="ltr">
+                      {o.slug}
+                    </div>
                   </td>
-                  <td className="p-3 capitalize">{o.sector.replace('_', ' ')}</td>
+                  <td className="p-3">{ts((SECTOR_I18N_KEY as Record<string, string>)[o.sector] ?? 'other')}</td>
                   <td className="p-3">
                     <div>{o.users[0]?.name ?? '—'}</div>
-                    <div className="text-xs text-muted-foreground">{o.users[0]?.email ?? ''}</div>
+                    <div className="text-xs text-muted-foreground" dir="ltr">
+                      {o.users[0]?.email ?? ''}
+                    </div>
                   </td>
                   <td className="p-3">
-                    <span className="px-2 py-0.5 rounded-full text-xs bg-primary/10 text-primary capitalize">
-                      {o.plan}
+                    <PlanSelect orgId={o.id} plan={o.plan} />
+                  </td>
+                  <td className="p-3 text-end tabular-nums">
+                    {o.suspended ? '—' : `${formatNumber(price.get(o.plan) ?? 0, locale)} ${CURRENCY}`}
+                  </td>
+                  <td className="p-3 text-end tabular-nums">{ticketsByOrg.get(o.id) ?? 0}</td>
+                  <td className="p-3">
+                    <span
+                      className={`rounded-full px-2 py-0.5 text-xs ${
+                        o.suspended
+                          ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                          : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                      }`}
+                    >
+                      {o.suspended ? t('suspendedBadge') : t('activeBadge')}
                     </span>
                   </td>
-                  <td className="p-3 text-right tabular-nums">
-                    {o.suspended ? '—' : `${PLAN_PRICES[o.plan] ?? 0} €`}
-                  </td>
-                  <td className="p-3 text-right tabular-nums">{ticketsByOrgId.get(o.id) ?? 0}</td>
                   <td className="p-3">
-                    {o.suspended ? (
-                      <span className="px-2 py-0.5 rounded-full text-xs bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300">
-                        Suspendu
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-xs bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                        Actif
-                      </span>
-                    )}
-                  </td>
-                  <td className="p-3">
-                    <OrgRowActions orgId={o.id} suspended={o.suspended} />
+                    <OrgRowActions orgId={o.id} orgName={o.name} suspended={o.suspended} />
                   </td>
                 </tr>
               ))}
               {orgs.length === 0 && (
                 <tr>
                   <td colSpan={8} className="p-12 text-center text-muted-foreground">
-                    Aucune organisation pour l'instant.
+                    {t('noOrgs')}
                   </td>
                 </tr>
               )}
@@ -102,9 +114,9 @@ export default async function AdminOrgsPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-4 text-xs text-muted-foreground">
-        💡 « Imiter » vous connecte en tant qu'owner pour debug — toutes vos actions sont auditables.
-      </div>
+      <p className="mt-4 flex items-start gap-2 text-xs text-muted-foreground">
+        <Info className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" /> {t('impersonateHint')}
+      </p>
     </div>
   );
 }

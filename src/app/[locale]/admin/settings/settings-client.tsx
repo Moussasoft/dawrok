@@ -1,122 +1,161 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
+import { User, Lock, CreditCard, Shield, Bell, Pencil, Check, X, Trash2, Plus, Eye, EyeOff, Info } from 'lucide-react';
+import { useRouter } from '@/i18n/routing';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  User, Lock, CreditCard, Shield, Bell,
-  Pencil, Check, X, Trash2, Plus, Eye, EyeOff,
-} from 'lucide-react';
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { Input, Label } from '@/components/ui/input';
+import { apiFetch, useErrorMessage } from '@/lib/api-client';
+import { cn } from '@/lib/utils';
 
 type PlanConfig = {
-  id: string; plan: string; price: number;
-  maxBranches: number; maxEmployees: number; maxServices: number;
-  allowBooking: boolean; allowAnalytics: boolean; allowCustomBrand: boolean;
+  plan: string;
+  price: number;
+  maxBranches: number;
+  maxEmployees: number;
+  maxServices: number;
+  allowBooking: boolean;
+  allowAnalytics: boolean;
+  allowCustomBrand: boolean;
 };
 type Superadmin = { id: string; name: string; email: string; createdAt: string };
-type Notifications = {
-  newOrgSignup: boolean; orgSuspended: boolean; orgOverLimit: boolean;
-  dailyReport: boolean; notifEmail: string;
-};
+type Notifications = { newOrgSignup: boolean; orgSuspended: boolean; orgOverLimit: boolean; dailyReport: boolean; notifEmail: string };
 type CurrentUser = { id: string; name: string; email: string };
 
-// ─── Tab nav ──────────────────────────────────────────────────────────────────
-
 const TABS = [
-  { id: 'profile',   label: 'Profil',          icon: User },
-  { id: 'security',  label: 'Sécurité',        icon: Lock },
-  { id: 'plans',     label: 'Plans & Limites',  icon: CreditCard },
-  { id: 'admins',    label: 'Superadmins',      icon: Shield },
-  { id: 'notifs',    label: 'Notifications',    icon: Bell },
+  { id: 'profile', key: 'tabProfile', icon: User },
+  { id: 'security', key: 'tabSecurity', icon: Lock },
+  { id: 'plans', key: 'tabPlans', icon: CreditCard },
+  { id: 'admins', key: 'tabAdmins', icon: Shield },
+  { id: 'notifs', key: 'tabNotifications', icon: Bell },
 ] as const;
-type TabId = typeof TABS[number]['id'];
+type TabId = (typeof TABS)[number]['id'];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+const SUPERADMIN_MIN_PASSWORD = 12;
 
-const PLAN_LABELS: Record<string, string> = {
-  free: 'Free', starter: 'Starter', pro: 'Pro', business: 'Business',
-};
+function useApi() {
+  const errorMessage = useErrorMessage();
+  return async function call<T = Record<string, unknown>>(url: string, method: string, json?: unknown): Promise<T | null> {
+    const res = await apiFetch<T>(url, { method, json });
+    if (!res.ok) {
+      toast.error(errorMessage(res));
+      return null;
+    }
+    return res.data;
+  };
+}
 
-function Toggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+function Toggle({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus:outline-none ${checked ? 'bg-primary' : 'bg-muted'}`}
+      className={cn(
+        'relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+        checked ? 'bg-primary' : 'bg-muted'
+      )}
     >
-      <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition-transform ${checked ? 'translate-x-4' : 'translate-x-0'}`} />
+      <span
+        className={cn(
+          'pointer-events-none inline-block h-4 w-4 rounded-full bg-white shadow transition-transform',
+          checked ? 'translate-x-4 rtl:-translate-x-4' : 'translate-x-0'
+        )}
+      />
     </button>
   );
 }
 
-// ─── Profile Section ──────────────────────────────────────────────────────────
+function PasswordInput({ id, value, onChange, show, placeholder }: { id: string; value: string; onChange: (v: string) => void; show: boolean; placeholder?: string }) {
+  return (
+    <Input
+      id={id}
+      type={show ? 'text' : 'password'}
+      value={value}
+      placeholder={placeholder}
+      autoComplete="new-password"
+      onChange={(e) => onChange(e.target.value)}
+    />
+  );
+}
+
+// ─── Profil ───────────────────────────────────────────────────────────────────
 
 function ProfileSection({ user, onRefresh }: { user: CurrentUser; onRefresh: () => void }) {
+  const t = useTranslations('admin');
+  const tc = useTranslations('common');
+  const call = useApi();
   const [form, setForm] = useState({ name: user.name, email: user.email });
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   async function save() {
-    setSaving(true); setError(''); setSuccess('');
-    const res = await fetch('/api/admin/settings/profile', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
+    setSaving(true);
+    const ok = await call('/api/admin/settings/profile', 'PATCH', form);
     setSaving(false);
-    if (!res.ok) {
-      const d = await res.json().catch(() => ({}));
-      setError(d.error ?? 'Erreur'); return;
-    }
-    setSuccess('Profil mis à jour'); setEditing(false); onRefresh();
+    if (!ok) return;
+    toast.success(t('profileUpdated'));
+    setEditing(false);
+    onRefresh();
   }
 
   return (
     <Card>
-      <CardContent className="pt-6 space-y-4">
+      <CardContent className="space-y-4 pt-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-base">Profil</h2>
+          <h2 className="text-base font-semibold">{t('tabProfile')}</h2>
           {!editing && (
             <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-              <Pencil className="h-3.5 w-3.5 mr-1.5" /> Modifier
+              <Pencil className="h-3.5 w-3.5" /> {tc('edit')}
             </Button>
           )}
         </div>
-
         {editing ? (
           <div className="space-y-3">
             <div className="space-y-1">
-              <label className="text-sm text-muted-foreground">Nom</label>
-              <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+              <Label htmlFor="sa-name" className="text-muted-foreground">
+                {t('name')}
+              </Label>
+              <Input id="sa-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
             <div className="space-y-1">
-              <label className="text-sm text-muted-foreground">Email</label>
-              <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+              <Label htmlFor="sa-email" className="text-muted-foreground">
+                {t('email')}
+              </Label>
+              <Input id="sa-email" type="email" dir="ltr" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button size="sm" onClick={save} disabled={saving}>{saving ? 'Sauvegarde…' : 'Enregistrer'}</Button>
-              <Button size="sm" variant="outline" onClick={() => { setEditing(false); setForm({ name: user.name, email: user.email }); setError(''); }}>
-                Annuler
+              <Button size="sm" onClick={save} disabled={saving}>
+                {saving ? tc('saving') : tc('save')}
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditing(false);
+                  setForm({ name: user.name, email: user.email });
+                }}
+              >
+                {tc('cancel')}
               </Button>
             </div>
           </div>
         ) : (
           <div className="space-y-2 text-sm">
-            {success && <p className="text-emerald-600 text-xs">{success}</p>}
-            <div className="flex items-center justify-between py-1.5 border-b">
-              <span className="text-muted-foreground">Nom</span>
+            <div className="flex items-center justify-between border-b py-1.5">
+              <span className="text-muted-foreground">{t('name')}</span>
               <span className="font-medium">{user.name}</span>
             </div>
             <div className="flex items-center justify-between py-1.5">
-              <span className="text-muted-foreground">Email</span>
-              <span className="font-medium">{user.email}</span>
+              <span className="text-muted-foreground">{t('email')}</span>
+              <span className="font-medium" dir="ltr">
+                {user.email}
+              </span>
             </div>
           </div>
         )}
@@ -125,73 +164,80 @@ function ProfileSection({ user, onRefresh }: { user: CurrentUser; onRefresh: () 
   );
 }
 
-// ─── Security Section ─────────────────────────────────────────────────────────
+// ─── Sécurité ─────────────────────────────────────────────────────────────────
 
 function SecuritySection() {
+  const t = useTranslations('admin');
+  const tc = useTranslations('common');
+  const call = useApi();
   const [form, setForm] = useState({ currentPassword: '', newPassword: '', confirm: '' });
   const [show, setShow] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
 
   async function save() {
-    setError(''); setSuccess('');
-    if (form.newPassword !== form.confirm) { setError('Les mots de passe ne correspondent pas'); return; }
+    setError('');
+    if (form.newPassword !== form.confirm) {
+      setError(t('passwordMismatch'));
+      return;
+    }
     setSaving(true);
-    const res = await fetch('/api/admin/settings/password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ currentPassword: form.currentPassword, newPassword: form.newPassword }),
+    const ok = await call('/api/admin/settings/password', 'POST', {
+      currentPassword: form.currentPassword,
+      newPassword: form.newPassword,
     });
     setSaving(false);
-    if (!res.ok) {
-      const d = await res.json().catch(() => ({}));
-      setError(d.error ?? 'Erreur'); return;
-    }
-    setSuccess('Mot de passe modifié avec succès');
+    if (!ok) return;
+    toast.success(t('passwordChanged'));
     setForm({ currentPassword: '', newPassword: '', confirm: '' });
   }
 
   return (
     <Card>
-      <CardContent className="pt-6 space-y-4">
-        <h2 className="font-semibold text-base">Changer le mot de passe</h2>
+      <CardContent className="space-y-4 pt-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold">{t('changePassword')}</h2>
+          <button
+            type="button"
+            onClick={() => setShow((s) => !s)}
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+          >
+            {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            {show ? t('hidePassword') : t('showPassword')}
+          </button>
+        </div>
         <div className="space-y-3">
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Mot de passe actuel</label>
-            <div className="relative">
-              <Input
-                type={show ? 'text' : 'password'}
-                value={form.currentPassword}
-                onChange={e => setForm(f => ({ ...f, currentPassword: e.target.value }))}
-                className="pr-10"
-              />
-              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShow(s => !s)}>
-                {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
+            <Label htmlFor="pw-current" className="text-muted-foreground">
+              {t('currentPassword')}
+            </Label>
+            <PasswordInput id="pw-current" show={show} value={form.currentPassword} onChange={(v) => setForm({ ...form, currentPassword: v })} />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Nouveau mot de passe</label>
-            <Input
-              type={show ? 'text' : 'password'}
+            <Label htmlFor="pw-new" className="text-muted-foreground">
+              {t('newPassword')}
+            </Label>
+            <PasswordInput
+              id="pw-new"
+              show={show}
               value={form.newPassword}
-              onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))}
-              placeholder="Min. 8 caractères"
+              placeholder={t('passwordMin', { count: 8 })}
+              onChange={(v) => setForm({ ...form, newPassword: v })}
             />
           </div>
           <div className="space-y-1">
-            <label className="text-sm text-muted-foreground">Confirmer le nouveau mot de passe</label>
-            <Input
-              type={show ? 'text' : 'password'}
-              value={form.confirm}
-              onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))}
-            />
+            <Label htmlFor="pw-confirm" className="text-muted-foreground">
+              {t('confirmPassword')}
+            </Label>
+            <PasswordInput id="pw-confirm" show={show} value={form.confirm} onChange={(v) => setForm({ ...form, confirm: v })} />
           </div>
-          {error   && <p className="text-sm text-destructive">{error}</p>}
-          {success && <p className="text-sm text-emerald-600">{success}</p>}
-          <Button size="sm" onClick={save} disabled={saving || !form.currentPassword || !form.newPassword}>
-            {saving ? 'Sauvegarde…' : 'Modifier le mot de passe'}
+          {error && (
+            <p role="alert" className="text-sm text-destructive">
+              {error}
+            </p>
+          )}
+          <Button size="sm" onClick={save} disabled={saving || !form.currentPassword || form.newPassword.length < 8}>
+            {saving ? tc('saving') : t('submitPassword')}
           </Button>
         </div>
       </CardContent>
@@ -199,111 +245,112 @@ function SecuritySection() {
   );
 }
 
-// ─── Plans Section ────────────────────────────────────────────────────────────
+// ─── Offres & limites ─────────────────────────────────────────────────────────
 
-function PlansSection({ initialConfigs }: { initialConfigs: PlanConfig[] }) {
+function PlansSection({ initialConfigs, currency }: { initialConfigs: PlanConfig[]; currency: string }) {
+  const t = useTranslations('admin');
+  const tc = useTranslations('common');
+  const tp = useTranslations('plans');
+  const call = useApi();
   const [configs, setConfigs] = useState(initialConfigs);
   const [editingPlan, setEditingPlan] = useState<string | null>(null);
-  const [form, setForm] = useState<Partial<PlanConfig>>({});
+  const [form, setForm] = useState<PlanConfig | null>(null);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-
-  function startEdit(cfg: PlanConfig) {
-    setEditingPlan(cfg.plan);
-    setForm({ ...cfg });
-    setError('');
-  }
 
   async function savePlan() {
-    setSaving(true); setError('');
-    const res = await fetch('/api/admin/settings/plans', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
+    if (!form) return;
+    setSaving(true);
+    const ok = await call('/api/admin/settings/plans', 'PATCH', form);
     setSaving(false);
-    if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error ?? 'Erreur'); return; }
-    setConfigs(prev => prev.map(c => c.plan === form.plan ? { ...c, ...form } as PlanConfig : c));
+    if (!ok) return;
+    setConfigs((prev) => prev.map((c) => (c.plan === form.plan ? form : c)));
     setEditingPlan(null);
+    toast.success(t('planSaved'));
   }
+
+  const numberFields = [
+    ['price', t('priceMonthly', { currency }), 0],
+    ['maxBranches', t('maxBranches'), 1],
+    ['maxEmployees', t('maxEmployees'), 1],
+    ['maxServices', t('maxServices'), 1],
+  ] as const;
+  const featureFields = [
+    ['allowBooking', t('featureBooking')],
+    ['allowAnalytics', t('featureAnalytics')],
+    ['allowCustomBrand', t('featureBranding')],
+  ] as const;
 
   return (
     <Card>
-      <CardContent className="pt-6 space-y-4">
-        <h2 className="font-semibold text-base">Plans & Limites</h2>
+      <CardContent className="space-y-4 pt-6">
+        <h2 className="text-base font-semibold">{t('tabPlans')}</h2>
         <div className="space-y-3">
-          {configs.map(cfg => (
-            <div key={cfg.plan} className="border rounded-lg p-4 space-y-3">
+          {configs.map((cfg) => (
+            <div key={cfg.plan} className="space-y-3 rounded-lg border p-4">
               <div className="flex items-center justify-between">
-                <span className="font-semibold text-sm">{PLAN_LABELS[cfg.plan] ?? cfg.plan}</span>
+                <span className="text-sm font-semibold">{tp.has(cfg.plan) ? tp(cfg.plan) : cfg.plan}</span>
                 {editingPlan !== cfg.plan && (
-                  <Button variant="outline" size="sm" onClick={() => startEdit(cfg)}>
-                    <Pencil className="h-3.5 w-3.5 mr-1" /> Modifier
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setEditingPlan(cfg.plan);
+                      setForm({ ...cfg });
+                    }}
+                  >
+                    <Pencil className="h-3.5 w-3.5" /> {tc('edit')}
                   </Button>
                 )}
               </div>
 
-              {editingPlan === cfg.plan ? (
+              {editingPlan === cfg.plan && form ? (
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Prix mensuel (€)</label>
-                      <Input type="number" min="0" value={form.price ?? 0}
-                        onChange={e => setForm(f => ({ ...f, price: Number(e.target.value) }))} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Max branches</label>
-                      <Input type="number" min="1" value={form.maxBranches ?? 1}
-                        onChange={e => setForm(f => ({ ...f, maxBranches: Number(e.target.value) }))} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Max employés</label>
-                      <Input type="number" min="1" value={form.maxEmployees ?? 1}
-                        onChange={e => setForm(f => ({ ...f, maxEmployees: Number(e.target.value) }))} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-xs text-muted-foreground">Max services</label>
-                      <Input type="number" min="1" value={form.maxServices ?? 1}
-                        onChange={e => setForm(f => ({ ...f, maxServices: Number(e.target.value) }))} />
-                    </div>
+                    {numberFields.map(([key, label, min]) => (
+                      <div key={key} className="space-y-1">
+                        <Label htmlFor={`${cfg.plan}-${key}`} className="text-xs text-muted-foreground">
+                          {label}
+                        </Label>
+                        <Input
+                          id={`${cfg.plan}-${key}`}
+                          type="number"
+                          min={min}
+                          value={form[key]}
+                          onChange={(e) => setForm({ ...form, [key]: Number(e.target.value) })}
+                        />
+                      </div>
+                    ))}
                   </div>
                   <div className="space-y-2">
-                    {([
-                      ['allowBooking',    'Réservation en ligne'],
-                      ['allowAnalytics',  'Analytics avancées'],
-                      ['allowCustomBrand','Personnalisation marque'],
-                    ] as const).map(([key, label]) => (
-                      <label key={key} className="flex items-center gap-2 text-sm cursor-pointer">
-                        <Toggle
-                          checked={!!form[key]}
-                          onChange={v => setForm(f => ({ ...f, [key]: v }))}
-                        />
+                    {featureFields.map(([key, label]) => (
+                      <label key={key} className="flex cursor-pointer items-center gap-2 text-sm">
+                        <Toggle checked={form[key]} label={label} onChange={(v) => setForm({ ...form, [key]: v })} />
                         {label}
                       </label>
                     ))}
                   </div>
-                  {error && <p className="text-sm text-destructive">{error}</p>}
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={savePlan} disabled={saving}>{saving ? 'Sauvegarde…' : 'Enregistrer'}</Button>
-                    <Button size="sm" variant="outline" onClick={() => setEditingPlan(null)}>Annuler</Button>
+                    <Button size="sm" onClick={savePlan} disabled={saving}>
+                      {saving ? tc('saving') : tc('save')}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => setEditingPlan(null)}>
+                      {tc('cancel')}
+                    </Button>
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-sm">
-                  <span className="text-muted-foreground">Prix</span>
-                  <span className="font-medium">{cfg.price === 0 ? 'Gratuit' : `${cfg.price} €/mois`}</span>
-                  <span className="text-muted-foreground">Branches max</span>
-                  <span className="font-medium">{cfg.maxBranches}</span>
-                  <span className="text-muted-foreground">Employés max</span>
-                  <span className="font-medium">{cfg.maxEmployees}</span>
-                  <span className="text-muted-foreground">Services max</span>
-                  <span className="font-medium">{cfg.maxServices}</span>
-                  <span className="text-muted-foreground">Réservation</span>
-                  <span>{cfg.allowBooking ? <Check className="h-4 w-4 text-emerald-600" /> : <X className="h-4 w-4 text-muted-foreground/50" />}</span>
-                  <span className="text-muted-foreground">Analytics</span>
-                  <span>{cfg.allowAnalytics ? <Check className="h-4 w-4 text-emerald-600" /> : <X className="h-4 w-4 text-muted-foreground/50" />}</span>
-                  <span className="text-muted-foreground">Personnalisation</span>
-                  <span>{cfg.allowCustomBrand ? <Check className="h-4 w-4 text-emerald-600" /> : <X className="h-4 w-4 text-muted-foreground/50" />}</span>
+                  <span className="text-muted-foreground">{t('price')}</span>
+                  <span className="font-medium">{cfg.price === 0 ? t('free') : t('perMonth', { price: cfg.price, currency })}</span>
+                  <span className="text-muted-foreground">{t('maxBranches')}</span>
+                  <span className="font-medium tabular-nums">{cfg.maxBranches}</span>
+                  <span className="text-muted-foreground">{t('maxEmployees')}</span>
+                  <span className="font-medium tabular-nums">{cfg.maxEmployees}</span>
+                  <span className="text-muted-foreground">{t('maxServices')}</span>
+                  <span className="font-medium tabular-nums">{cfg.maxServices}</span>
+                  {featureFields.map(([key, label]) => (
+                    <FeatureRow key={key} label={label} enabled={cfg[key]} />
+                  ))}
                 </div>
               )}
             </div>
@@ -314,99 +361,128 @@ function PlansSection({ initialConfigs }: { initialConfigs: PlanConfig[] }) {
   );
 }
 
-// ─── Superadmins Section ──────────────────────────────────────────────────────
+function FeatureRow({ label, enabled }: { label: string; enabled: boolean }) {
+  return (
+    <>
+      <span className="text-muted-foreground">{label}</span>
+      <span>{enabled ? <Check className="h-4 w-4 text-emerald-600" /> : <X className="h-4 w-4 text-muted-foreground/50" />}</span>
+    </>
+  );
+}
+
+// ─── Superadmins ──────────────────────────────────────────────────────────────
 
 function SuperadminsSection({ initialList, currentUserId }: { initialList: Superadmin[]; currentUserId: string }) {
+  const t = useTranslations('admin');
+  const tc = useTranslations('common');
+  const call = useApi();
   const [list, setList] = useState(initialList);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [showPwd, setShowPwd] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
   const [revoking, setRevoking] = useState<string | null>(null);
 
   async function invite() {
-    setSaving(true); setError('');
-    const res = await fetch('/api/admin/settings/superadmins', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form),
-    });
+    setSaving(true);
+    const res = await call<{ user: Superadmin }>('/api/admin/settings/superadmins', 'POST', form);
     setSaving(false);
-    if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error ?? 'Erreur'); return; }
-    const { user } = await res.json();
-    setList(prev => [...prev, user]);
+    if (!res) return;
+    setList((prev) => [...prev, res.user]);
     setForm({ name: '', email: '', password: '' });
     setShowForm(false);
+    toast.success(t('invited'));
   }
 
-  async function revoke(id: string) {
-    setRevoking(id);
-    const res = await fetch(`/api/admin/settings/superadmins/${id}`, { method: 'DELETE' });
+  async function revoke(sa: Superadmin) {
+    if (!confirm(t('confirmRevoke', { name: sa.name }))) return;
+    setRevoking(sa.id);
+    const ok = await call(`/api/admin/settings/superadmins/${sa.id}`, 'DELETE');
     setRevoking(null);
-    if (!res.ok) return;
-    setList(prev => prev.filter(s => s.id !== id));
+    if (!ok) return;
+    setList((prev) => prev.filter((s) => s.id !== sa.id));
+    toast.success(t('revoked'));
   }
 
   return (
     <Card>
-      <CardContent className="pt-6 space-y-4">
+      <CardContent className="space-y-4 pt-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-base">Superadmins</h2>
-          <Button size="sm" variant="outline" onClick={() => setShowForm(s => !s)}>
-            <Plus className="h-3.5 w-3.5 mr-1" /> Inviter
+          <h2 className="text-base font-semibold">{t('tabAdmins')}</h2>
+          <Button size="sm" variant="outline" onClick={() => setShowForm((s) => !s)}>
+            <Plus className="h-3.5 w-3.5" /> {t('invite')}
           </Button>
         </div>
 
         {showForm && (
-          <div className="border rounded-lg p-4 space-y-3 bg-muted/30">
-            <p className="text-sm font-medium">Nouveau superadmin</p>
-            <Input placeholder="Nom" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
-            <Input type="email" placeholder="Email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
-            <div className="relative">
+          <div className="space-y-3 rounded-lg border bg-muted/30 p-4">
+            <p className="text-sm font-medium">{t('newAdmin')}</p>
+            <Input placeholder={t('name')} aria-label={t('name')} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            <Input
+              type="email"
+              dir="ltr"
+              placeholder={t('email')}
+              aria-label={t('email')}
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+            />
+            <div className="flex items-center gap-2">
               <Input
                 type={showPwd ? 'text' : 'password'}
-                placeholder="Mot de passe (min 8 caract.)"
+                autoComplete="new-password"
+                placeholder={t('passwordMin', { count: SUPERADMIN_MIN_PASSWORD })}
+                aria-label={t('newPassword')}
                 value={form.password}
-                onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
-                className="pr-10"
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
               />
-              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" onClick={() => setShowPwd(s => !s)}>
+              <button
+                type="button"
+                aria-label={showPwd ? t('hidePassword') : t('showPassword')}
+                className="text-muted-foreground"
+                onClick={() => setShowPwd((s) => !s)}
+              >
                 {showPwd ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
             </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
             <div className="flex gap-2">
-              <Button size="sm" onClick={invite} disabled={saving || !form.name || !form.email || !form.password}>
-                {saving ? 'Création…' : 'Créer le compte'}
+              <Button
+                size="sm"
+                onClick={invite}
+                disabled={saving || !form.name || !form.email || form.password.length < SUPERADMIN_MIN_PASSWORD}
+              >
+                {saving ? t('creating') : t('createAccount')}
               </Button>
-              <Button size="sm" variant="outline" onClick={() => { setShowForm(false); setError(''); }}>Annuler</Button>
+              <Button size="sm" variant="outline" onClick={() => setShowForm(false)}>
+                {tc('cancel')}
+              </Button>
             </div>
           </div>
         )}
 
         <div className="space-y-2">
-          {list.map(sa => (
-            <div key={sa.id} className="flex items-center justify-between py-2 border-b last:border-0">
+          {list.map((sa) => (
+            <div key={sa.id} className="flex items-center justify-between border-b py-2 last:border-0">
               <div>
                 <p className="text-sm font-medium">{sa.name}</p>
-                <p className="text-xs text-muted-foreground">{sa.email}</p>
+                <p className="text-xs text-muted-foreground" dir="ltr">
+                  {sa.email}
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                {sa.id === currentUserId && (
-                  <span className="text-xs text-muted-foreground bg-muted px-2 py-0.5 rounded">vous</span>
-                )}
-                {sa.id !== currentUserId && (
-                  <Button
-                    variant="ghost" size="sm"
-                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                    onClick={() => revoke(sa.id)}
-                    disabled={revoking === sa.id}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-              </div>
+              {sa.id === currentUserId ? (
+                <span className="rounded bg-muted px-2 py-0.5 text-xs text-muted-foreground">{t('you')}</span>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={t('revoke')}
+                  title={t('revoke')}
+                  className="text-destructive hover:bg-destructive/10 hover:text-destructive"
+                  onClick={() => revoke(sa)}
+                  disabled={revoking === sa.id}
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              )}
             </div>
           ))}
         </div>
@@ -415,72 +491,68 @@ function SuperadminsSection({ initialList, currentUserId }: { initialList: Super
   );
 }
 
-// ─── Notifications Section ────────────────────────────────────────────────────
+// ─── Notifications ────────────────────────────────────────────────────────────
 
 function NotificationsSection({ initialConfig }: { initialConfig: Notifications }) {
+  const t = useTranslations('admin');
+  const tc = useTranslations('common');
+  const call = useApi();
   const [config, setConfig] = useState(initialConfig);
   const [saving, setSaving] = useState(false);
-  const [success, setSuccess] = useState('');
-  const [error, setError] = useState('');
 
-  async function saveToggle(key: keyof Notifications, value: boolean | string) {
-    setSaving(true); setSuccess(''); setError('');
-    const res = await fetch('/api/admin/settings/notifications', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ [key]: value }),
-    });
+  async function save(key: keyof Notifications, value: boolean | string) {
+    setSaving(true);
+    const ok = await call('/api/admin/settings/notifications', 'PATCH', { [key]: value });
     setSaving(false);
-    if (!res.ok) { const d = await res.json().catch(() => ({})); setError(d.error ?? 'Erreur'); return; }
-    setConfig(prev => ({ ...prev, [key]: value }));
-    setSuccess('Sauvegardé');
-    setTimeout(() => setSuccess(''), 2000);
+    if (!ok) return;
+    setConfig((prev) => ({ ...prev, [key]: value }));
+    toast.success(tc('saved'));
   }
 
-  const boolFields: { key: keyof Notifications; label: string; desc: string }[] = [
-    { key: 'newOrgSignup', label: 'Nouvelle organisation',  desc: 'Alerte quand une organisation s\'inscrit' },
-    { key: 'orgSuspended', label: 'Organisation suspendue', desc: 'Alerte quand une org est suspendue ou réactivée' },
-    { key: 'orgOverLimit', label: 'Dépassement de limite',  desc: 'Alerte quand une org dépasse les limites de son plan' },
-    { key: 'dailyReport',  label: 'Rapport quotidien',      desc: 'Récapitulatif quotidien des activités' },
-  ];
+  const fields = [
+    { key: 'newOrgSignup', label: t('notifNewOrg'), desc: t('notifNewOrgDesc') },
+    { key: 'orgSuspended', label: t('notifSuspended'), desc: t('notifSuspendedDesc') },
+    { key: 'orgOverLimit', label: t('notifOverLimit'), desc: t('notifOverLimitDesc') },
+    { key: 'dailyReport', label: t('notifDaily'), desc: t('notifDailyDesc') },
+  ] as const;
 
   return (
     <Card>
-      <CardContent className="pt-6 space-y-5">
+      <CardContent className="space-y-5 pt-6">
         <div className="flex items-center justify-between">
-          <h2 className="font-semibold text-base">Notifications par email</h2>
-          {saving && <span className="text-xs text-muted-foreground">Sauvegarde…</span>}
-          {success && <span className="text-xs text-emerald-600">{success}</span>}
-          {error   && <span className="text-xs text-destructive">{error}</span>}
+          <h2 className="text-base font-semibold">{t('notifTitle')}</h2>
+          {saving && <span className="text-xs text-muted-foreground">{tc('saving')}</span>}
         </div>
-
+        <p className="flex items-start gap-2 rounded-lg bg-muted p-3 text-xs text-muted-foreground">
+          <Info className="mt-0.5 h-4 w-4 flex-shrink-0" /> {t('notifPending')}
+        </p>
         <div className="space-y-1">
-          <label className="text-sm text-muted-foreground">Email de réception</label>
+          <Label htmlFor="notif-email" className="text-muted-foreground">
+            {t('notifEmail')}
+          </Label>
           <div className="flex gap-2">
             <Input
+              id="notif-email"
               type="email"
-              placeholder="admin@exemple.com"
+              dir="ltr"
+              placeholder="admin@example.com"
               value={config.notifEmail}
-              onChange={e => setConfig(prev => ({ ...prev, notifEmail: e.target.value }))}
+              onChange={(e) => setConfig((prev) => ({ ...prev, notifEmail: e.target.value }))}
               className="max-w-xs"
             />
-            <Button size="sm" variant="outline" onClick={() => saveToggle('notifEmail', config.notifEmail)}>
+            <Button size="sm" variant="outline" aria-label={tc('save')} onClick={() => save('notifEmail', config.notifEmail)}>
               <Check className="h-3.5 w-3.5" />
             </Button>
           </div>
         </div>
-
         <div className="space-y-3">
-          {boolFields.map(({ key, label, desc }) => (
-            <div key={key} className="flex items-start justify-between gap-4 py-2 border-b last:border-0">
+          {fields.map(({ key, label, desc }) => (
+            <div key={key} className="flex items-start justify-between gap-4 border-b py-2 last:border-0">
               <div>
                 <p className="text-sm font-medium">{label}</p>
                 <p className="text-xs text-muted-foreground">{desc}</p>
               </div>
-              <Toggle
-                checked={!!config[key]}
-                onChange={v => saveToggle(key, v)}
-              />
+              <Toggle checked={config[key]} label={label} onChange={(v) => save(key, v)} />
             </div>
           ))}
         </div>
@@ -489,50 +561,55 @@ function NotificationsSection({ initialConfig }: { initialConfig: Notifications 
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function AdminSettingsClient({
-  currentUser, planConfigs, superadmins, notifications,
+  currentUser,
+  currency,
+  planConfigs,
+  superadmins,
+  notifications,
 }: {
   currentUser: CurrentUser;
+  currency: string;
   planConfigs: PlanConfig[];
   superadmins: Superadmin[];
   notifications: Notifications;
 }) {
+  const t = useTranslations('admin');
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<TabId>('profile');
 
   return (
-    <div className="container max-w-2xl py-8 space-y-6">
+    <div className="container max-w-2xl space-y-6 py-8">
       <div>
-        <h1 className="text-2xl font-bold">Réglages</h1>
-        <p className="text-sm text-muted-foreground mt-1">Gérez votre compte et la configuration de la plateforme</p>
+        <h1 className="text-2xl font-bold">{t('settings')}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{t('settingsSubtitle')}</p>
       </div>
 
-      {/* Tab bar */}
-      <div className="flex gap-1 border-b overflow-x-auto">
-        {TABS.map(({ id, label, icon: Icon }) => (
+      <div role="tablist" className="flex gap-1 overflow-x-auto border-b">
+        {TABS.map(({ id, key, icon: Icon }) => (
           <button
             key={id}
+            role="tab"
+            aria-selected={activeTab === id}
             onClick={() => setActiveTab(id)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium whitespace-nowrap border-b-2 transition-colors -mb-px ${
-              activeTab === id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
+            className={cn(
+              '-mb-px flex items-center gap-1.5 whitespace-nowrap border-b-2 px-3 py-2 text-sm font-medium transition-colors',
+              activeTab === id ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:text-foreground'
+            )}
           >
             <Icon className="h-4 w-4" />
-            {label}
+            {t(key)}
           </button>
         ))}
       </div>
 
-      {/* Tab content */}
-      {activeTab === 'profile'  && <ProfileSection user={currentUser} onRefresh={() => router.refresh()} />}
+      {activeTab === 'profile' && <ProfileSection user={currentUser} onRefresh={() => router.refresh()} />}
       {activeTab === 'security' && <SecuritySection />}
-      {activeTab === 'plans'    && <PlansSection initialConfigs={planConfigs} />}
-      {activeTab === 'admins'   && <SuperadminsSection initialList={superadmins} currentUserId={currentUser.id} />}
-      {activeTab === 'notifs'   && <NotificationsSection initialConfig={notifications} />}
+      {activeTab === 'plans' && <PlansSection initialConfigs={planConfigs} currency={currency} />}
+      {activeTab === 'admins' && <SuperadminsSection initialList={superadmins} currentUserId={currentUser.id} />}
+      {activeTab === 'notifs' && <NotificationsSection initialConfig={notifications} />}
     </div>
   );
 }
