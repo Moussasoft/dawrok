@@ -3,6 +3,7 @@ import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { prisma } from './db';
 import { isSessionStale } from './tokens';
+import { isWeakJwtSecret } from './secrets';
 
 const COOKIE = 'daourak_session';
 const SESSION_DAYS = 30;
@@ -17,7 +18,7 @@ let cachedSecret: Uint8Array | null = null;
 function getSecret(): Uint8Array {
   if (cachedSecret) return cachedSecret;
   const secret = process.env.JWT_SECRET ?? '';
-  const weak = secret.length < 32 || secret.startsWith('change-me');
+  const weak = isWeakJwtSecret(secret);
   if (weak && process.env.NODE_ENV === 'production') {
     throw new Error('JWT_SECRET absent ou trop faible (≥ 32 caractères aléatoires requis en production).');
   }

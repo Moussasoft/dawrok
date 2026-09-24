@@ -2,6 +2,7 @@
 // (traduit côté client via `errors.<code>`), validation Zod et gestion d'exceptions.
 import { NextRequest, NextResponse } from 'next/server';
 import type { z } from 'zod';
+import { reportError } from './monitoring';
 
 export class ApiError extends Error {
   constructor(
@@ -26,7 +27,7 @@ export function route<Ctx>(handler: (req: NextRequest, ctx: Ctx) => Promise<Resp
       return await handler(req, ctx);
     } catch (e) {
       if (e instanceof ApiError) return jsonError(e.status, e.code, e.extra);
-      console.error(`[api] ${req.method} ${req.nextUrl.pathname}`, e);
+      reportError(e, { source: 'api', method: req.method, path: req.nextUrl.pathname });
       return jsonError(500, 'server_error');
     }
   };

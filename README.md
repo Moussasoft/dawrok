@@ -51,7 +51,7 @@ Image seule : `docker build --build-arg NEXT_PUBLIC_APP_URL=https://votre-domain
 | Variable | Obligatoire | Rôle |
 |---|---|---|
 | `DATABASE_URL` | oui | `file:./dev.db` en dev ; PostgreSQL recommandé en prod |
-| `JWT_SECRET` | **oui en prod** | ≥ 32 caractères aléatoires (`openssl rand -base64 48`). Le serveur refuse de démarrer une session avec un secret absent ou d'exemple. |
+| `JWT_SECRET` | **oui en prod** | ≥ 32 caractères aléatoires (`openssl rand -base64 48`). En production, le serveur refuse de démarrer avec un secret absent, court ou d'exemple. |
 | `NEXT_PUBLIC_APP_URL` | oui | URL publique (QR codes, liens des notifications) |
 | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | non | Notifications push. Générer avec `npx web-push generate-vapid-keys`. Sans ces clés, seules les alertes « page ouverte » fonctionnent. |
 | `SMTP_URL` ou `RESEND_API_KEY`, `MAIL_FROM` | non | E-mails (mot de passe oublié, invitations d'équipe). Sans fournisseur, les e-mails s'affichent dans la console en développement. |
@@ -61,6 +61,7 @@ Image seule : `docker build --build-arg NEXT_PUBLIC_APP_URL=https://votre-domain
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM` ou `TWILIO_MESSAGING_SERVICE_SID`, `TWILIO_WHATSAPP_FROM` | non | SMS / WhatsApp aux clients qui le demandent (« bientôt votre tour » puis appel), dans le quota mensuel de l'offre. |
 | `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `STRIPE_PRICE_STARTER` / `_PRO` / `_BUSINESS` | non | Abonnements en ligne (Checkout, portail client, webhook `/api/billing/webhook`). Sans Stripe, la page *Abonnement* propose de contacter l'équipe. |
 | `SUPPORT_WHATSAPP`, `SUPPORT_EMAIL` | non | Contact affiché pour les offres « sur demande » (sans prix Stripe). |
+| `ERROR_WEBHOOK_URL` | non | Alerte (Slack, Discord ou collecteur JSON) à chaque erreur serveur, une par minute au plus pour une même erreur ; les erreurs sont aussi journalisées en JSON en production. |
 | `REDIS_URL` | si plusieurs instances | Redis partage entre instances le temps réel (instantanés de file), la limitation de débit et le dédoublonnage des notifications ; repli en mémoire s'il ne répond pas. |
 | `RETENTION_SCHEDULER`, `CRON_SECRET` | non | Purge quotidienne des données expirées : planifiée dans le serveur Node par défaut ; en serverless, `RETENTION_SCHEDULER=off` et un cron sur `GET /api/cron/retention` (`Authorization: Bearer $CRON_SECRET`). |
 
@@ -143,7 +144,7 @@ src/
 1. **PostgreSQL** (Neon, Supabase…) : voir « PostgreSQL (production) » ci-dessus — toutes les suites de tests de bout en bout passent aussi sur PostgreSQL.
 2. **Plusieurs instances** : définir `REDIS_URL` (Upstash, Redis Cloud…) — le temps réel, la limitation de débit et le dédoublonnage des notifications sont alors partagés.
 3. Secrets : `JWT_SECRET`, clés VAPID, `NEXT_PUBLIC_APP_URL` en HTTPS (obligatoire pour le push).
-4. Supervision : brancher `/api/health` sur un moniteur, ajouter Sentry.
+4. Supervision : brancher `/api/health` sur un moniteur (UptimeRobot, Better Stack) et `ERROR_WEBHOOK_URL` sur un canal d'alerte ; les journaux JSON peuvent alimenter n'importe quel collecteur.
 5. Prochaines briques : alertes e-mail superadmin, paiement CMI (cartes marocaines).
 
 Voir [AUDIT.md](AUDIT.md) pour l'audit complet et ce qui reste à faire.
