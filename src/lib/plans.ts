@@ -2,9 +2,9 @@
 // et application des limites (jusqu'ici configurées mais jamais appliquées).
 import { prisma } from './db';
 import { ApiError } from './api';
+import { PLANS } from './plans-shared';
 
-export const PLANS = ['free', 'starter', 'pro', 'business'] as const;
-export type Plan = (typeof PLANS)[number];
+export { PLANS, CURRENCY, DEFAULT_BRAND_COLOR, isPlan, type Plan } from './plans-shared';
 
 export type PlanLimits = {
   plan: string;
@@ -26,14 +26,6 @@ export const PLAN_DEFAULTS: PlanLimits[] = [
   { plan: 'business', price: 129, maxBranches: 20, maxEmployees: 200, maxServices: 200, allowBooking: true, allowAnalytics: true, allowCustomBrand: true, smsQuota: 500 },
 ];
 
-/** Devise d'affichage des prix des plans. */
-export const CURRENCY = '€';
-
-export const DEFAULT_BRAND_COLOR = '#6366F1';
-
-export function isPlan(value: string): value is Plan {
-  return (PLANS as readonly string[]).includes(value);
-}
 
 let seeded = false;
 

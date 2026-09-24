@@ -1,13 +1,13 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { LogOut, UserRound, Users2 } from 'lucide-react';
+import { CreditCard, LogOut, UserRound, Users2 } from 'lucide-react';
 import { Link } from '@/i18n/routing';
 import { hasRole } from '@/lib/roles';
 
 type Props = { name: string; email: string; role: string };
 
-/** Menu du compte : profil, équipe (propriétaire), déconnexion. */
+/** Menu du compte : profil, équipe et abonnement (propriétaire), déconnexion. */
 export function UserMenu({ name, email, role }: Props) {
   const t = useTranslations('userMenu');
   const tr = useTranslations('roles');
@@ -35,6 +35,7 @@ export function UserMenu({ name, email, role }: Props) {
   const items = [
     { href: '/dashboard/account', label: t('account'), icon: UserRound, show: true },
     { href: '/dashboard/team', label: t('team'), icon: Users2, show: owner },
+    { href: '/dashboard/billing', label: t('billing'), icon: CreditCard, show: owner },
   ].filter((i) => i.show);
 
   return (

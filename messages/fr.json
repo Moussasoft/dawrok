@@ -182,7 +182,12 @@
     "terms_required": "Veuillez accepter les conditions d’utilisation et la politique de confidentialité.",
     "customer_has_active_ticket": "Ce client a un ticket ou un rendez-vous en cours : terminez-le ou annulez-le d’abord.",
     "invalid_phone": "Ce numéro ne peut pas recevoir de SMS : saisissez un numéro de mobile.",
-    "plan_feature_sms": "Les SMS ne sont pas inclus dans votre offre."
+    "plan_feature_sms": "Les SMS ne sont pas inclus dans votre offre.",
+    "billing_not_configured": "Le paiement en ligne n’est pas disponible : contactez-nous pour changer d’offre.",
+    "plan_not_purchasable": "Cette offre ne peut pas être souscrite en ligne.",
+    "subscription_exists": "Vous avez déjà un abonnement : changez d’offre depuis « Gérer mon abonnement ».",
+    "no_billing_account": "Aucun abonnement en ligne pour cette organisation.",
+    "billing_unavailable": "Le service de paiement ne répond pas. Réessayez dans un instant."
   },
   "status": {
     "scheduled": "RDV à venir",
@@ -626,7 +631,10 @@
       "customer_export": "Données client exportées",
       "retention_purge": "Purge des données expirées",
       "org_retention": "Durée de conservation modifiée",
-      "org_sms": "Notifications SMS modifiées"
+      "org_sms": "Notifications SMS modifiées",
+      "billing_checkout": "Paiement d’abonnement commencé",
+      "billing_plan": "Offre modifiée par l’abonnement",
+      "billing_status": "Statut d’abonnement modifié"
     },
     "settingsSubtitle": "Gérez votre compte et la configuration de la plateforme",
     "tabProfile": "Profil",
@@ -783,7 +791,7 @@
     "open": "Menu du compte",
     "account": "Mon compte",
     "team": "Équipe",
-    "billing": "Offre & facturation",
+    "billing": "Abonnement",
     "logout": "Déconnexion"
   },
   "team": {
@@ -933,6 +941,46 @@
   "sms": {
     "called": "{org} : c’est votre tour ! Ticket {number}, présentez-vous : {where}.",
     "soon": "{org} : votre tour approche ({count, plural, =0 {vous êtes le prochain} one {encore # personne avant vous} other {encore # personnes avant vous}}). Ticket {number} : {url}"
+  },
+  "billing": {
+    "title": "Abonnement",
+    "subtitle": "Votre offre, son renouvellement et le paiement.",
+    "currentPlan": "Offre actuelle",
+    "currentBadge": "Votre offre",
+    "free": "Gratuit",
+    "perMonth": "{price} {currency} / mois",
+    "renewsOn": "Renouvellement le {date}",
+    "endsOn": "Se termine le {date} (résiliation programmée)",
+    "manage": "Gérer mon abonnement",
+    "choose": "Choisir cette offre",
+    "change": "Changer d’offre",
+    "contact": "Nous contacter",
+    "contactFallback": "Contactez notre équipe pour changer d’offre.",
+    "contactMessage": "Bonjour, je souhaite passer à l’offre {plan} pour {org}.",
+    "manualBilling": "Le paiement en ligne n’est pas encore disponible : notre équipe active votre nouvelle offre dès réception de votre demande.",
+    "successNotice": "Merci ! Votre abonnement est en cours d’activation : votre nouvelle offre s’applique dans quelques instants.",
+    "cancelledNotice": "Paiement annulé : votre offre n’a pas changé.",
+    "pastDueNotice": "Le dernier paiement a échoué. Mettez à jour votre moyen de paiement pour conserver votre offre.",
+    "pastDueBanner": "Paiement de l’abonnement en échec.",
+    "updatePayment": "Mettre à jour le paiement",
+    "featureBranches": "{count, plural, one {# agence} other {# agences}}",
+    "featureEmployees": "{count, plural, one {# employé} other {# employés}}",
+    "featureServices": "{count, plural, one {# prestation} other {# prestations}}",
+    "featureBooking": "Réservation en ligne",
+    "featureAnalytics": "Statistiques et avis clients",
+    "featureBrand": "Logo et couleur de marque",
+    "featureSms": "{count} SMS / WhatsApp par mois",
+    "featureSmsNone": "SMS / WhatsApp",
+    "status": {
+      "active": "Actif",
+      "trialing": "Période d’essai",
+      "past_due": "Paiement en échec",
+      "canceled": "Résilié",
+      "incomplete": "Paiement en attente",
+      "incomplete_expired": "Paiement expiré",
+      "unpaid": "Impayé",
+      "paused": "En pause"
+    }
   },
   "language": {
     "fr": "Français",

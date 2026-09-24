@@ -25,6 +25,12 @@ model Organization {
   // Prévenir par SMS ou WhatsApp les clients qui l'ont demandé (dans le quota de l'offre).
   smsEnabled Boolean  @default(false)
   smsChannel String   @default("sms") // sms | whatsapp
+  // Abonnement payant (Stripe) : l'offre suit l'abonnement, synchronisée par webhook.
+  stripeCustomerId     String?   @unique
+  stripeSubscriptionId String?   @unique
+  billingStatus        String?   // active | trialing | past_due | canceled | incomplete…
+  planRenewsAt         DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 

@@ -182,7 +182,12 @@
     "terms_required": "يرجى قبول شروط الاستخدام وسياسة الخصوصية.",
     "customer_has_active_ticket": "لدى هذا العميل تذكرة أو موعد جارٍ: أنهِه أو ألغِه أولاً.",
     "invalid_phone": "لا يمكن لهذا الرقم استقبال الرسائل النصية: أدخل رقم هاتف محمول.",
-    "plan_feature_sms": "الرسائل النصية غير مشمولة في عرضك."
+    "plan_feature_sms": "الرسائل النصية غير مشمولة في عرضك.",
+    "billing_not_configured": "الأداء عبر الإنترنت غير متاح: تواصل معنا لتغيير العرض.",
+    "plan_not_purchasable": "لا يمكن الاشتراك في هذا العرض عبر الإنترنت.",
+    "subscription_exists": "لديك اشتراك بالفعل: غيّر العرض من «تدبير اشتراكي».",
+    "no_billing_account": "لا يوجد اشتراك عبر الإنترنت لهذه المؤسسة.",
+    "billing_unavailable": "خدمة الأداء لا تستجيب. أعد المحاولة بعد لحظات."
   },
   "status": {
     "scheduled": "موعد قادم",
@@ -626,7 +631,10 @@
       "customer_export": "تصدير معطيات عميل",
       "retention_purge": "حذف المعطيات المنتهية الصلاحية",
       "org_retention": "تعديل مدة الاحتفاظ",
-      "org_sms": "تعديل إشعارات الرسائل النصية"
+      "org_sms": "تعديل إشعارات الرسائل النصية",
+      "billing_checkout": "بدء أداء الاشتراك",
+      "billing_plan": "تغيير العرض عبر الاشتراك",
+      "billing_status": "تغيير حالة الاشتراك"
     },
     "settingsSubtitle": "أدر حسابك وإعدادات المنصة",
     "tabProfile": "الملف الشخصي",
@@ -783,7 +791,7 @@
     "open": "قائمة الحساب",
     "account": "حسابي",
     "team": "الفريق",
-    "billing": "الباقة والفوترة",
+    "billing": "الاشتراك",
     "logout": "تسجيل الخروج"
   },
   "team": {
@@ -933,6 +941,46 @@
   "sms": {
     "called": "{org}: حان دورك! التذكرة {number}، توجّه إلى: {where}.",
     "soon": "{org}: اقترب دورك ({count, plural, =0 {أنت التالي} one {أمامك شخص واحد} two {أمامك شخصان} few {أمامك # أشخاص} many {أمامك # شخصاً} other {أمامك # شخص}}). التذكرة {number}: {url}"
+  },
+  "billing": {
+    "title": "الاشتراك",
+    "subtitle": "عرضك وتجديده والأداء.",
+    "currentPlan": "العرض الحالي",
+    "currentBadge": "عرضك",
+    "free": "مجاني",
+    "perMonth": "{price} {currency} / شهرياً",
+    "renewsOn": "يتجدد في {date}",
+    "endsOn": "ينتهي في {date} (إلغاء مبرمج)",
+    "manage": "تدبير اشتراكي",
+    "choose": "اختيار هذا العرض",
+    "change": "تغيير العرض",
+    "contact": "تواصل معنا",
+    "contactFallback": "تواصل مع فريقنا لتغيير العرض.",
+    "contactMessage": "مرحباً، أرغب في الانتقال إلى عرض {plan} لـ {org}.",
+    "manualBilling": "الأداء عبر الإنترنت غير متاح بعد: يفعّل فريقنا عرضك الجديد فور توصلنا بطلبك.",
+    "successNotice": "شكراً! جارٍ تفعيل اشتراكك: سيسري عرضك الجديد خلال لحظات.",
+    "cancelledNotice": "تم إلغاء الأداء: لم يتغير عرضك.",
+    "pastDueNotice": "فشل آخر أداء. حدّث وسيلة الأداء للاحتفاظ بعرضك.",
+    "pastDueBanner": "فشل أداء الاشتراك.",
+    "updatePayment": "تحديث وسيلة الأداء",
+    "featureBranches": "{count, plural, one {فرع واحد} two {فرعان} few {# فروع} many {# فرعاً} other {# فرع}}",
+    "featureEmployees": "{count, plural, one {موظف واحد} two {موظفان} few {# موظفين} many {# موظفاً} other {# موظف}}",
+    "featureServices": "{count, plural, one {خدمة واحدة} two {خدمتان} few {# خدمات} many {# خدمة} other {# خدمة}}",
+    "featureBooking": "الحجز عبر الإنترنت",
+    "featureAnalytics": "الإحصاءات وآراء العملاء",
+    "featureBrand": "الشعار ولون العلامة",
+    "featureSms": "{count} رسالة SMS / واتساب شهرياً",
+    "featureSmsNone": "رسائل SMS / واتساب",
+    "status": {
+      "active": "نشط",
+      "trialing": "فترة تجريبية",
+      "past_due": "فشل الأداء",
+      "canceled": "ملغى",
+      "incomplete": "أداء قيد الانتظار",
+      "incomplete_expired": "انتهت صلاحية الأداء",
+      "unpaid": "غير مؤدى",
+      "paused": "متوقف مؤقتاً"
+    }
   },
   "language": {
     "fr": "Français",

@@ -182,7 +182,12 @@
     "terms_required": "Please accept the terms of use and the privacy policy.",
     "customer_has_active_ticket": "This customer has a ticket or appointment in progress: complete or cancel it first.",
     "invalid_phone": "This number cannot receive text messages: enter a mobile number.",
-    "plan_feature_sms": "Text messages are not included in your plan."
+    "plan_feature_sms": "Text messages are not included in your plan.",
+    "billing_not_configured": "Online payment is not available: contact us to change plans.",
+    "plan_not_purchasable": "This plan cannot be purchased online.",
+    "subscription_exists": "You already have a subscription: change plans from “Manage my subscription”.",
+    "no_billing_account": "No online subscription for this organization.",
+    "billing_unavailable": "The payment service is not responding. Try again in a moment."
   },
   "status": {
     "scheduled": "Upcoming appointment",
@@ -626,7 +631,10 @@
       "customer_export": "Customer data exported",
       "retention_purge": "Expired data purged",
       "org_retention": "Retention period changed",
-      "org_sms": "SMS notifications changed"
+      "org_sms": "SMS notifications changed",
+      "billing_checkout": "Subscription checkout started",
+      "billing_plan": "Plan changed by subscription",
+      "billing_status": "Subscription status changed"
     },
     "settingsSubtitle": "Manage your account and the platform configuration",
     "tabProfile": "Profile",
@@ -783,7 +791,7 @@
     "open": "Account menu",
     "account": "My account",
     "team": "Team",
-    "billing": "Plan & billing",
+    "billing": "Subscription",
     "logout": "Logout"
   },
   "team": {
@@ -933,6 +941,46 @@
   "sms": {
     "called": "{org}: it’s your turn! Ticket {number}, please go to: {where}.",
     "soon": "{org}: your turn is coming ({count, plural, =0 {you are next} one {# person ahead of you} other {# people ahead of you}}). Ticket {number}: {url}"
+  },
+  "billing": {
+    "title": "Subscription",
+    "subtitle": "Your plan, its renewal and payment.",
+    "currentPlan": "Current plan",
+    "currentBadge": "Your plan",
+    "free": "Free",
+    "perMonth": "{price} {currency} / month",
+    "renewsOn": "Renews on {date}",
+    "endsOn": "Ends on {date} (cancellation scheduled)",
+    "manage": "Manage my subscription",
+    "choose": "Choose this plan",
+    "change": "Change plan",
+    "contact": "Contact us",
+    "contactFallback": "Contact our team to change plans.",
+    "contactMessage": "Hello, I would like to switch {org} to the {plan} plan.",
+    "manualBilling": "Online payment is not available yet: our team activates your new plan as soon as we receive your request.",
+    "successNotice": "Thank you! Your subscription is being activated: your new plan applies in a few moments.",
+    "cancelledNotice": "Payment cancelled: your plan has not changed.",
+    "pastDueNotice": "The last payment failed. Update your payment method to keep your plan.",
+    "pastDueBanner": "Subscription payment failed.",
+    "updatePayment": "Update payment",
+    "featureBranches": "{count, plural, one {# branch} other {# branches}}",
+    "featureEmployees": "{count, plural, one {# employee} other {# employees}}",
+    "featureServices": "{count, plural, one {# service} other {# services}}",
+    "featureBooking": "Online booking",
+    "featureAnalytics": "Analytics and customer feedback",
+    "featureBrand": "Logo and brand color",
+    "featureSms": "{count} SMS / WhatsApp per month",
+    "featureSmsNone": "SMS / WhatsApp",
+    "status": {
+      "active": "Active",
+      "trialing": "Trial",
+      "past_due": "Payment failed",
+      "canceled": "Cancelled",
+      "incomplete": "Payment pending",
+      "incomplete_expired": "Payment expired",
+      "unpaid": "Unpaid",
+      "paused": "Paused"
+    }
   },
   "language": {
     "fr": "Français",
