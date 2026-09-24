@@ -1,6 +1,6 @@
 import { getLocale, getTranslations } from 'next-intl/server';
 import { Phone, User, Calendar, X, Award, Search } from 'lucide-react';
-import { prisma } from '@/lib/db';
+import { containsText, prisma } from '@/lib/db';
 import { requireOrgPageRole } from '@/lib/guards';
 import { getActiveBranch } from '@/lib/branch';
 import { redirectTo } from '@/i18n/server';
@@ -31,7 +31,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
   const customers = await prisma.customer.findMany({
     where: {
       branchId: branch.id,
-      ...(q ? { OR: [{ name: { contains: q } }, { phone: { contains: q } }] } : {}),
+      ...(q ? { OR: [{ name: containsText(q) }, { phone: containsText(q) }] } : {}),
     },
     orderBy: [{ totalVisits: 'desc' }, { lastVisitAt: 'desc' }],
     take: 200,

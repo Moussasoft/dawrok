@@ -13,7 +13,11 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "db:pg:sync": "node scripts/sync-postgres-schema.mjs",
+    "db:pg:generate": "prisma generate --schema prisma/postgres/schema.prisma",
+    "db:pg:migrate": "prisma migrate deploy --schema prisma/postgres/schema.prisma",
+    "db:pg:new-migration": "prisma migrate dev --create-only --schema prisma/postgres/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",

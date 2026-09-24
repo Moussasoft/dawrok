@@ -24,6 +24,19 @@ Ouvrez :
 - 📱 **Page client (QR)** : http://localhost:3000/fr/q/demo-salon-karim
 - 📺 **Écran TV** : http://localhost:3000/fr/screen/demo-salon-karim
 
+### PostgreSQL (production)
+
+Le schéma de développement (`prisma/schema.prisma`, SQLite) est décliné pour PostgreSQL dans `prisma/postgres/schema.prisma`, avec des migrations versionnées :
+
+```bash
+export DATABASE_URL="postgresql://utilisateur:motdepasse@hote:5432/daourak"
+npm run db:pg:generate   # client Prisma pour PostgreSQL
+npm run db:pg:migrate    # applique prisma/postgres/migrations
+npm run build && npm start
+```
+
+Après une modification du schéma : `npm run db:push` (SQLite), `npm run db:pg:sync`, puis `npm run db:pg:new-migration -- --name <nom>` contre une base PostgreSQL de développement, et commiter la migration (un test vérifie que les deux schémas restent alignés).
+
 ## ⚙️ Variables d'environnement
 
 | Variable | Obligatoire | Rôle |
@@ -56,7 +69,7 @@ npm run build
 - **Next.js 15** (App Router) + **React 19** + **TypeScript** strict
 - **next-intl v4** : `ar` (défaut, sans préfixe), `fr`, `en` — traductions dans `messages/*.json`
 - **Tailwind CSS 3** + composants maison style shadcn (`src/components/ui`)
-- **Prisma** + **SQLite** (dev) — migrable vers PostgreSQL
+- **Prisma** + **SQLite** (dev) / **PostgreSQL** (prod, migrations dans `prisma/postgres`)
 - Sessions **JWT** (jose) en cookie httpOnly, **revérifiées en base à chaque requête**
 - **SSE** temps réel + **Web Push** (service worker `public/sw.js`)
 - **Zod** pour valider toutes les entrées d'API
@@ -118,7 +131,7 @@ src/
 
 ## 🌍 Vers la production
 
-1. **PostgreSQL** (Neon, Supabase…) : `provider = "postgresql"` dans `schema.prisma`, puis passer à `prisma migrate`.
+1. **PostgreSQL** (Neon, Supabase…) : voir « PostgreSQL (production) » ci-dessus — toutes les suites de tests de bout en bout passent aussi sur PostgreSQL.
 2. **Plusieurs instances** : définir `REDIS_URL` (Upstash, Redis Cloud…) — le temps réel, la limitation de débit et le dédoublonnage des notifications sont alors partagés.
 3. Secrets : `JWT_SECRET`, clés VAPID, `NEXT_PUBLIC_APP_URL` en HTTPS (obligatoire pour le push).
 4. Supervision : brancher `/api/health` sur un moniteur, ajouter Sentry.
