@@ -14,16 +14,19 @@ import {
   zonedTimeToUtc,
 } from './time';
 
-// Casablanca est à UTC+1 hors ramadan (en 2026, UTC+0 du 15/02 au 22/03 environ) :
-// on utilise donc des dates de septembre pour les assertions en UTC+1.
-const CASA = 'Africa/Casablanca';
+// Les règles d'un fuseau réel changent (le Maroc est repassé à UTC+0 le 20/09/2026) et la base tz
+// embarquée dépend de la version de Node : la logique est donc testée avec un fuseau à décalage
+// fixe. « Etc/GMT-1 » vaut UTC+1 toute l'année (signe inversé, convention POSIX).
+// Paris sert aux changements d'heure : ses règles n'ont pas bougé depuis 1996.
+const UTC_PLUS_1 = 'Etc/GMT-1';
 const PARIS = 'Europe/Paris';
+const CASA = 'Africa/Casablanca'; // ses règles ne sont vérifiées que dans le dernier bloc
 const HOUR = 3_600_000;
 const iso = (d: Date) => d.toISOString();
 
 describe('getZonedParts', () => {
-  it('décompose un instant dans le fuseau de Casablanca', () => {
-    expect(getZonedParts(new Date('2026-09-24T12:34:56Z'), CASA)).toEqual({
+  it('décompose un instant dans le fuseau demandé', () => {
+    expect(getZonedParts(new Date('2026-09-24T12:34:56Z'), UTC_PLUS_1)).toEqual({
       year: 2026,
       month: 9,
       day: 24,
@@ -35,15 +38,15 @@ describe('getZonedParts', () => {
   });
 
   it('renvoie l’heure 0 (et non 24) à minuit local', () => {
-    expect(getZonedParts(new Date('2026-09-23T23:00:00Z'), CASA)).toMatchObject({ day: 24, hour: 0, minute: 0 });
+    expect(getZonedParts(new Date('2026-09-23T23:00:00Z'), UTC_PLUS_1)).toMatchObject({ day: 24, hour: 0, minute: 0 });
     expect(getZonedParts(new Date('2026-09-24T00:00:00Z'), 'UTC').hour).toBe(0);
   });
 
   it('numérote les jours à partir de dimanche = 0, dans le fuseau demandé', () => {
     expect(getZonedParts(new Date('2026-09-27T10:00:00Z'), 'UTC').weekday).toBe(0); // dimanche
     expect(getZonedParts(new Date('2026-09-26T10:00:00Z'), 'UTC').weekday).toBe(6); // samedi
-    // Samedi 23:30 UTC = déjà dimanche 00:30 à Casablanca.
-    expect(getZonedParts(new Date('2026-09-26T23:30:00Z'), CASA).weekday).toBe(0);
+    // Samedi 23:30 UTC = déjà dimanche 00:30 en UTC+1.
+    expect(getZonedParts(new Date('2026-09-26T23:30:00Z'), UTC_PLUS_1).weekday).toBe(0);
   });
 
   it('suit l’heure d’été de Paris', () => {
@@ -54,7 +57,7 @@ describe('getZonedParts', () => {
 
 describe('getTimeZoneOffsetMinutes', () => {
   it('donne le décalage du fuseau à cet instant', () => {
-    expect(getTimeZoneOffsetMinutes(new Date('2026-09-24T12:00:00Z'), CASA)).toBe(60);
+    expect(getTimeZoneOffsetMinutes(new Date('2026-09-24T12:00:00Z'), UTC_PLUS_1)).toBe(60);
     expect(getTimeZoneOffsetMinutes(new Date('2026-07-01T12:00:00Z'), PARIS)).toBe(120);
     expect(getTimeZoneOffsetMinutes(new Date('2026-01-15T12:00:00Z'), PARIS)).toBe(60);
     expect(getTimeZoneOffsetMinutes(new Date('2026-09-24T12:00:00Z'), 'UTC')).toBe(0);
@@ -62,28 +65,28 @@ describe('getTimeZoneOffsetMinutes', () => {
 });
 
 describe('dayKey', () => {
-  it('23:30 UTC le 23 est déjà le 24 à Casablanca', () => {
+  it('23:30 UTC le 23 est déjà le 24 en UTC+1', () => {
     const d = new Date('2026-09-23T23:30:00Z');
-    expect(dayKey(d, CASA)).toBe('2026-09-24');
+    expect(dayKey(d, UTC_PLUS_1)).toBe('2026-09-24');
     expect(dayKey(d, 'UTC')).toBe('2026-09-23');
   });
 
   it('bascule exactement à minuit local', () => {
-    expect(dayKey(new Date('2026-09-23T22:59:59Z'), CASA)).toBe('2026-09-23');
-    expect(dayKey(new Date('2026-09-23T23:00:00Z'), CASA)).toBe('2026-09-24');
+    expect(dayKey(new Date('2026-09-23T22:59:59Z'), UTC_PLUS_1)).toBe('2026-09-23');
+    expect(dayKey(new Date('2026-09-23T23:00:00Z'), UTC_PLUS_1)).toBe('2026-09-24');
   });
 
   it('complète sur deux chiffres et change d’année au réveillon', () => {
     expect(dayKey(new Date('2026-01-05T12:00:00Z'), 'UTC')).toBe('2026-01-05');
-    expect(dayKey(new Date('2026-12-31T23:30:00Z'), CASA)).toBe('2027-01-01');
+    expect(dayKey(new Date('2026-12-31T23:30:00Z'), UTC_PLUS_1)).toBe('2027-01-01');
   });
 });
 
 describe('dayBounds / getDayWindow', () => {
   it('borne un jour entre deux minuits locaux exprimés en UTC', () => {
-    const casa = dayBounds('2026-09-24', CASA);
-    expect(iso(casa.start)).toBe('2026-09-23T23:00:00.000Z');
-    expect(iso(casa.end)).toBe('2026-09-24T23:00:00.000Z');
+    const plus1 = dayBounds('2026-09-24', UTC_PLUS_1);
+    expect(iso(plus1.start)).toBe('2026-09-23T23:00:00.000Z');
+    expect(iso(plus1.end)).toBe('2026-09-24T23:00:00.000Z');
     const utc = dayBounds('2026-09-24', 'UTC');
     expect(iso(utc.start)).toBe('2026-09-24T00:00:00.000Z');
     expect(iso(utc.end)).toBe('2026-09-25T00:00:00.000Z');
@@ -104,12 +107,12 @@ describe('dayBounds / getDayWindow', () => {
   });
 
   it('rejette une clé invalide', () => {
-    expect(() => dayBounds('2026-02-30', CASA)).toThrow(/Clé de jour invalide/);
+    expect(() => dayBounds('2026-02-30', UTC_PLUS_1)).toThrow(/Clé de jour invalide/);
   });
 
   it('getDayWindow renvoie la clé locale et des bornes qui contiennent l’instant', () => {
     const d = new Date('2026-09-23T23:30:00Z');
-    const w = getDayWindow(d, CASA);
+    const w = getDayWindow(d, UTC_PLUS_1);
     expect(w.key).toBe('2026-09-24');
     expect(iso(w.start)).toBe('2026-09-23T23:00:00.000Z');
     expect(iso(w.end)).toBe('2026-09-24T23:00:00.000Z');
@@ -120,7 +123,7 @@ describe('dayBounds / getDayWindow', () => {
 
 describe('zonedTimeToUtc', () => {
   it('convertit une heure murale en instant UTC', () => {
-    expect(iso(zonedTimeToUtc(2026, 9, 24, 10, 0, CASA))).toBe('2026-09-24T09:00:00.000Z');
+    expect(iso(zonedTimeToUtc(2026, 9, 24, 10, 0, UTC_PLUS_1))).toBe('2026-09-24T09:00:00.000Z');
     expect(iso(zonedTimeToUtc(2026, 9, 24, 10, 0, PARIS))).toBe('2026-09-24T08:00:00.000Z');
     expect(iso(zonedTimeToUtc(2026, 9, 24, 10, 0, 'UTC'))).toBe('2026-09-24T10:00:00.000Z');
   });
@@ -143,8 +146,8 @@ describe('zonedTimeToUtc', () => {
 
   it('fait l’aller-retour avec getZonedParts à chaque quart d’heure', () => {
     const days: [string, string][] = [
-      [CASA, '2026-09-24'],
-      [CASA, '2026-12-31'],
+      [UTC_PLUS_1, '2026-09-24'],
+      [UTC_PLUS_1, '2026-12-31'],
       ['UTC', '2026-09-24'],
       [PARIS, '2026-03-29'],
       [PARIS, '2026-10-25'],
@@ -259,4 +262,25 @@ describe('isValidTimeZone', () => {
     expect(isValidTimeZone('pas un fuseau')).toBe(false);
     expect(isValidTimeZone('')).toBe(false);
   });
+});
+
+// Seul test lié aux règles réelles du Maroc : il dépend de la base tz embarquée par le runtime
+// (process.versions.tz). Décret n° 2.26.530 : retour définitif à GMT le dimanche 20/09/2026 à
+// 02:00, sans changement d'heure pendant le ramadan (tzdata 2026c). Un runtime plus ancien place
+// encore Casablanca à UTC+1 — ses heures marocaines avancent d'une heure — et le test est ignoré.
+describe('Africa/Casablanca (dépend de la base tz du runtime)', () => {
+  const tzdata = process.versions.tz ?? '';
+
+  it.runIf(tzdata >= '2026c')(
+    `est à UTC+0 depuis le 20/09/2026 (tzdata ≥ 2026c ; runtime : ${tzdata || 'inconnue'})`,
+    () => {
+      expect(getTimeZoneOffsetMinutes(new Date('2026-09-20T00:59:59Z'), CASA)).toBe(60);
+      expect(getTimeZoneOffsetMinutes(new Date('2026-09-20T01:00:00Z'), CASA)).toBe(0);
+      expect(getTimeZoneOffsetMinutes(new Date('2026-10-01T12:00:00Z'), CASA)).toBe(0);
+      // Le jour du retour à GMT dure 25 h : l'heure 01:00–02:00 a lieu deux fois.
+      const { start, end } = dayBounds('2026-09-20', CASA);
+      expect(iso(start)).toBe('2026-09-19T23:00:00.000Z');
+      expect(iso(end)).toBe('2026-09-21T00:00:00.000Z');
+    }
+  );
 });

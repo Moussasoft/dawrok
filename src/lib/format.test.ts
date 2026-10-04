@@ -13,7 +13,9 @@ import {
   weekdayName,
 } from './format';
 
-const CASA = 'Africa/Casablanca';
+// Fuseau à décalage fixe UTC+1 (signe inversé, convention POSIX) : pas de règle, donc aucune
+// dépendance à la base tz du runtime.
+const UTC_PLUS_1 = 'Etc/GMT-1';
 /** Chiffres arabes orientaux (٠-٩) et persans (۰-۹) : interdits, l'app affiche des chiffres latins. */
 const EASTERN_DIGITS = /[٠-٩۰-۹]/;
 
@@ -51,7 +53,7 @@ describe('dayKeyParts', () => {
     const original = process.env.TZ;
     const results = new Set<string>();
     try {
-      for (const tz of ['UTC', 'Pacific/Kiritimati', 'Pacific/Pago_Pago', CASA]) {
+      for (const tz of ['UTC', 'Pacific/Kiritimati', 'Pacific/Pago_Pago', 'Africa/Casablanca']) {
         process.env.TZ = tz; // UTC+14 et UTC−11 : les deux extrêmes
         results.add(JSON.stringify([dayKeyParts('2026-09-24', 'fr'), dayKeyParts('2027-01-01', 'en')]));
       }
@@ -97,18 +99,18 @@ describe('formatTime et formats de date', () => {
   const d = new Date('2026-09-24T09:05:00Z');
 
   it('affiche l’heure dans le fuseau demandé', () => {
-    expect(formatTime(d, 'fr', CASA)).toBe('10:05');
-    expect(formatTime(d, 'en', CASA)).toBe('10:05');
+    expect(formatTime(d, 'fr', UTC_PLUS_1)).toBe('10:05');
+    expect(formatTime(d, 'en', UTC_PLUS_1)).toBe('10:05');
     expect(formatTime(d, 'fr', 'Europe/Paris')).toBe('11:05');
     expect(formatTime('2026-09-24T09:05:00Z', 'fr', 'UTC')).toBe('09:05');
   });
 
   it('utilise des chiffres latins en arabe (ar-MA)', () => {
-    const time = formatTime(d, 'ar', CASA);
+    const time = formatTime(d, 'ar', UTC_PLUS_1);
     expect(time).toContain('10:05');
     expect(time).not.toMatch(EASTERN_DIGITS);
-    expect(formatDate(d, 'ar', CASA)).toMatch(/24.*2026/);
-    for (const text of [formatDateTime(d, 'ar', CASA), formatLongDateTime(d, 'ar', CASA), formatNumber(1234.5, 'ar')]) {
+    expect(formatDate(d, 'ar', UTC_PLUS_1)).toMatch(/24.*2026/);
+    for (const text of [formatDateTime(d, 'ar', UTC_PLUS_1), formatLongDateTime(d, 'ar', UTC_PLUS_1), formatNumber(1234.5, 'ar')]) {
       expect(text).not.toMatch(EASTERN_DIGITS);
     }
   });

@@ -1,11 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { generateSlots, isSlotBookable, type ExistingBooking, type SlotQuery } from './slots';
 
-// Jeudi 24/09/2026 à Casablanca (UTC+1) : 09:00 locale = 08:00Z. Ouvert 09:00–12:00.
+// Fuseau à décalage fixe UTC+1 (signe inversé, convention POSIX) : pas de règle, donc aucune
+// dépendance à la base tz du runtime.
+const UTC_PLUS_1 = 'Etc/GMT-1';
+
+// Jeudi 24/09/2026 en UTC+1 : 09:00 locale = 08:00Z. Ouvert 09:00–12:00.
 function query(over: Partial<SlotQuery> = {}): SlotQuery {
   return {
     dayKey: '2026-09-24',
-    timeZone: 'Africa/Casablanca',
+    timeZone: UTC_PLUS_1,
     hours: { thu: { open: '09:00', close: '12:00' } },
     slotMin: 15,
     serviceDurationMin: 30,

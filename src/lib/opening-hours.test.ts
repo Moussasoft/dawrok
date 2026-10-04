@@ -11,8 +11,9 @@ import {
 } from './opening-hours';
 import { WEEKDAYS } from './time';
 
-// Jeudi 24/09/2026 à Casablanca (UTC+1) : 08:00Z = 09:00 locale.
-const CASA = 'Africa/Casablanca';
+// Fuseau à décalage fixe UTC+1 (signe inversé, convention POSIX) : pas de règle, donc aucune
+// dépendance à la base tz du runtime. Jeudi 24/09/2026 : 08:00Z = 09:00 locale.
+const UTC_PLUS_1 = 'Etc/GMT-1';
 const json = (v: unknown) => JSON.stringify(v);
 /** Horaires où seul le jour `day` est ouvert. */
 const onlyDay = (day: string, open: string, close: string) =>
@@ -90,34 +91,34 @@ describe('isOpenAt', () => {
   const hours: OpenHours = { thu: { open: '09:00', close: '18:00' }, sun: { closed: true } };
 
   it('considère l’agence toujours ouverte sans horaires configurés', () => {
-    expect(isOpenAt(null, CASA, new Date('2026-09-27T02:00:00Z'))).toBe(true);
+    expect(isOpenAt(null, UTC_PLUS_1, new Date('2026-09-27T02:00:00Z'))).toBe(true);
   });
 
   it('inclut l’heure d’ouverture et exclut l’heure de fermeture', () => {
-    expect(isOpenAt(hours, CASA, new Date('2026-09-24T07:59:00Z'))).toBe(false); // 08:59
-    expect(isOpenAt(hours, CASA, new Date('2026-09-24T08:00:00Z'))).toBe(true); // 09:00
-    expect(isOpenAt(hours, CASA, new Date('2026-09-24T16:59:00Z'))).toBe(true); // 17:59
-    expect(isOpenAt(hours, CASA, new Date('2026-09-24T17:00:00Z'))).toBe(false); // 18:00
+    expect(isOpenAt(hours, UTC_PLUS_1, new Date('2026-09-24T07:59:00Z'))).toBe(false); // 08:59
+    expect(isOpenAt(hours, UTC_PLUS_1, new Date('2026-09-24T08:00:00Z'))).toBe(true); // 09:00
+    expect(isOpenAt(hours, UTC_PLUS_1, new Date('2026-09-24T16:59:00Z'))).toBe(true); // 17:59
+    expect(isOpenAt(hours, UTC_PLUS_1, new Date('2026-09-24T17:00:00Z'))).toBe(false); // 18:00
   });
 
   it('est fermée un jour marqué closed', () => {
-    expect(isOpenAt(hours, CASA, new Date('2026-09-27T11:00:00Z'))).toBe(false); // dimanche midi
+    expect(isOpenAt(hours, UTC_PLUS_1, new Date('2026-09-27T11:00:00Z'))).toBe(false); // dimanche midi
   });
 
   it('applique les horaires par défaut quand l’objet est vide', () => {
-    expect(isOpenAt({}, CASA, new Date('2026-09-24T07:30:00Z'))).toBe(false); // 08:30
-    expect(isOpenAt({}, CASA, new Date('2026-09-24T08:30:00Z'))).toBe(true); // 09:30
+    expect(isOpenAt({}, UTC_PLUS_1, new Date('2026-09-24T07:30:00Z'))).toBe(false); // 08:30
+    expect(isOpenAt({}, UTC_PLUS_1, new Date('2026-09-24T08:30:00Z'))).toBe(true); // 09:30
   });
 
   it('raisonne dans le fuseau de l’agence, pas celui de la machine', () => {
-    const at = new Date('2026-09-24T08:30:00Z'); // 08:30 UTC = 09:30 à Casablanca
+    const at = new Date('2026-09-24T08:30:00Z'); // 08:30 UTC = 09:30 en UTC+1
     expect(isOpenAt(hours, 'UTC', at)).toBe(false);
-    expect(isOpenAt(hours, CASA, at)).toBe(true);
-    // Le jour de semaine aussi : jeudi 23:30 UTC = vendredi 00:30 à Casablanca.
+    expect(isOpenAt(hours, UTC_PLUS_1, at)).toBe(true);
+    // Le jour de semaine aussi : jeudi 23:30 UTC = vendredi 00:30 en UTC+1.
     const night: OpenHours = { thu: { closed: true }, fri: { open: '00:00', close: '12:00' } };
     const late = new Date('2026-09-24T23:30:00Z');
     expect(isOpenAt(night, 'UTC', late)).toBe(false);
-    expect(isOpenAt(night, CASA, late)).toBe(true);
+    expect(isOpenAt(night, UTC_PLUS_1, late)).toBe(true);
   });
 });
 
@@ -131,37 +132,37 @@ describe('nextOpening', () => {
   };
 
   it('renvoie null sans horaires configurés', () => {
-    expect(nextOpening(null, CASA, new Date('2026-09-24T06:00:00Z'))).toBeNull();
+    expect(nextOpening(null, UTC_PLUS_1, new Date('2026-09-24T06:00:00Z'))).toBeNull();
   });
 
   it('renvoie l’ouverture du jour si elle est encore à venir', () => {
-    expect(nextOpening(hours, CASA, new Date('2026-09-24T06:00:00Z'))).toEqual({ weekday: 4, time: '09:00', today: true });
+    expect(nextOpening(hours, UTC_PLUS_1, new Date('2026-09-24T06:00:00Z'))).toEqual({ weekday: 4, time: '09:00', today: true });
   });
 
   it('passe à un autre jour une fois l’heure d’ouverture atteinte', () => {
     const friday = { weekday: 5, time: '10:00', today: false };
-    expect(nextOpening(hours, CASA, new Date('2026-09-24T08:00:00Z'))).toEqual(friday); // 09:00 pile
-    expect(nextOpening(hours, CASA, new Date('2026-09-24T20:00:00Z'))).toEqual(friday); // 21:00
+    expect(nextOpening(hours, UTC_PLUS_1, new Date('2026-09-24T08:00:00Z'))).toEqual(friday); // 09:00 pile
+    expect(nextOpening(hours, UTC_PLUS_1, new Date('2026-09-24T20:00:00Z'))).toEqual(friday); // 21:00
   });
 
   it('saute les jours fermés', () => {
     // Samedi 15:00 → dimanche fermé → lundi 08:30.
-    expect(nextOpening(hours, CASA, new Date('2026-09-26T14:00:00Z'))).toEqual({ weekday: 1, time: '08:30', today: false });
+    expect(nextOpening(hours, UTC_PLUS_1, new Date('2026-09-26T14:00:00Z'))).toEqual({ weekday: 1, time: '08:30', today: false });
   });
 
   it('utilise le fuseau de l’agence', () => {
-    const at = new Date('2026-09-24T08:30:00Z'); // 08:30 UTC, 09:30 à Casablanca
+    const at = new Date('2026-09-24T08:30:00Z'); // 08:30 UTC, 09:30 en UTC+1
     expect(nextOpening(hours, 'UTC', at)).toEqual({ weekday: 4, time: '09:00', today: true });
-    expect(nextOpening(hours, CASA, at)).toEqual({ weekday: 5, time: '10:00', today: false });
+    expect(nextOpening(hours, UTC_PLUS_1, at)).toEqual({ weekday: 5, time: '10:00', today: false });
   });
 
   it('renvoie null si tous les jours sont fermés', () => {
     const allClosed = Object.fromEntries(WEEKDAYS.map((d) => [d, { closed: true }])) as OpenHours;
-    expect(nextOpening(allClosed, CASA, new Date('2026-09-24T06:00:00Z'))).toBeNull();
+    expect(nextOpening(allClosed, UTC_PLUS_1, new Date('2026-09-24T06:00:00Z'))).toBeNull();
   });
 
   it('trouve le seul jour ouvert quand il est encore à venir', () => {
-    expect(nextOpening(onlyDay('thu', '09:00', '13:00'), CASA, new Date('2026-09-23T12:00:00Z'))).toEqual({
+    expect(nextOpening(onlyDay('thu', '09:00', '13:00'), UTC_PLUS_1, new Date('2026-09-23T12:00:00Z'))).toEqual({
       weekday: 4,
       time: '09:00',
       today: false,
@@ -173,7 +174,7 @@ describe('nextOpening', () => {
   // ouverture » dès que l'heure d'ouverture de ce jour est passée.
   it('retrouve le même jour la semaine suivante quand c’est le seul jour ouvert', () => {
     // Jeudi 14:00 : prochaine ouverture = jeudi suivant 09:00 (dans moins de 7 jours).
-    expect(nextOpening(onlyDay('thu', '09:00', '13:00'), CASA, new Date('2026-09-24T13:00:00Z'))).toEqual({
+    expect(nextOpening(onlyDay('thu', '09:00', '13:00'), UTC_PLUS_1, new Date('2026-09-24T13:00:00Z'))).toEqual({
       weekday: 4,
       time: '09:00',
       today: false,

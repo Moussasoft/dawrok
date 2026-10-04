@@ -37,6 +37,7 @@
 - Schéma Prisma modifié : `npm run db:push`, puis `npm run db:pg:sync` et une migration PostgreSQL (`npm run db:pg:new-migration`)
 - Navigation : `Link`, `useRouter`, `usePathname` de `@/i18n/routing` ; redirection serveur : `redirectTo()` de `@/i18n/server` (jamais `next/link` ni `next/navigation` directement : la langue serait perdue)
 - Dates/heures : `formatTime`, `formatDateTime`… de `@/lib/format` avec le fuseau de l'agence ; « aujourd'hui » se calcule avec `getDayWindow(now, branch.timezone)` de `@/lib/time`, jamais avec `setHours(0,0,0,0)`
+- Tests de fuseau : jamais d'heure attendue codée en dur pour un fuseau réel dont les règles changent (`Africa/Casablanca`…) — le résultat dépend de la base tz du runtime ; utiliser `Etc/GMT-1` (UTC+1 fixe) pour la logique et `Europe/Paris` pour les changements d'heure
 - TypeScript strict : pas de `any`, typer paramètres et retours
 - Clés de traduction en camelCase (ex: `vehicleInspection`)
 
