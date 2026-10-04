@@ -3,6 +3,7 @@
 // `npm run admin:create` (demande l'e-mail) ou `npm run admin:create -- vous@exemple.com`, dans le terminal du serveur.
 // `npm run db:seed` ne doit jamais y tourner (comptes de démonstration aux mots de passe publics) et l'invitation
 // depuis la console exige déjà un superadmin. Node seul : @prisma/client et bcryptjs, ni tsx ni TypeScript.
+// L'image Docker ne contient pas tout node_modules : un import de plus doit y être copié (Dockerfile, étape runner).
 import { randomInt } from 'node:crypto';
 import { realpathSync } from 'node:fs';
 import { createInterface } from 'node:readline';

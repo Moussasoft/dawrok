@@ -46,6 +46,8 @@ cp .env.example .env        # au minimum JWT_SECRET ; NEXT_PUBLIC_APP_URL = URL 
 docker compose up --build   # PostgreSQL + Redis + migrations + application sur le port 3000
 ```
 
+Une fois la pile démarrée, le premier superadmin se crée dans le conteneur de l'application : `docker compose exec app npm run admin:create -- vous@exemple.com` (voir « Premier superadmin (production) » ci-dessous).
+
 Image seule : `docker build --build-arg NEXT_PUBLIC_APP_URL=https://votre-domaine -t daourak .` (les variables `NEXT_PUBLIC_*` sont intégrées au build), migrations avec `docker compose run --rm migrate`. L'image utilise la sortie autonome de Next.js (`NEXT_OUTPUT=standalone`), tourne sans les droits root et expose un healthcheck sur `/api/health`.
 
 ### Premier superadmin (production)
@@ -57,11 +59,17 @@ npm run admin:create -- vous@exemple.com   # e-mail en argument…
 npm run admin:create                       # … ou saisi à l'invite
 ```
 
+Avec Docker, la même commande se lance dans le conteneur de l'application, une fois la pile démarrée (image seule : `docker exec -it <conteneur> npm run admin:create`) :
+
+```bash
+docker compose exec app npm run admin:create -- vous@exemple.com
+```
+
 - **E-mail libre** : le compte superadmin est créé.
 - **E-mail d'un superadmin existant** : son mot de passe est réinitialisé et ses sessions ouvertes sont révoquées (accès perdu).
 - **E-mail d'un autre compte, ou e-mail invalide** : rien n'est modifié et la commande échoue.
 
-Le script affiche **une seule fois** un mot de passe aléatoire de 20 caractères avec l'adresse de connexion, et inscrit l'opération au journal d'audit (auteur « Terminal serveur »). Nom, e-mail et mot de passe se changent ensuite dans *Superadmin → Réglages*, où s'ajoutent aussi les superadmins suivants. Le script (`scripts/create-superadmin.mjs`) tourne avec Node seul, sur SQLite comme sur PostgreSQL ; l'image Docker, limitée à la sortie autonome, ne l'embarque pas.
+Le script affiche **une seule fois** un mot de passe aléatoire de 20 caractères avec l'adresse de connexion, et inscrit l'opération au journal d'audit (auteur « Terminal serveur »). Nom, e-mail et mot de passe se changent ensuite dans *Superadmin → Réglages*, où s'ajoutent aussi les superadmins suivants. Le script (`scripts/create-superadmin.mjs`) tourne avec Node seul, sur SQLite comme sur PostgreSQL ; l'image Docker l'embarque avec ses dépendances, ainsi que le `NEXT_PUBLIC_APP_URL` du build pour l'adresse de connexion.
 
 ## ⚙️ Variables d'environnement
 
@@ -167,7 +175,7 @@ src/
 1. **PostgreSQL** (Neon, Supabase…) : voir « PostgreSQL (production) » ci-dessus — toutes les suites de tests de bout en bout passent aussi sur PostgreSQL.
 2. **Plusieurs instances** : définir `REDIS_URL` (Upstash, Redis Cloud…) — le temps réel, la limitation de débit et le dédoublonnage des notifications sont alors partagés.
 3. Secrets : `JWT_SECRET`, clés VAPID, `NEXT_PUBLIC_APP_URL` en HTTPS (obligatoire pour le push).
-4. Premier superadmin : `npm run admin:create` dans le terminal du serveur (voir « Premier superadmin (production) » ci-dessus) — jamais `npm run db:seed`.
+4. Premier superadmin : `npm run admin:create` dans le terminal du serveur, ou dans le conteneur avec Docker (voir « Premier superadmin (production) » ci-dessus) — jamais `npm run db:seed`.
 5. Supervision : brancher `/api/health` sur un moniteur (UptimeRobot, Better Stack) et `ERROR_WEBHOOK_URL` sur un canal d'alerte ; les journaux JSON peuvent alimenter n'importe quel collecteur.
 6. Prochaines briques : alertes e-mail superadmin, paiement CMI (cartes marocaines).
 

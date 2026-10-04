@@ -25,16 +25,25 @@ COPY . .
 RUN npx prisma generate --schema prisma/postgres/schema.prisma && npm run build
 
 FROM base AS runner
+# Même URL publique qu'au build : le script du premier superadmin l'affiche comme adresse de connexion.
+ARG NEXT_PUBLIC_APP_URL=http://localhost:3000
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 COPY --from=builder --chown=node:node /app/public ./public
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 # Moteur Prisma généré pour PostgreSQL (le traçage de Next peut l'omettre).
 COPY --from=builder --chown=node:node /app/node_modules/.prisma ./node_modules/.prisma
+# Premier superadmin (`npm run admin:create` dans le conteneur, voir le README) : le script et bcryptjs,
+# que Next intègre à ses bundles sans le copier dans node_modules ; @prisma/client, lui, y est déjà.
+COPY --from=builder --chown=node:node /app/scripts/create-superadmin.mjs ./scripts/create-superadmin.mjs
+COPY --from=builder --chown=node:node /app/node_modules/bcryptjs ./node_modules/bcryptjs
 USER node
+# Le build échoue si le script ne se charge plus dans l'image (import ajouté sans le COPY correspondant).
+RUN node -e "import('./scripts/create-superadmin.mjs')"
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
