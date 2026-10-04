@@ -17,7 +17,8 @@
     "db:pg:sync": "node scripts/sync-postgres-schema.mjs",
     "db:pg:generate": "prisma generate --schema prisma/postgres/schema.prisma",
     "db:pg:migrate": "prisma migrate deploy --schema prisma/postgres/schema.prisma",
-    "db:pg:new-migration": "prisma migrate dev --create-only --schema prisma/postgres/schema.prisma"
+    "db:pg:new-migration": "prisma migrate dev --create-only --schema prisma/postgres/schema.prisma",
+    "admin:create": "node scripts/create-superadmin.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
