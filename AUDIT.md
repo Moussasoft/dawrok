@@ -185,3 +185,7 @@ Tous les points restants (F10–F16, recommandations de production) ont été tr
 - Non vérifiable sur ce poste : la construction de l'image Docker (Docker absent ; la sortie standalone a été testée), un vrai Redis (testé avec ioredis-mock et en panne simulée), les vrais services Twilio et Stripe (testés contre des serveurs factices fidèles à leurs API).
 - `enforceRateLimit` est désormais asynchrone : toujours l'appeler avec `await`.
 
+
+### Après la mise en production (octobre 2026)
+- **Heure du Maroc** : le Maroc est repassé à GMT de façon permanente le 20/09/2026 (décret n° 2.26.530, tzdata 2026c). Le Node du serveur (22.11, base de fuseaux de 2023) le croyait encore à GMT+1 : horaires d'ouverture, créneaux et changement de jour avançaient d'une heure. `lib/time.ts` calcule désormais en UTC à partir de cette date quand la base tz du moteur (Node ou navigateur) ignore la règle, et ne corrige rien sur un moteur à jour ; `/api/health` renvoie `localTime` et `tzCorrected`. Tests réécrits pour ne plus dépendre de la base tz du runtime.
+- **Premier superadmin** : `npm run admin:create` (la production n'en avait aucun, et les données de démonstration ne doivent jamais y être chargées).

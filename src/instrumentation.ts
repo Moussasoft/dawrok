@@ -14,6 +14,11 @@ export async function register() {
     }
   }
 
+  const { hasOutdatedZoneRules } = await import('./lib/time');
+  if (hasOutdatedZoneRules()) {
+    console.warn(`[time] Base tz de Node dépassée (${process.versions.tz}) : l'heure du Maroc est corrigée par l'application. Mettre Node à jour.`);
+  }
+
   if (process.env.RETENTION_SCHEDULER !== 'off') {
     const { startRetentionScheduler } = await import('./lib/retention-scheduler');
     startRetentionScheduler();

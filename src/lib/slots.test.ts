@@ -50,6 +50,17 @@ describe('generateSlots', () => {
     expect(times(query({ timeZone: 'UTC' }))[0]).toBe(z('09:00'));
   });
 
+  it('place les créneaux d’une agence marocaine à l’heure GMT après le 20/09/2026', () => {
+    // Lundi 05/10/2026, ouvert 09:00–10:00 : 09:00 au Maroc = 09:00Z, quelle que soit la base tz du runtime.
+    const q = query({
+      dayKey: '2026-10-05',
+      timeZone: 'Africa/Casablanca',
+      hours: { mon: { open: '09:00', close: '10:00' } },
+      now: new Date('2026-10-04T12:00:00Z'),
+    });
+    expect(times(q)).toEqual(['2026-10-05T09:00:00.000Z', '2026-10-05T09:15:00.000Z', '2026-10-05T09:30:00.000Z']);
+  });
+
   it('exige que la prestation se termine avant la fermeture', () => {
     expect(times(query({ serviceDurationMin: 60 })).at(-1)).toBe(z('10:00')); // 11:00 → 12:00 pile
     expect(times(query({ serviceDurationMin: 180 }))).toEqual([z('08:00')]);

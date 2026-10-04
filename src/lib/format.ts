@@ -1,5 +1,6 @@
 // Formatage localisé, utilisable côté serveur comme côté client.
 // L'arabe utilise « ar-MA » : chiffres latins et noms de mois marocains.
+import { effectiveTimeZone } from './time';
 
 const INTL_LOCALES: Record<string, string> = { ar: 'ar-MA', fr: 'fr-FR', en: 'en-GB' };
 
@@ -11,22 +12,26 @@ function fmt(locale: string, options: Intl.DateTimeFormatOptions) {
   return new Intl.DateTimeFormat(intlLocale(locale), options);
 }
 
+/** Formate un instant dans un fuseau, corrigé si la base tz du moteur date (voir `effectiveTimeZone`). */
+function fmtAt(value: Date | string | number, locale: string, timeZone: string | undefined, options: Intl.DateTimeFormatOptions) {
+  const date = new Date(value);
+  return fmt(locale, { ...options, timeZone: timeZone ? effectiveTimeZone(timeZone, date) : undefined }).format(date);
+}
+
 export function formatTime(value: Date | string | number, locale: string, timeZone?: string): string {
-  return fmt(locale, { hour: '2-digit', minute: '2-digit', timeZone }).format(new Date(value));
+  return fmtAt(value, locale, timeZone, { hour: '2-digit', minute: '2-digit' });
 }
 
 export function formatDateTime(value: Date | string | number, locale: string, timeZone?: string): string {
-  return fmt(locale, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone }).format(new Date(value));
+  return fmtAt(value, locale, timeZone, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 }
 
 export function formatLongDateTime(value: Date | string | number, locale: string, timeZone?: string): string {
-  return fmt(locale, { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone }).format(
-    new Date(value)
-  );
+  return fmtAt(value, locale, timeZone, { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 }
 
 export function formatDate(value: Date | string | number, locale: string, timeZone?: string): string {
-  return fmt(locale, { day: 'numeric', month: 'short', year: 'numeric', timeZone }).format(new Date(value));
+  return fmtAt(value, locale, timeZone, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 export function formatNumber(value: number, locale: string): string {

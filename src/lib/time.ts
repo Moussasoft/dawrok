@@ -49,8 +49,8 @@ export function isValidTimeZone(timeZone: string): boolean {
   }
 }
 
-/** Composantes de date/heure d'un instant, vues dans un fuseau donné. */
-export function getZonedParts(date: Date, timeZone: string): ZonedParts {
+/** Composantes vues par le moteur, sans correction (voir ZONE_RULES). */
+function engineParts(date: Date, timeZone: string): ZonedParts {
   const map: Record<string, string> = {};
   for (const p of partsFormatter(timeZone).formatToParts(date)) map[p.type] = p.value;
   return {
@@ -64,11 +64,85 @@ export function getZonedParts(date: Date, timeZone: string): ZonedParts {
   };
 }
 
+// ─── Règles de fuseau plus récentes que la base tz du moteur ─────────────────
+// Les calculs reposent sur la base tz embarquée par le moteur (Node, navigateur), qui peut dater :
+// celle de Node 22.11 remonte à 2023 ou 2024. Le Maroc est repassé à UTC+0 de façon permanente le
+// 20/09/2026 à 02:00 (décret n° 2.26.530, tzdata 2026c) ; un moteur plus ancien le laisse à UTC+1
+// et avance toutes les heures marocaines d'une heure. Pour ces fuseaux, à partir de la bascule,
+// on calcule alors avec le fuseau de remplacement. Un moteur à jour n'est jamais corrigé.
+type ZoneRule = {
+  zones: readonly string[];
+  /** Instant d'entrée en vigueur. */
+  since: number;
+  /** Fuseau équivalent à la nouvelle règle, connu de tous les moteurs. */
+  substitute: string;
+  /** Instant où l'ancienne et la nouvelle règle donnent des décalages différents. */
+  probe: number;
+};
+
+const ZONE_RULES: readonly ZoneRule[] = [
+  {
+    zones: ['africa/casablanca', 'africa/el_aaiun'],
+    since: Date.UTC(2026, 8, 20, 1),
+    substitute: 'UTC',
+    // Le 20/10/2026 est hors ramadan : l'ancienne règle y donne UTC+1.
+    probe: Date.UTC(2026, 9, 20, 12),
+  },
+];
+
+/** Décalage (minutes) d'un fuseau à un instant, tel que le moteur le calcule. */
+export type EngineOffset = (instant: number, timeZone: string) => number;
+
+function offsetMinutes(p: ZonedParts, instant: number): number {
+  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+  return Math.round((asUtc - Math.floor(instant / 1000) * 1000) / 60000);
+}
+
+function engineOffsetMinutes(instant: number, timeZone: string): number {
+  return offsetMinutes(engineParts(new Date(instant), timeZone), instant);
+}
+
+function ruleFor(timeZone: string): ZoneRule | undefined {
+  const key = timeZone.toLowerCase();
+  return ZONE_RULES.find((r) => r.zones.includes(key));
+}
+
+/** Fuseau avec lequel calculer `instant`. Le moteur est un paramètre pour pouvoir tester les deux cas. */
+export function resolveTimeZone(timeZone: string, instant: number, engineOffset: EngineOffset): string {
+  const rule = ruleFor(timeZone);
+  if (!rule || !(instant >= rule.since)) return timeZone;
+  const known = engineOffset(rule.probe, timeZone) === engineOffset(rule.probe, rule.substitute);
+  return known ? timeZone : rule.substitute;
+}
+
+// Le moteur ne change pas en cours d'exécution : sa réponse est calculée une fois par fuseau.
+const zoneAfterRule = new Map<string, string>();
+
+/** Fuseau avec lequel calculer cet instant : celui demandé, sauf règle récente inconnue du moteur. */
+export function effectiveTimeZone(timeZone: string, date: Date): string {
+  const rule = ruleFor(timeZone);
+  if (!rule || !(date.getTime() >= rule.since)) return timeZone;
+  let zone = zoneAfterRule.get(timeZone);
+  if (!zone) {
+    zone = resolveTimeZone(timeZone, rule.since, engineOffsetMinutes);
+    zoneAfterRule.set(timeZone, zone);
+  }
+  return zone;
+}
+
+/** Vrai si la base tz du moteur est antérieure à une règle ci-dessus (l'application corrige alors). */
+export function hasOutdatedZoneRules(): boolean {
+  return ZONE_RULES.some((r) => r.zones.some((z) => resolveTimeZone(z, r.since, engineOffsetMinutes) !== z));
+}
+
+/** Composantes de date/heure d'un instant, vues dans un fuseau donné. */
+export function getZonedParts(date: Date, timeZone: string): ZonedParts {
+  return engineParts(date, effectiveTimeZone(timeZone, date));
+}
+
 /** Décalage (minutes) entre l'heure locale du fuseau et UTC à cet instant. */
 export function getTimeZoneOffsetMinutes(date: Date, timeZone: string): number {
-  const p = getZonedParts(date, timeZone);
-  const asUtc = Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
-  return Math.round((asUtc - Math.floor(date.getTime() / 1000) * 1000) / 60000);
+  return offsetMinutes(getZonedParts(date, timeZone), date.getTime());
 }
 
 /** Instant UTC correspondant à une heure « murale » dans un fuseau (gère les changements d'heure). */

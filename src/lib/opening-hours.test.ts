@@ -181,3 +181,32 @@ describe('nextOpening', () => {
     });
   });
 });
+
+// Cas réel : agence marocaine après le retour à GMT du 20/09/2026. Un moteur dont la base tz est
+// plus ancienne ouvrait et fermait une heure trop tôt ; ces tests passent quelle que soit la base
+// tz du runtime (voir effectiveTimeZone dans time.ts).
+describe('agence marocaine après le 20/09/2026', () => {
+  const CASA = 'Africa/Casablanca';
+  const hours: OpenHours = { mon: { open: '09:00', close: '18:00' }, tue: { open: '09:00', close: '18:00' } };
+
+  it('ouvre à 09:00 et ferme à 18:00, heure du Maroc (= UTC)', () => {
+    // Lundi 05/10/2026.
+    expect(isOpenAt(hours, CASA, new Date('2026-10-05T08:00:00Z'))).toBe(false);
+    expect(isOpenAt(hours, CASA, new Date('2026-10-05T08:59:00Z'))).toBe(false);
+    expect(isOpenAt(hours, CASA, new Date('2026-10-05T09:00:00Z'))).toBe(true);
+    expect(isOpenAt(hours, CASA, new Date('2026-10-05T17:00:00Z'))).toBe(true);
+    expect(isOpenAt(hours, CASA, new Date('2026-10-05T17:59:00Z'))).toBe(true);
+    expect(isOpenAt(hours, CASA, new Date('2026-10-05T18:00:00Z'))).toBe(false);
+  });
+
+  it('annonce l’ouverture du jour tant que 09:00 n’est pas atteint', () => {
+    expect(nextOpening(hours, CASA, new Date('2026-10-05T08:30:00Z'))).toEqual({ weekday: 1, time: '09:00', today: true });
+    expect(nextOpening(hours, CASA, new Date('2026-10-05T09:00:00Z'))).toEqual({ weekday: 2, time: '09:00', today: false });
+  });
+
+  it('change de jour à minuit, heure du Maroc', () => {
+    // Lundi 23:30 UTC : encore lundi au Maroc (c'était déjà mardi à UTC+1).
+    const night: OpenHours = { mon: { open: '20:00', close: '23:59' }, tue: { closed: true } };
+    expect(isOpenAt(night, CASA, new Date('2026-10-05T23:30:00Z'))).toBe(true);
+  });
+});

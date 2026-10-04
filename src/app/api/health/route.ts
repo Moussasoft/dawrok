@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db';
 import { redis } from '@/lib/redis';
+import { DEFAULT_TIMEZONE, formatHm, getZonedParts, hasOutdatedZoneRules } from '@/lib/time';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,5 +19,15 @@ export async function GET() {
   if (clients) {
     cache = clients.cmd.status !== 'ready' ? 'down' : await clients.cmd.ping().then(() => 'up' as const, () => 'down' as const);
   }
-  return NextResponse.json({ ok: true, db: 'up', redis: cache, latencyMs: Date.now() - startedAt });
+  // Heure du fuseau par défaut telle que l'application la calcule. `tzCorrected` : la base tz du
+  // moteur est dépassée et l'application compense (l'heure reste juste, Node est à mettre à jour).
+  const local = getZonedParts(new Date(), DEFAULT_TIMEZONE);
+  return NextResponse.json({
+    ok: true,
+    db: 'up',
+    redis: cache,
+    latencyMs: Date.now() - startedAt,
+    localTime: formatHm(local.hour * 60 + local.minute),
+    tzCorrected: hasOutdatedZoneRules(),
+  });
 }

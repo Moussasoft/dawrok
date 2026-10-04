@@ -3,15 +3,19 @@ import {
   addDaysToKey,
   dayBounds,
   dayKey,
+  effectiveTimeZone,
   formatHm,
   getDayWindow,
   getTimeZoneOffsetMinutes,
   getZonedParts,
+  hasOutdatedZoneRules,
   isValidTimeZone,
   parseDayKey,
   parseHm,
+  resolveTimeZone,
   weekdayOfKey,
   zonedTimeToUtc,
+  type EngineOffset,
 } from './time';
 
 // Les règles d'un fuseau réel changent (le Maroc est repassé à UTC+0 le 20/09/2026) et la base tz
@@ -20,7 +24,7 @@ import {
 // Paris sert aux changements d'heure : ses règles n'ont pas bougé depuis 1996.
 const UTC_PLUS_1 = 'Etc/GMT-1';
 const PARIS = 'Europe/Paris';
-const CASA = 'Africa/Casablanca'; // ses règles ne sont vérifiées que dans le dernier bloc
+const CASA = 'Africa/Casablanca'; // ses règles ne sont vérifiées que dans les derniers blocs
 const HOUR = 3_600_000;
 const iso = (d: Date) => d.toISOString();
 
@@ -264,23 +268,87 @@ describe('isValidTimeZone', () => {
   });
 });
 
-// Seul test lié aux règles réelles du Maroc : il dépend de la base tz embarquée par le runtime
-// (process.versions.tz). Décret n° 2.26.530 : retour définitif à GMT le dimanche 20/09/2026 à
-// 02:00, sans changement d'heure pendant le ramadan (tzdata 2026c). Un runtime plus ancien place
-// encore Casablanca à UTC+1 — ses heures marocaines avancent d'une heure — et le test est ignoré.
-describe('Africa/Casablanca (dépend de la base tz du runtime)', () => {
-  const tzdata = process.versions.tz ?? '';
+// Règles réelles du Maroc. Décret n° 2.26.530 : retour définitif à GMT le dimanche 20/09/2026 à
+// 02:00, sans changement d'heure pendant le ramadan (tzdata 2026c). Ces tests passent quelle que
+// soit la base tz du runtime : un moteur plus ancien (Node 22.11, tzdata 2023c) place encore
+// Casablanca à UTC+1, et `effectiveTimeZone` calcule alors en UTC à partir de la bascule.
+describe('Africa/Casablanca : retour à GMT du 20/09/2026', () => {
+  const EL_AAIUN = 'Africa/El_Aaiun';
 
-  it.runIf(tzdata >= '2026c')(
-    `est à UTC+0 depuis le 20/09/2026 (tzdata ≥ 2026c ; runtime : ${tzdata || 'inconnue'})`,
-    () => {
-      expect(getTimeZoneOffsetMinutes(new Date('2026-09-20T00:59:59Z'), CASA)).toBe(60);
-      expect(getTimeZoneOffsetMinutes(new Date('2026-09-20T01:00:00Z'), CASA)).toBe(0);
-      expect(getTimeZoneOffsetMinutes(new Date('2026-10-01T12:00:00Z'), CASA)).toBe(0);
-      // Le jour du retour à GMT dure 25 h : l'heure 01:00–02:00 a lieu deux fois.
-      const { start, end } = dayBounds('2026-09-20', CASA);
-      expect(iso(start)).toBe('2026-09-19T23:00:00.000Z');
-      expect(iso(end)).toBe('2026-09-21T00:00:00.000Z');
-    }
-  );
+  it(`est à UTC+1 avant la bascule et à UTC+0 ensuite (base tz du runtime : ${process.versions.tz ?? 'inconnue'})`, () => {
+    expect(getTimeZoneOffsetMinutes(new Date('2026-06-15T12:00:00Z'), CASA)).toBe(60);
+    expect(getTimeZoneOffsetMinutes(new Date('2026-09-20T00:59:59Z'), CASA)).toBe(60);
+    expect(getTimeZoneOffsetMinutes(new Date('2026-09-20T01:00:00Z'), CASA)).toBe(0);
+    expect(getTimeZoneOffsetMinutes(new Date('2026-10-01T12:00:00Z'), CASA)).toBe(0);
+    expect(getTimeZoneOffsetMinutes(new Date('2026-10-01T12:00:00Z'), EL_AAIUN)).toBe(0);
+  });
+
+  it('ne repasse plus à UTC+1 après le ramadan', () => {
+    expect(getTimeZoneOffsetMinutes(new Date('2027-01-15T12:00:00Z'), CASA)).toBe(0);
+    expect(getTimeZoneOffsetMinutes(new Date('2027-06-15T12:00:00Z'), CASA)).toBe(0);
+    expect(getTimeZoneOffsetMinutes(new Date('2030-08-01T12:00:00Z'), CASA)).toBe(0);
+  });
+
+  it('donne l’heure marocaine réelle : 11:38 UTC = 11:38 à Casablanca', () => {
+    expect(getZonedParts(new Date('2026-10-04T11:38:33Z'), CASA)).toMatchObject({ day: 4, hour: 11, minute: 38, weekday: 0 });
+    expect(dayKey(new Date('2026-10-04T23:30:00Z'), CASA)).toBe('2026-10-04');
+    expect(iso(zonedTimeToUtc(2026, 10, 5, 9, 0, CASA))).toBe('2026-10-05T09:00:00.000Z');
+    const { start, end } = dayBounds('2026-10-05', CASA);
+    expect(iso(start)).toBe('2026-10-05T00:00:00.000Z');
+    expect(iso(end)).toBe('2026-10-06T00:00:00.000Z');
+  });
+
+  it('le jour du retour à GMT dure 25 h (l’heure 01:00–02:00 a lieu deux fois)', () => {
+    const { start, end } = dayBounds('2026-09-20', CASA);
+    expect(iso(start)).toBe('2026-09-19T23:00:00.000Z');
+    expect(iso(end)).toBe('2026-09-21T00:00:00.000Z');
+  });
+
+  it('accepte le nom du fuseau sans tenir compte de la casse', () => {
+    expect(getTimeZoneOffsetMinutes(new Date('2026-10-01T12:00:00Z'), 'africa/casablanca')).toBe(0);
+  });
+});
+
+describe('resolveTimeZone', () => {
+  const SWITCH = Date.UTC(2026, 8, 20, 1);
+  /** Moteur à l'ancienne règle : le Maroc reste à UTC+1. */
+  const outdated: EngineOffset = (_instant, zone) => (zone === 'UTC' ? 0 : 60);
+  /** Moteur à jour : UTC+0 depuis la bascule. */
+  const upToDate: EngineOffset = (instant, zone) => (zone === 'UTC' || instant >= SWITCH ? 0 : 60);
+
+  it('remplace le fuseau par UTC à partir de la bascule quand le moteur ignore la règle', () => {
+    expect(resolveTimeZone(CASA, SWITCH, outdated)).toBe('UTC');
+    expect(resolveTimeZone(CASA, Date.UTC(2027, 5, 1), outdated)).toBe('UTC');
+    expect(resolveTimeZone('Africa/El_Aaiun', SWITCH, outdated)).toBe('UTC');
+  });
+
+  it('garde le fuseau avant la bascule : l’histoire reste celle du moteur', () => {
+    expect(resolveTimeZone(CASA, SWITCH - 1, outdated)).toBe(CASA);
+    expect(resolveTimeZone(CASA, Date.UTC(2026, 2, 1), outdated)).toBe(CASA);
+  });
+
+  it('ne touche à rien quand le moteur connaît la règle', () => {
+    expect(resolveTimeZone(CASA, SWITCH, upToDate)).toBe(CASA);
+    expect(resolveTimeZone(CASA, Date.UTC(2027, 5, 1), upToDate)).toBe(CASA);
+  });
+
+  it('ne concerne que les fuseaux marocains', () => {
+    expect(resolveTimeZone(PARIS, SWITCH, outdated)).toBe(PARIS);
+    expect(resolveTimeZone('UTC', SWITCH, outdated)).toBe('UTC');
+    expect(resolveTimeZone(UTC_PLUS_1, SWITCH, outdated)).toBe(UTC_PLUS_1);
+  });
+
+  it('laisse passer un instant invalide', () => {
+    expect(resolveTimeZone(CASA, Number.NaN, outdated)).toBe(CASA);
+  });
+});
+
+describe('effectiveTimeZone / hasOutdatedZoneRules', () => {
+  it('suit la base tz du runtime', () => {
+    const after = new Date('2026-10-04T12:00:00Z');
+    expect(effectiveTimeZone(PARIS, after)).toBe(PARIS);
+    expect(effectiveTimeZone(CASA, new Date('2026-09-01T12:00:00Z'))).toBe(CASA);
+    // Runtime à jour : aucun remplacement. Runtime plus ancien : UTC, et le contrôle le signale.
+    expect(effectiveTimeZone(CASA, after)).toBe(hasOutdatedZoneRules() ? 'UTC' : CASA);
+  });
 });

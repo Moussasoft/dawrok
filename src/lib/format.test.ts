@@ -115,6 +115,24 @@ describe('formatTime et formats de date', () => {
     }
   });
 
+  it('affiche l’heure marocaine réelle, quelle que soit la base tz du runtime', () => {
+    // Maroc à UTC+1 jusqu'au 20/09/2026, à UTC+0 ensuite (voir effectiveTimeZone dans time.ts).
+    const CASA = 'Africa/Casablanca';
+    expect(formatTime('2026-09-01T11:38:00Z', 'fr', CASA)).toBe('12:38');
+    expect(formatTime('2026-10-04T11:38:00Z', 'fr', CASA)).toBe('11:38');
+    expect(formatTime('2026-10-04T11:38:00Z', 'ar', CASA)).toContain('11:38');
+    // 23:30 UTC le 4 : encore le 4 au Maroc (c'était déjà le 5 à UTC+1).
+    expect(formatDateTime('2026-10-04T23:30:00Z', 'fr', CASA)).toMatch(/^4 oct.*23:30$/);
+    expect(formatLongDateTime('2026-10-04T23:30:00Z', 'fr', CASA)).toMatch(/^dimanche 4 octobre.*23:30$/);
+    expect(formatDate('2026-10-04T23:30:00Z', 'fr', CASA)).toMatch(/^4 oct/);
+  });
+
+  it('utilise le fuseau de la machine sans fuseau demandé', () => {
+    const at = new Date('2026-10-04T11:38:00Z');
+    const machine = new Intl.DateTimeFormat('fr-FR', { hour: '2-digit', minute: '2-digit' }).format(at);
+    expect(formatTime(at, 'fr')).toBe(machine);
+  });
+
   it('formate les nombres selon la langue', () => {
     expect(formatNumber(1234.5, 'fr')).toMatch(/^1\s234,5$/);
     expect(formatNumber(1234.5, 'en')).toBe('1,234.5');
